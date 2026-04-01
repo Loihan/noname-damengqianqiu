@@ -1,22 +1,22 @@
 export default {
     character: {
         // 梦钟会：势力神，体力1，上限按原版逻辑由技能维持
-        dmqc_zhonghui: ["male", "shen", 1, ["dmqc_quanji", "dmqc_fensi", "dmqc_jitian", "dmqc_zhuyue", "dmqc_xingfa","dmqc_audio_effect", "dmqc_zhonghui_texiao"], [
+        sgz_zhonghui: ["male", "shen", 1, ["sgz_quanji", "sgz_fensi", "sgz_jitian", "sgz_zhuyue", "sgz_xingfa","sgz_audio_effect", "sgz_zhonghui_texiao"], [
             "des:钟会字士季，颖川之杰也。少负绝代之才，精于权略，时人比之子房。<br>景元四年，会统大军入蜀，剑指成都。及蜀汉既平，会功冠诸军，然其心高傲，不甘久居司马氏之下。彼深忿邓艾先入之功，遂假权谋之策，诬艾谋逆，籍没其军，由是独擅益州，威震西南。<br>会有揽月逐影之志，自谓才足冠世，何必为人臣之列？见洛阳篡臣当道，汉鼎迁移，遂萌觊觎神器之心。会乃称帝于成都，布告天下，正式自立。司马昭闻变震怒，起倾国之兵远征。会仗剑立于剑阁，激赏士卒，反兴义师而北伐。是役也，会奇计百出，诱敌深入于巴蜀险峻之间，终使中原大军折戟山谷。<br>自此，会据秦岭之险，分天下之半，三足鼎立之势复兴。后世论之，谓其志虽肆，其才实奇，终能于乱世孤影之中，强自逐月，开一朝之基命，成不世之枭雄。",
-            "ext:大梦千秋/image/dmqc_zhonghui.jpg",
-            "die:ext:大梦千秋/audio/dmqc_zhonghui/die/die.mp3"
+            "ext:大梦千秋/image/sgz_zhonghui.jpg",
+            "die:ext:大梦千秋/audio/sgz_zhonghui/die/die.mp3"
         ]],
     },
-    characterName: 'dmqc_zhonghui',
+    characterName: 'sgz_zhonghui',
     characterTranslate: {
-        dmqc_zhonghui: "梦钟会",
+        sgz_zhonghui: "钟会",
     },
     characterTitle: {
-        dmqc_zhonghui: "白霜降世",
+        sgz_zhonghui: "白霜降世",
     },
     skills: {
         // === 1. 权计 (保留 async 结构与核心逻辑) ===
-        dmqc_quanji: {
+        sgz_quanji: {
             forced: true,
             trigger: {
                 global: "phaseBefore",
@@ -37,7 +37,7 @@ export default {
                 reverseEquip: true,
             },
             // 音频路径适配
-            audio: "ext:大梦千秋/audio/dmqc_zhonghui/skill:12", //开局一声获得4权
+            audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:12", //开局一声获得4权
             mod: {
                 aiOrder(player, card, num) {
                     if (num > 0) return num;
@@ -53,9 +53,9 @@ export default {
                 },
             },
             content() {
-                player.addMark("dmqc_quanji", 4);
+                player.addMark("sgz_quanji", 4);
             },
-            group: ["dmqc_quanji_huan", "dmqc_quanji_num", "dmqc_quanji_lose"],
+            group: ["sgz_quanji_huan", "sgz_quanji_num", "sgz_quanji_lose"],
             subSkill: {
                 num: {
                     persevereSkill: true,
@@ -65,16 +65,16 @@ export default {
                     },
                     forced: true,
                     filter(event, player) {
-                        return player.countCards("h") != player.countMark("dmqc_quanji");
+                        return player.countCards("h") != player.countMark("sgz_quanji");
                     },
                     content() {
-                        const num = player.countMark("dmqc_quanji") - player.countCards("h");
+                        const num = player.countMark("sgz_quanji") - player.countCards("h");
                         if (num > 0) player.draw(num);
                         else player.chooseToDiscard("h", true, -num);
                     },
                 },
                 huan: {
-                    audio: "ext:大梦千秋/audio/dmqc_zhonghui/skill:8",
+                    audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:8",
                     persevereSkill: true,
                     mark: true,
                     intro: {
@@ -87,43 +87,43 @@ export default {
                     },
                     forced: true,
                     filter(event, player) {
-                        return event.num > 0 && !event.dmqc_quanji_huan;
+                        return event.num > 0 && !event.sgz_quanji_huan;
                     },
                     lastDo: true,
                     content() {
                         trigger.cancel();
-                        player.addMark("dmqc_quanji_huan", trigger.num);
-                        game.playAudio('../extension/大梦千秋/audio/dmqc_zhonghui/clanxieshu.mp3');
+                        player.addMark("sgz_quanji_huan", trigger.num);
+                        game.playAudio('../extension/大梦千秋/audio/sgz_zhonghui/clanxieshu.mp3');
                     },
                 },
                 lose: {
-                    audio: "ext:大梦千秋/audio/dmqc_zhonghui/skill:4",
+                    audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:4",
                     persevereSkill: true,
                     trigger: {
                         player: "phaseUseAfter",
                     },
                     filter(event, player) {
-                        return player.countMark("dmqc_quanji_huan");
+                        return player.countMark("sgz_quanji_huan");
                     },
                     forced: true,
                     lastDo: true,
                     // 保留范本中的 async
                     async content(event, trigger, player) {
-                        player.damage("nosource", "nocard", player.countMark("dmqc_quanji_huan")).dmqc_quanji_huan = true;
+                        player.damage("nosource", "nocard", player.countMark("sgz_quanji_huan")).sgz_quanji_huan = true;
                     },
                 },
             },
         },
 
         // === 2. 忿肆 (适配) ===
-        dmqc_fensi: {
-            audio: "ext:大梦千秋/audio/dmqc_zhonghui/skill:10",
+        sgz_fensi: {
+            audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:10",
             persevereSkill: true,
             enable: ["chooseToUse", "chooseToRespond"],
             // 修改点：出牌阶段限两次
             usable: 2,
             filter(event, player) {
-                if (!player.countMark("dmqc_quanji_huan") || _status.currentPhase != player) return false;
+                if (!player.countMark("sgz_quanji_huan") || _status.currentPhase != player) return false;
                 for (const name of lib.inpile) {
                     if (get.type(name) == "trick") {
                         if (event.filterCard(get.autoViewAs({ name: name }, "unsure"), player, event)) return true;
@@ -166,8 +166,8 @@ export default {
                         selectCard: 0,
                         viewAs: { name: links[0][2] },
                         precontent() {
-                            player.removeMark("dmqc_quanji_huan", 1);
-                            player.logSkill("dmqc_fensi");
+                            player.removeMark("sgz_quanji_huan", 1);
+                            player.logSkill("sgz_fensi");
                             // 修改点：弃置任意张牌，也可以不弃
                             player.chooseToDiscard('he', [0, Infinity], `###忿肆###你可以弃置任意数量的牌`).set("ai", card => 4.6 - get.value(card));
                         },
@@ -180,8 +180,8 @@ export default {
         },
 
         // === 3. 觊天 (适配) ===
-        dmqc_jitian: {
-            audio: "ext:大梦千秋/audio/dmqc_zhonghui/skill:7",
+        sgz_jitian: {
+            audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:7",
             persevereSkill: true,
             enable: ["chooseToUse", "chooseToRespond"],
             filterCard(card) {
@@ -203,13 +203,13 @@ export default {
                 order: 0.5,
                 result: {
                     player(player) {
-                        if (player.countMark("dmqc_quanji_huan") > 1) return 1;
+                        if (player.countMark("sgz_quanji_huan") > 1) return 1;
                         if (player.hp > 1) return -5;
                         return 1;
                     },
                 },
             },
-            group: "dmqc_jitian_end",
+            group: "sgz_jitian_end",
             subSkill: {
                 end: {
                     
@@ -220,18 +220,18 @@ export default {
                     filter(event, player) {
                         // 逻辑：检查梦钟会本回合内是否发动过“觊天”
                         return player.hasHistory('useSkill', function(evt) {
-                            return evt.skill == 'dmqc_jitian';
+                            return evt.skill == 'sgz_jitian';
                         });
                     },
                     content: function() {
                         "step 0"
                         // 1. 若有“权”标记，则移除一个
-                        if (player.countMark("dmqc_quanji") > 0) {
-                            player.removeMark("dmqc_quanji", 1);
+                        if (player.countMark("sgz_quanji") > 0) {
+                            player.removeMark("sgz_quanji", 1);
                         }
                         // 2. 若有“患”标记，则移除一个
-                        if (player.countMark("dmqc_quanji_huan") > 0) {
-                            player.removeMark("dmqc_quanji_huan", 1);
+                        if (player.countMark("sgz_quanji_huan") > 0) {
+                            player.removeMark("sgz_quanji_huan", 1);
                         }
                         game.log(player, '因在本回合发动过【觊天】，移除了标记');
                     }
@@ -240,11 +240,11 @@ export default {
         },
 
         // === 4. 逐月 (适配) ===
-        dmqc_zhuyue: {
-            audio: "ext:大梦千秋/audio/dmqc_zhonghui/skill:3",
+        sgz_zhuyue: {
+            audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:3",
             persevereSkill: true,
             init(player) {
-                player.storage.dmqc_zhuyue = 0;
+                player.storage.sgz_zhuyue = 0;
             },
             mark: true,
             intro: {
@@ -260,33 +260,33 @@ export default {
             },
             direct: true,
             content() {
-                if (player.storage.dmqc_zhuyue % 2 > 0) {
-                    if ((player.storage.dmqc_zhuyue + trigger.num) % 2 == 0) {
+                if (player.storage.sgz_zhuyue % 2 > 0) {
+                    if ((player.storage.sgz_zhuyue + trigger.num) % 2 == 0) {
                         player.changeHujia(1);
-                        if (player.countMark("dmqc_quanji") < 4) {
+                        if (player.countMark("sgz_quanji") < 4) {
                             player.chooseToDiscard(1, "she", "弃置一张牌并获得一枚“权”标记。");
-                            player.addMark("dmqc_quanji", 1);
+                            player.addMark("sgz_quanji", 1);
                         }
                     }
-                    player.storage.dmqc_zhuyue += trigger.num;
+                    player.storage.sgz_zhuyue += trigger.num;
                 } else {
-                    player.storage.dmqc_zhuyue += trigger.num;
+                    player.storage.sgz_zhuyue += trigger.num;
                 }
-                player.markSkill("dmqc_zhuyue");
+                player.markSkill("sgz_zhuyue");
             },
         },
 
         // === 5. 兴伐 (适配) ===
-dmqc_xingfa: {
-            audio: "ext:大梦千秋/audio/dmqc_zhonghui/skill:4",
+sgz_xingfa: {
+            audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:4",
             persevereSkill: true,
             forced: true,
             // 技能主时机：准备阶段选目标
             trigger: { player: "phaseZhunbeiBegin" },
             // 挂载子技能，处理核心的体力上限调整逻辑
-            group: "dmqc_xingfa_logic",
+            group: "sgz_xingfa_logic",
             async content(event, trigger, player) {
-                player.logSkill('dmqc_xingfa');
+                player.logSkill('sgz_xingfa');
                 const { result } = await player.chooseTarget(
                     '兴伐：请选择一名角色对其造成1点伤害并即时调整其体力上限',
                     true
@@ -298,7 +298,7 @@ dmqc_xingfa: {
                     const target = result.targets[0];
                     // 标记该次伤害来源，防止误伤（确保只调整兴伐造成的伤害）
                     const damageEvt = target.damage(1);
-                    damageEvt.dmqc_xingfa = true; 
+                    damageEvt.sgz_xingfa = true; 
                     await damageEvt;
                 }
             },
@@ -310,7 +310,7 @@ dmqc_xingfa: {
                     silent: true,
                     // 只有是兴伐造成的伤害才触发调整
                     filter: function(event, player) {
-                        return event.dmqc_xingfa === true && event.player.isAlive();
+                        return event.sgz_xingfa === true && event.player.isAlive();
                     },
                     content: function() {
                         "step 0"
@@ -327,7 +327,7 @@ dmqc_xingfa: {
             }
         },
 // === 梦钟会：特写音效控制器 ===
-        "dmqc_zhonghui_texiao": {
+        "sgz_zhonghui_texiao": {
             charlotte: true, // 隐藏技能
             forced: true,
             silent: true,
@@ -350,10 +350,10 @@ dmqc_xingfa: {
                 "step 0"
                 if (trigger.name == 'die') {
                     // 播放击杀/回合内死亡音效
-                    game.playAudio('../extension/大梦千秋/audio/dmqc_zhonghui/texiao/dmqc_texiao_death.mp3');
+                    game.playAudio('../extension/大梦千秋/audio/sgz_zhonghui/texiao/sgz_texiao_death.mp3');
                 } else {
                     // 播放成为延时锦囊目标音效
-                    game.playAudio('../extension/大梦千秋/audio/dmqc_zhonghui/texiao/dmqc_texiao_judge.mp3');
+                    game.playAudio('../extension/大梦千秋/audio/sgz_zhonghui/texiao/sgz_texiao_judge.mp3');
                 }
             }
         },
@@ -362,23 +362,23 @@ dmqc_xingfa: {
 
     },
     skillTranslate: {
-        dmqc_quanji: "权计",
-        dmqc_quanji_info: "持恒技，锁定技，①游戏开始时，你获得4枚“权”标记，你的手牌数始终为X（X为“权”标记的数量)。②当你不因此技能受到伤害或失去体力时防止之，改为获得等量的“患”标记。③出牌阶段结束时，你受到X点无来源伤害（X为“患”标记的数量)。",
-        dmqc_fensi: "忿肆",
-        dmqc_fensi_info: "持恒技，回合内限两次，当你需要使用一张非延时性锦囊牌，你可以移除一枚“患”标记并弃置任意张手牌，视为使用之。",
-        dmqc_jitian: "觊天",
-        dmqc_jitian_info: "持恒技，你可将一张♥或♠牌当【桃】使用。每名角色的结束阶段结束时，若你于本回合发动过“觊天”，若你有“权”/“患”标记，你移除一枚“权”/“患”标记。",
-        dmqc_zhuyue: "逐月",
-        dmqc_zhuyue_info: "持恒技，锁定技，你于本局游戏内累计造成的伤害由奇数变为偶数时你获得一点护甲，然后若你的“权”标记小于4，你弃置一张牌并获得一枚“权”标记。",
-        dmqc_xingfa: "兴伐",
-        dmqc_xingfa_info: "持恒技，锁定技，准备阶段，你选择一名角色对其造成一点伤害并调整其体力上限与体力相同。",
+        sgz_quanji: "权计",
+        sgz_quanji_info: "持恒技，锁定技，①游戏开始时，你获得4枚“权”标记，你的手牌数始终为X（X为“权”的数量)。②当你不因此技能受到伤害或失去体力时防止之，改为获得等量的“患”标记。③出牌阶段结束时，你受到X点无来源伤害（X为“患”的数量)。",
+        sgz_fensi: "忿肆",
+        sgz_fensi_info: "持恒技，回合内限两次，当你需要使用一张非延时性锦囊牌，你可以移除一枚“患”并弃置至少零张手牌，视为使用之。",
+        sgz_jitian: "觊天",
+        sgz_jitian_info: "持恒技，你可将一张♥️或♠️牌当【桃】使用。每名角色的结束阶段结束时，若你于其回合发动过“觊天”，且你有“权”/“患”，你移除一枚“权”/“患”。",
+        sgz_zhuyue: "逐月",
+        sgz_zhuyue_info: "持恒技，锁定技，你于本局游戏内累计造成的伤害由奇数变为偶数时，你获得一点护甲，然后若你的“权”的数量小于4，你弃置一张牌并获得一枚“权”。",
+        sgz_xingfa: "兴伐",
+        sgz_xingfa_info: "持恒技，锁定技，准备阶段，你选择一名角色对其造成一点伤害并立即调整其体力上限与体力相同。",
     },
     characterTaici:{
-        "dmqc_quanji":{order: 1,content:"大丈夫胸怀四海，有提携玉龙之术！/王霸之志在胸，我岂池中之物！/历经风浪至此，会不可止步于龙门！/我若束手无策，诸位又有何施为？/今长缨在手，欲问鼎九州！/我有佐国之术，可缚苍龙!/入宝山而空手回，其与匹夫何异？/操权弄略，舍小利而谋大局！/天降大任于斯，不受必遭其殃！/空将宝地赠他人，某怎会心甘情愿！/大丈夫行事，岂较一兵一将之得失？/我欲行夏禹旧事，为天下人！"},
-        "dmqc_fensi":{order: 2,content:"匹夫侥幸行险，岂敢妄居首功！/蛇可吞象，我钟会亦可吞天食地！/坏吾大计者，罪死不赦！/蜀川三千里，皆由我一言决之。/天下风流出我辈，一遇风云便化龙！/顺我者封候拜将；逆我者，斧钺加身！/烧去剑阁八百里，蜀中自有一片天！/天书数册，当为我载此世之名！/我以露布上达天听，安不可称万岁！/事在人为，王侯之封不在人而在我！"},
-        "dmqc_jitian":{order: 3,content:"动我钟家的人，哼，你长了几个脑袋？/有我在一日，谁也动不得吾族分毫!/燕雀安知鸿鹄之志哉！/吾族恒大，谁敢欺之。/不为刀下脍，且做俎上刀。/心怀屠龙之术，何患手无长缨！/功高终怀异，峙鼎复三分！"},
-        "dmqc_zhuyue":{order: 4,content:"人生艰难如逆水行舟，不欲进则必退！/汉鹿已失，魏牛犹在，吾欲执其耳！/既已功高盖主，何妨冕服加身！"},
-        "dmqc_xingfa":{order: 5,content:"风水轮流转，轮到我钟某问鼎重几何了。/道同者可俱容，殊途者成白骨！/天赐良机，不取何为？既搏一世之功，亦搏万世之名！"},
+        "sgz_quanji":{order: 1,content:"大丈夫胸怀四海，有提携玉龙之术！/王霸之志在胸，我岂池中之物！/历经风浪至此，会不可止步于龙门！/我若束手无策，诸位又有何施为？/今长缨在手，欲问鼎九州！/我有佐国之术，可缚苍龙!/入宝山而空手回，其与匹夫何异？/操权弄略，舍小利而谋大局！/天降大任于斯，不受必遭其殃！/空将宝地赠他人，某怎会心甘情愿！/大丈夫行事，岂较一兵一将之得失？/我欲行夏禹旧事，为天下人！"},
+        "sgz_fensi":{order: 2,content:"匹夫侥幸行险，岂敢妄居首功！/蛇可吞象，我钟会亦可吞天食地！/坏吾大计者，罪死不赦！/蜀川三千里，皆由我一言决之。/天下风流出我辈，一遇风云便化龙！/顺我者封候拜将；逆我者，斧钺加身！/烧去剑阁八百里，蜀中自有一片天！/天书数册，当为我载此世之名！/我以露布上达天听，安不可称万岁！/事在人为，王侯之封不在人而在我！"},
+        "sgz_jitian":{order: 3,content:"动我钟家的人，哼，你长了几个脑袋？/有我在一日，谁也动不得吾族分毫!/燕雀安知鸿鹄之志哉！/吾族恒大，谁敢欺之。/不为刀下脍，且做俎上刀。/心怀屠龙之术，何患手无长缨！/功高终怀异，峙鼎复三分！"},
+        "sgz_zhuyue":{order: 4,content:"人生艰难如逆水行舟，不欲进则必退！/汉鹿已失，魏牛犹在，吾欲执其耳！/既已功高盖主，何妨冕服加身！"},
+        "sgz_xingfa":{order: 5,content:"风水轮流转，轮到我钟某问鼎重几何了。/道同者可俱容，殊途者成白骨！/天赐良机，不取何为？既搏一世之功，亦搏万世之名！"},
         "die":{content:"夺取天下之机，尔等竖子竟弃如敝履，啊！！！"}
     }
 };
