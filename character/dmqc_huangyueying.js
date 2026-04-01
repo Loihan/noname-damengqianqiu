@@ -144,60 +144,69 @@ export default {
         dmqc_qimeng: {
             audio: "ext:大梦千秋/audio/dmqc_huangyueying:4",
             persevereSkill: true,
-            forced:true,
-            trigger: { player: "damageEnd" }, // 受到伤害后触发
+            forced: true,
+            trigger: {
+                player: "damageEnd",
+            },
+            // 判定：只要有牌就能发动
             filter: function(event, player) {
-                // 只要手牌或装备区有牌即可
-                return player.countCards('hes') > 0;
+                return player.countCards("hes") > 0;
             },
-            async content(event, trigger, player) {
+            cost: async function(event, trigger, player) {
+                event.result = {
+                    bool: true,
+                    cost_data: "wuzhong",
+                };
+            },
+            content: async function(event, trigger, player) {
+                const name = event.cost_data;
+                
+                // 1. 播放语音
+                game.playAudio('../extension/大梦千秋/audio/dmqc_huangyueying/dmqc_qimeng.mp3');
 
-                // 调用范本中的标准 chooseToUse 模式
-                await player.chooseToUse({
-                    // 指定转化后要使用的牌
-                    viewAs: { name: 'wuzhong' },
-                    // 指定对应的备份技能（在 subSkill 中定义）
-                    _backupevent: 'dmqc_qimeng_backup',
-                    prompt: '奇梦：是否使用一张牌视为使用【无中生有】？',
-                    // 禁用系统默认对话框，使用自定义提示
-                    openskilldialog: '将一张牌当作【无中生有】使用',
-                    // 不计入次数（虽然无中生有本就不计，但为了严谨加上）
-                    addCount: false
-                }).backup('dmqc_qimeng_backup'); 
-                // .backup() 会将上面定义的逻辑与 subSkill 里的 backup 技能绑定
+                // 2. 核心重写：劫持 chooseToUse
+                await player
+                    .chooseToUse(true) // true 表示物理移除“取消”按钮
+                    .set("openskilldialog", `将一张牌当作【无中生有】使用`)
+                    .set("norestore", true)
+                    .set("_backupevent", `${event.name}_backup`)
+                    .set("custom", {
+                        add: {},
+                        replace: { window() {} },
+                    })
+                    .backup(`${event.name}_backup`) // 绑定下方的备份子技能
+                    .set("targetRequired", true)
+                    .set("complexTarget", true)
+                    .set("complexSelect", true)
+                    .set("addCount", false); // 不计入次数
             },
-            // === 子技能定义 ===
             subSkill: {
-                // 备份技能：专门负责“选牌”阶段的合法性检查
                 backup: {
-                    // 记录：不显示技能名字弹出
                     log: false,
-                    // 过滤：允许选择所有实体牌（手牌或装备）
-                    filterCard: function(card, player) {
-                        return true; 
+                    filterCard: function(card) {
+                        // 允许选择所有实体牌
+                        return get.itemtype(card) == "card";
                     },
-                    // 位置：手牌和装备区
                     position: "hes",
-                    // 视为：转换为无中生有
+                    // 强制指定转化为无中生有
                     viewAs: { name: "wuzhong" },
-                    // AI 选牌逻辑
                     check: function(card) {
                         return 7 - get.value(card);
                     },
                     sub: true,
-                }
-            }
+                },
+            },
         },
     },
     skillTranslate: {
         dmqc_jiqiao: "集巧", 
-        dmqc_jiqiao_info: "持恒技，锁定技。你的回合开始时，若你手牌中没有锦囊牌，你从牌堆中随机获得一张锦囊牌。",
+        dmqc_jiqiao_info: "持恒技，锁定技，你的回合开始时，若你手牌中没有锦囊牌，你从牌堆中随机获得一张锦囊牌。",
         dmqc_xuanhe: "璇和", 
-        dmqc_xuanhe_info: "持恒技，锁定技。当你使用锦囊牌时摸一张牌，此牌不计入手牌上限。然后你按照所使用的锦囊牌花色执行对应效果:<br>♦️：选择一名角色视为对其使用一张无次数限制的火【杀】；<br>♥️：若你已受伤回复一点体力，否则获得一点护甲；<br>♠️：选择一名其他角色获得其一张牌；<br>♣️：本回合出【杀】次数+1（不可叠加），获得一张无色【闪】，标记为“梦闪”，不计入手牌上限。",
+        dmqc_xuanhe_info: "持恒技，锁定技，当你使用锦囊牌时摸一张牌，此牌不计入手牌上限。然后你按照所使用的锦囊牌花色执行对应效果:<br>♦️：选择一名角色视为对其使用一张无次数限制的火【杀】；<br>♥️：若你已受伤回复一点体力，否则获得一点护甲；<br>♠️：选择一名其他角色获得其一张牌；<br>♣️：本回合出【杀】次数+1（不可叠加），获得一张无色【闪】，标记为“梦闪”，不计入手牌上限。",
         dmqc_changming: "长明", 
-        dmqc_changming_info: "持恒技，锁定技。准备阶段和结束阶段，你卜算2X+Y（X为“梦闪”数，Y为存活人数，至多卜算7）。",
+        dmqc_changming_info: "持恒技，锁定技，准备阶段和结束阶段，你卜算2X+Y（X为“梦闪”数，Y为存活人数，至多卜算7）。",
         dmqc_qimeng: "绮梦",
-        dmqc_qimeng_info: "持恒技，锁定技。当你受到伤害后，你须将一张牌当做【无中生有】使用。",
+        dmqc_qimeng_info: "持恒技，锁定技，当你受到伤害后，若你有牌，你须将一张牌当做【无中生有】使用。",
         dmqc_xuanhe_shan: "梦闪",
         dmqc_xuanhe_tag: "不计上限", 
     },

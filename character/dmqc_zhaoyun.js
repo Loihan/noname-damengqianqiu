@@ -15,45 +15,46 @@ export default {
         dmqc_zhaoyun: "梦赵云",
     },
     skills: {
-        // === 1. 绝境 (适配版) ===
-// === 1. 绝境 (修改版：体力上限加成 & 体力锁定) ===
+        // === 1. 绝境 (修改版：体力上限加成 & 体力锁定) ===
         dmqc_juejing: {
             persevereSkill: true,
             audio: "ext:大梦千秋/audio/dmqc_zhaoyun:2",
             forced: true,
-            // 包含三个部分：手牌上限mod、濒死摸牌、体力锁定
-            group: ["dmqc_juejing_start","dmqc_juejing_hscap", "dmqc_juejing_draw", "dmqc_juejing_hplock","dmqc_juejing_maxhplock"],
+            // 包含：开局初始化、手牌上限加成、濒死补牌、体力锁定、上限锁定、持续补牌(新增)
+            group: [
+                "dmqc_juejing_start", 
+                "dmqc_juejing_hscap", 
+                "dmqc_juejing_draw", 
+                "dmqc_juejing_hplock", 
+                "dmqc_juejing_maxhplock",
+                "dmqc_juejing_shangshi" // 新增补牌逻辑
+            ],
             init: function(player) {
-                // 1. 上限初始化：确保登场不超 7
                 if (player.maxHp > 7) {
                     player.loseMaxHp(player.maxHp - 7);
                 }
-                // 2. 体力值初始化：强制将当前体力调整为 1 (应对主公加成)
                 if (player.hp > 1) {
                     player.hp = 1;
                     player.update();
                 }
             },
             subSkill: {
-                // 【核心修正】：专门对付主公加成的开局触发器
+                // 1. 开局及模式加成锁定
                 start: {
-                    // 使用 global 时机，确保在所有身份加成完成后执行
                     trigger: { 
                         global: ["gameStart", "gameDrawBefore"],
                         player: "enterGame" 
                     },
                     forced: true,
                     silent: true,
-                    priority: 101, // 极高优先级
+                    priority: 101,
                     content: function() {
                         "step 0"
-                        // 1. 强制将当前体力拉回1
                         if (player.hp > 1) {
                             player.hp = 1;
                             player.update();
                             game.log(player, '受【绝境】影响，初始体力锁定为1');
                         }
-                        // 2. 强制检查上限，防止主公加成突破7
                         if (player.maxHp > 7) {
                             var overflow = player.maxHp - 7;
                             player.loseMaxHp(overflow);
@@ -62,7 +63,7 @@ export default {
                     }
                 },
 
-                // 修改点①：手牌上限增加 X (X为当前体力上限)
+                // 2. 手牌上限 MOD
                 hscap: { 
                     mod: { 
                         maxHandcard: function(player, num) {
@@ -70,7 +71,8 @@ export default {
                         }
                     } 
                 },
-                // 濒死摸牌逻辑保持原版
+
+                // 3. 濒死/脱离濒死即时补牌
                 draw: {
                     trigger: { player: ["dying", "dyingEnd"] },
                     forced: true,
@@ -81,8 +83,6 @@ export default {
                     },
                     content: function() {
                         player.logSkill('dmqc_juejing');
-                        var log_str = (trigger.name == 'dying') ? '进入濒死状态' : '脱离濒死状态';
-                        game.log(player, '因' + log_str + '，触发了【绝境】');
                         if (player.countCards('h') == 0) {
                             player.draw(2);
                         } else {
@@ -90,21 +90,53 @@ export default {
                         }
                     }
                 },
-                // 修改点③：体力值始终不大于1 (通过监听变化实时拉回)
+
+                // 4. 【核心新增】：持续补牌效果（参考伤逝逻辑）
+                shangshi: {
+                    trigger: {
+                        player: ["loseAfter", "changeHp", "gainMaxHpAfter", "loseMaxHpAfter"],
+                        global: ["equipAfter", "addJudgeAfter", "gainAfter", "loseAsyncAfter", "addToExpansionAfter"]
+                    },
+                    forced: true,
+                    frequent: true,
+                    filter: function(event, player) {
+                        // 限制点①：必须不是自己的回合
+                        if (_status.currentPhase == player) return false;
+                        
+                        // 限制点②：手牌数小于2
+                        if (player.countCards("h") >= 2) return false;
+                        
+                        // 限制点③：过滤非本人的卡牌失去事件
+                        if (event.getl && !event.getl(player)) return false;
+                        
+                        return true;
+                    },
+                    content: function() {
+                        player.drawTo(2);
+                    },
+                    ai: {
+                        noh: true,
+                        freeSha: true,
+                        freeShan: true
+                    }
+                },
+
+                // 5. 体力锁定 1
                 hplock: {
                     trigger: { player: "changeHp" },
                     forced: true,
                     silent: true,
                     filter: function(event, player) {
-                        // 只要血量大于1，立即触发
                         return player.hp > 1;
                     },
                     content: function() {
                         player.hp = 1;
-                        player.update(); // 强制刷新UI
-                        game.log(player, '受【绝境】影响，体力值回归至1');
+                        player.update();
+                        game.log(player, '受【绝境】影响，体力回归至1');
                     }
                 },
+
+                // 6. 体力上限锁定 7
                 maxhplock: {
                     trigger: { 
                         player: ["gainMaxHpAfter", "changeHp", "phaseBefore"],
@@ -116,11 +148,9 @@ export default {
                         return player.maxHp > 7;
                     },
                     content: function() {
-                        // 计算溢出的数值
                         var overflow = player.maxHp - 7;
-                        // 使用引擎方法 loseMaxHp 强制扣回，这会触发 UI 刷新并阻止上限溢出
                         player.loseMaxHp(overflow); 
-                        game.log(player, '受【绝境】影响，体力上限被锁定在7点（扣除了', overflow, '点溢出）');
+                        game.log(player, '受【绝境】影响，体力上限被锁定在7点');
                     }
                 },
             }
@@ -381,9 +411,10 @@ dmqc_longhun: {
     },
     skillTranslate: {
         dmqc_juejing: "绝境",
-        dmqc_juejing_info: "持恒技，锁定技，①你的手牌上限+X（X为你的体力上限）；②当你进入或脱离濒死状态时，若你没有手牌，你摸两张牌，否则摸一张牌。③你的体力值始终不大于1,体力上限始终不大于7。",
+        dmqc_juejing_info: "持恒技，锁定技，①你的手牌上限+X（X为你的体力上限）；②当你进入或脱离濒死状态时，若你没有手牌，你摸两张牌，否则摸一张牌。③回合外你的手牌数始终不小于2。④你的体力值始终不大于1,体力上限始终不大于7。",
         dmqc_longhun: "龙魂",
-        dmqc_longhun_info: "持恒技，你可以将1至3张花色相同的牌当做对应牌使用或打出并根据其数量与花色执行对应效果：<br>①一张：♥️当【桃】；♦️当火【杀】（无距离次数限制且不可被响应）；♣️当【闪】；♠️当【无懈可击】。<br>②两张：增加1点体力上限。红色：伤害/回复量+1；黑色牌：弃置当前回合角色一张牌。<br>③三张：增加1点体力上限。♥️：回复体力至体力上限；♦️：此伤害值改为等同于目标体力；♣️：弃置一名角色的所有牌；♠️：不可被响应且你摸2张牌。",
+        //dmqc_longhun_info: "持恒技，你可以将1至3张花色相同的牌当做对应牌使用或打出并根据其数量与花色执行对应效果：<br>①一张：♥️当【桃】；♦️当火【杀】（无距离次数限制且不可被响应）；♣️当【闪】；♠️当【无懈可击】。<br>②两张：增加1点体力上限。红色：伤害/回复量+1；黑色牌：弃置当前回合角色一张牌。<br>③三张：增加1点体力上限。♥️：回复体力至体力上限；♦️：此伤害值改为等同于目标体力；♣️：弃置一名角色的所有牌；♠️：不可被响应且你摸2张牌。",
+        dmqc_longhun_info: "持恒技，你可以将1至3张花色相同的牌当做对应牌使用或打出并根据其数量与花色执行对应效果：<br>♥️当【桃】；两张：回复量+1；三张：回满体力。<br>♦️当火【杀】（无距离次数限制且不可被响应）；两张：伤害+1；三张：伤害改为等同于目标体力。<br>♠️当【无懈可击】：两张：弃置当前回合角色一张牌；三张：不可被响应且摸两张牌。<br>♣️当【闪】：两张：弃置当前回合角色一张牌；三张：弃置一名角色所有牌。<br>若你依此法使用或打出了2或3张牌，你增加一点体力上限。",
         dmqc_jiuzhu: "救主",
         dmqc_jiuzhu_info: "持恒技，蓄力技(0/7)，每名角色准备阶段开始时或你进入濒死状态时，你获得1点蓄力点。<br>当你发动“龙魂时，你可以消耗1点蓄力点并执行相应效果：若在你的回合内/外，你获得一名其他角色/当前回合角色的一张牌。",
     },

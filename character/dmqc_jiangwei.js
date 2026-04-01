@@ -37,9 +37,9 @@ dmqc_jiufa: {
     },
     derivation: ["dmqc_xinran", "dmqc_zhuri", "dmqc_juejin", "dmqc_guju", "dmqc_youming"],
     trigger: { global: "phaseBegin" },
-    filter: function(event, player) {
-        return event.player != player;
-    },
+    //  filter: function(event, player) {
+    //      return event.player != player;
+    //  },
     content: function() {
         'step 0'
 
@@ -421,7 +421,7 @@ dmqc_youming_counter: {
     
     skillTranslate: {
         dmqc_jiufa: "九伐",
-        dmqc_jiufa_info: "①持恒技，锁定技。每名其他角色回合开始时，若你的手牌数小于X，你将手牌摸至X（X为你的体力上限且至多为9）；否则，你摸一张牌。然后你选择一名其他角色拼点：若你赢，你获得一个“伐”标记、摸一张牌、手牌上限+1、增加1点体力上限并视为对其使用一张火【杀】。<br>②根据你的“伐”标记数量，你视为拥有以下技能：<br>1：【薪燃】 3：【逐日】 5：【绝烬】 7：【孤炬】 9：【幽明】<br>③当“伐”标记达到9时此技能失去拼点效果。",
+        dmqc_jiufa_info: "持恒技，锁定技。①每名角色回合开始时，若你的手牌数小于X，你将手牌摸至X（X为你的体力上限且至多为9）；否则，你摸一张牌。然后你选择一名其他角色拼点：若你赢，你获得一个“伐”标记、摸一张牌、手牌上限+1、增加1点体力上限并视为对其使用一张火【杀】。<br>②根据你的“伐”标记数量，你视为拥有以下技能：<br>1：【薪燃】 3：【逐日】 5：【绝烬】 7：【孤炬】 9：【幽明】<br>③当“伐”标记达到9时此技能失去拼点效果。",
         dmqc_xinran: "薪燃",
         dmqc_xinran_info: "持恒技，锁定技。当你进入濒死状态时，你减1点体力上限并将体力回复至1点。",
         dmqc_zhuri: "逐日",
