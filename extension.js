@@ -135,7 +135,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包<br>包含三国志与山海经系列武将",
             author: "Loihan",
-            version: "2.0",
+            version: "2.1",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };

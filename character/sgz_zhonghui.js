@@ -277,7 +277,7 @@ export default {
         },
 
         // === 5. 兴伐 (适配) ===
-sgz_xingfa: {
+        sgz_xingfa: {
             audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:4",
             persevereSkill: true,
             forced: true,
@@ -356,9 +356,7 @@ sgz_xingfa: {
                     game.playAudio('../extension/大梦千秋/audio/sgz_zhonghui/texiao/sgz_texiao_judge.mp3');
                 }
             }
-        },
-        //'binliang','chiling','diaohulishan','guohe','gz_guguoanbang','gz_haolingtianxia','gz_kefuzhongyuan','huogong','huoshaolianying','jiedao','jiu','juedou','lebu','lianjunshengyan','lulitongxin','nanman','sha','sha_fire','sha_thunder','shan','shandian','shuiyanqijun','shunshou','tao','taoyuan','tiesuo','wanjian','wenhe','wugu','wuxie','wuzhong','yiyi','yuanjiao','zhibi'
-        
+        },        
 
     },
     skillTranslate: {
