@@ -12,10 +12,14 @@ import sgzGuojia from './character/sgz_guojia.js';
 import shjBaize from './character/shj_baize.js'; 
 import shjXiangliu from './character/shj_xiangliu.js';
 
+// 新增：魔法时代武将
+import mfsdAnyuanmofa from './character/mfsd_anyuanmofa.js';
+
 // 分类数组定义
 const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia];
 const shjCharacters = [shjBaize, shjXiangliu];
-const allCharacters = [...sgzCharacters, ...shjCharacters];
+const mfsdCharacters = [mfsdAnyuanmofa]; 
+const allCharacters = [...sgzCharacters, ...shjCharacters, ...mfsdCharacters];
 
 export const type = "extension";
 export default function () {
@@ -35,7 +39,7 @@ export default function () {
             lib.qhlypkg.push({
                 isExt: true,
                 filterCharacter: function(name) {
-                    return name.indexOf('sgz_') == 0 || name.indexOf('shj_') == 0;
+                    return name.indexOf('sgz_') == 0 || name.indexOf('shj_') == 0 || name.indexOf('mfsd_') == 0;
                 },
                 characterNameTranslate: function(name) {
                     return get.translation(name);
@@ -60,6 +64,8 @@ export default function () {
             // === 分包名翻译注入 ===
             lib.translate["三国志"] = "三国志";
             lib.translate["山海经"] = "山海经";
+            lib.translate["魔法时代"] = "魔法时代";
+            //lib.translate["大梦千秋_character_config"] = "大梦千秋";
 
             // 【核心配置】：卡牌音效劫持逻辑（保持原封不动）
             //-------------------↓↓↓↓↓↓↓↓↓↓出牌语音↓↓↓↓↓↓↓↓↓↓↓----------------//
@@ -125,7 +131,8 @@ export default function () {
                 characterSort: {
                     "大梦千秋": {
                         "三国志": sgzCharacters.map(char => char.characterName),
-                        "山海经": shjCharacters.map(char => char.characterName)
+                        "山海经": shjCharacters.map(char => char.characterName),
+                        "魔法时代": mfsdCharacters.map(char => char.characterName),
                     }
                 }
             },
@@ -135,7 +142,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包<br>包含三国志与山海经系列武将",
             author: "Loihan",
-            version: "2.1",
+            version: "2.2",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };
