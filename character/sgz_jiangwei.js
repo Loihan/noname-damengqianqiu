@@ -100,12 +100,14 @@ sgz_jiufa: {
         'step 5'
         var num = player.countMark('sgz_jiufa');
         var skills_to_add = [];
-        if (num >= 1 && !player.hasSkill('sgz_xinran')) skills_to_add.push('sgz_xinran');
+        if (num >= 1 && !player.hasSkill('sgz_xinran')) skills_to_add.push('sgz_xinran');  
         if (num >= 3 && !player.hasSkill('sgz_zhuri')) skills_to_add.push('sgz_zhuri');
         if (num >= 5 && !player.hasSkill('sgz_juejin')) skills_to_add.push('sgz_juejin');
         if (num >= 7 && !player.hasSkill('sgz_guju')) skills_to_add.push('sgz_guju');
-        if (num >= 9 && !player.hasSkill('sgz_youming')) skills_to_add.push('sgz_youming');
-        
+        if (num >= 9 && !player.hasSkill('sgz_youming')) {
+            skills_to_add.push('sgz_youming');
+            player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_jiangwei_9.png');
+        }
         if (skills_to_add.length) {
             player.addSkill(skills_to_add);
         }

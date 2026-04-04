@@ -47,6 +47,7 @@ export default {
                     
                     // 增加发动次数标记
                     player.addMark('mfsd_guishi', 1);
+                    player.node.avatar.setBackgroundImage('extension/大梦千秋/image/mfsd_anyuanmofa2.jpg');
 
                     // 1. 阻止死亡并弃置所有牌
                     trigger.cancel(); 
@@ -80,6 +81,7 @@ export default {
                         
                         "step 1"
                         // 2. 核心：回到游戏后再增加上限
+                        player.node.avatar.setBackgroundImage('extension/大梦千秋/image/mfsd_anyuanmofa.jpg');
                         player.gainMaxHp(1);
                         
                         "step 2"
@@ -148,6 +150,7 @@ export default {
                     // 修改点：加伤 + 变火
                     trigger.num++;
                     trigger.nature = 'fire'; 
+                    player.node.avatar.setBackgroundImage('extension/大梦千秋/image/mfsd_anyuanmofa2.jpg');
                     
                     // 给目标添加标记技能
                     trigger.player.addSkill('mfsd_jiangming_tag');
@@ -186,6 +189,7 @@ export default {
                                 delete curr.storage.mfsd_jiangming_tag; 
                                 curr.unmarkSkill('mfsd_jiangming_tag'); 
                                 game.log(curr, '的“降冥”状态解除，回复了', num, '点体力');
+                                player.node.avatar.setBackgroundImage('extension/大梦千秋/image/mfsd_anyuanmofa.jpg');
                             }
                             event.redo();
                         }

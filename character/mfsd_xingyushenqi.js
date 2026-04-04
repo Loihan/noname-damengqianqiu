@@ -24,6 +24,7 @@ export default {
         mfsd_shisu: {
             audio: "ext:大梦千秋/audio/mfsd_xingyushenqi:9",
             persevereSkill: true,
+            enable: ["chooseToUse", "chooseToRespond"],
             mark: true,
             marktext: "时空镜",
             intro: {
@@ -44,24 +45,50 @@ export default {
             init: function(player) {
                 if (!player.storage.mfsd_shisu) player.storage.mfsd_shisu = {};
             },
-            enable: ["chooseToUse", "chooseToRespond"],
+            hiddenCard: function(player, name) {
+                var storage = player.storage.mfsd_shisu;
+                if (storage && storage[name] > 0) return true;
+                return false;
+            },
             filter: function(event, player) {
-                let store = player.storage.mfsd_shisu;
-                for (let i in store) {
-                    if (store[i] > 0 && event.filterCard({ name: i }, player, event)) return true;
+                var storage = player.storage.mfsd_shisu;
+                if (!storage) return false;
+                
+                // 如果是响应/打出环节
+                if (event && event.filterCard) {
+                    for (var i in storage) {
+                        if (storage[i] > 0) {
+                            // 检查时空镜里的这张牌是否符合当前系统的需求
+                            if (event.filterCard({ name: i }, player, event)) return true;
+                        }
+                    }
+                    return false;
+                }
+                
+                // 如果是出牌阶段主动使用
+                for (var i in storage) {
+                    if (storage[i] > 0) return true;
                 }
                 return false;
             },
             chooseButton: {
                 dialog: function(event, player) {
-                    let list = [];
-                    let store = player.storage.mfsd_shisu;
-                    for (let i in store) {
-                        if (store[i] > 0 && event.filterCard({ name: i }, player, event)) {
-                            list.push(["", "", i]);
+                    var storage = player.storage.mfsd_shisu;
+                    var list = [];
+                    for (var i in storage) {
+                        if (storage[i] > 0) {
+                            // 只显示符合当前询问条件的牌
+                            if (event.filterCard({ name: i }, player, event)) {
+                                list.push(["", "", i]);
+                            }
                         }
                     }
-                    return ui.create.dialog("时溯", [list, 'vcard']);
+                    return ui.create.dialog("时溯：选择要消耗的记录", [list, 'vcard']);
+                },
+                check: function(button) {
+                    var player = get.player();
+                    if (_status.event.type == 'phase') return player.getUseValue({ name: button.link[2] });
+                    return 1;
                 },
                 backup: function(links) {
                     return {
@@ -70,13 +97,38 @@ export default {
                         selectCard: -1,
                         sourceSkill: "mfsd_shisu",
                         onuse: function(result, player) {
-                            let name = result.card.name;
+                            var name = result.card.name;
                             player.storage.mfsd_shisu[name]--;
                             player.markSkill('mfsd_shisu');
-                            game.playAudio(`../extension/大梦千秋/audio/mfsd_xingyushenqi/mfsd_shisu${[1,2,3,4,5,6,7,8,9].randomGet()}.mp3`);
+                            // 手动触发对应卡牌的音效（可选，建议保持原声劫持）
                         }
                     }
+                },
+                prompt: function(links) {
+                    return "请选择" + get.translation(links[0][2]) + "的目标";
                 }
+            },
+                            // === 核心修正3：AI与系统标签映射 ===
+            ai: {
+                respondSha: true,
+                respondShan: true,
+                save: true,
+                respondWuxie: true,
+                skillTagFilter: function(player, tag) {
+                    var storage = player.storage.mfsd_shisu;
+                    if (!storage) return false;
+                    var name;
+                    switch (tag) {
+                        case 'respondSha': name = 'sha'; break;
+                        case 'respondShan': name = 'shan'; break;
+                        case 'save': name = 'tao'; break;
+                        case 'respondWuxie': name = 'wuxie'; break;
+                    }
+                    if (name && storage[name] > 0) return true;
+                    return false;
+                },
+                order: 1,
+                result: { player: 1 }
             },
             group: ["mfsd_shisu_record"],
             subSkill: {

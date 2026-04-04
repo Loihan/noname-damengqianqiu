@@ -94,6 +94,7 @@ export default {
                         trigger.cancel();
                         player.addMark("sgz_quanji_huan", trigger.num);
                         game.playAudio('../extension/大梦千秋/audio/sgz_zhonghui/clanxieshu.mp3');
+                        if(player.countMark("sgz_quanji_huan") > 2 ) player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_zhonghui2.jpg');
                     },
                 },
                 lose: {
@@ -168,6 +169,7 @@ export default {
                         precontent() {
                             player.removeMark("sgz_quanji_huan", 1);
                             player.logSkill("sgz_fensi");
+                            if(player.countMark("sgz_quanji_huan") <= 2 ) player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_zhonghui.jpg');
                             // 修改点：弃置任意张牌，也可以不弃
                             player.chooseToDiscard('he', [0, Infinity], `###忿肆###你可以弃置任意数量的牌`).set("ai", card => 4.6 - get.value(card));
                         },
@@ -232,6 +234,7 @@ export default {
                         // 2. 若有“患”标记，则移除一个
                         if (player.countMark("sgz_quanji_huan") > 0) {
                             player.removeMark("sgz_quanji_huan", 1);
+                            if(player.countMark("sgz_quanji_huan") <= 2 ) player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_zhonghui.jpg');
                         }
                         game.log(player, '因在本回合发动过【觊天】，移除了标记');
                     }

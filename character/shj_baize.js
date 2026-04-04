@@ -318,7 +318,7 @@ export default {
                     var all_non_equip = lib.inpile.filter(name => get.type(name) != 'equip').unique();
                     if(player.storage.shj_dongxu.length >= all_non_equip.length) {
                         player.logSkill('shj_dongxu');
-                        player.$fullscreenpop('洞虚', 'wood');
+                        //player.$fullscreenpop('洞虚', 'wood');
                         player.awakenSkill('shj_dongxu');
                         player.node.avatar.setBackgroundImage('extension/大梦千秋/image/shj_baize2.jpg');
                         player.addSkill('shj_zhen_e');
