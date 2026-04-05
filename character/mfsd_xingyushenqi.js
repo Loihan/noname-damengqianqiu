@@ -601,28 +601,7 @@ mfsd_huangjie_cleanup: {
         game.removeGlobalSkill('mfsd_huangjie_global_effect');
     }
 },
-        "mfsd_xingyushenqi_texiao": {
-            charlotte: true, // 隐藏技能
-            forced: true,
-            silent: true,
-            trigger: {
-                global: "dieAfter",            // 监听全场死亡
-            },
-            filter: function(event, player) {
-                // 1. 击杀逻辑：如果是击杀（source是自己）或者是在自己的回合内有人死亡
-                if (event.name == 'die') {
-                    return event.source == player || _status.currentPhase == player;
-                }
-                return false;
-            },
-            content: function() {
-                "step 0"
-                if (trigger.name == 'die') {
-                    // 播放击杀/回合内死亡音效
-                    game.playAudio(`../extension/大梦千秋/audio/mfsd_xingyushenqi/mfsd_kill${[1,2,3].randomGet()}.mp3`)
-                } 
-            }
-        },  
+
 
 
     },

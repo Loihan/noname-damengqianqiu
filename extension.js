@@ -1,6 +1,6 @@
 import { lib, game, ui, get, ai, _status } from "../../noname.js";
 
-// 1. 导入所有独立的武将模块
+// === 三国志武将 ===
 import sgzJiangwei from './character/sgz_jiangwei.js';
 import sgzZhugedan from './character/sgz_zhugedan.js';
 import sgzZhonghui from './character/sgz_zhonghui.js';
@@ -8,20 +8,25 @@ import sgzHuangyueying from './character/sgz_huangyueying.js';
 import sgzZhaoyun from './character/sgz_zhaoyun.js';
 import sgzGuojia from './character/sgz_guojia.js';
 
-// === 新增：山海经武将导入 ===
+// === 山海经武将 ===
 import shjBaize from './character/shj_baize.js'; 
 import shjXiangliu from './character/shj_xiangliu.js';
 import shjChaofeng from './character/shj_chaofeng.js';
 
-// 新增：魔法时代武将
+// === 魔法时代武将 ===
 import mfsdAnyuanmofa from './character/mfsd_anyuanmofa.js';
 import mfsdXingyushenqi from './character/mfsd_xingyushenqi.js';
+
+// === 万古仙道武将 ===
+import wgxdHeyuxingzun from './character/wgxd_heyuxingzun.js';
 
 // 分类数组定义
 const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia];
 const shjCharacters = [shjBaize, shjXiangliu, shjChaofeng];
 const mfsdCharacters = [mfsdAnyuanmofa, mfsdXingyushenqi]; 
-const allCharacters = [...sgzCharacters, ...shjCharacters, ...mfsdCharacters];
+const wgxdCharacters = [wgxdHeyuxingzun];
+
+const allCharacters = [...sgzCharacters, ...shjCharacters, ...mfsdCharacters, ...wgxdCharacters];
 
 export const type = "extension";
 export default function () {
@@ -67,6 +72,7 @@ export default function () {
             lib.translate["三国志"] = "三国志";
             lib.translate["山海经"] = "山海经";
             lib.translate["魔法时代"] = "魔法时代";
+            lib.translate["万古仙道"] = "万古仙道";
             //lib.translate["大梦千秋_character_config"] = "大梦千秋";
 
             // 【核心配置】：卡牌音效劫持逻辑（保持原封不动）
@@ -135,6 +141,7 @@ export default function () {
                         "三国志": sgzCharacters.map(char => char.characterName),
                         "山海经": shjCharacters.map(char => char.characterName),
                         "魔法时代": mfsdCharacters.map(char => char.characterName),
+                        "万古仙道": wgxdCharacters.map(char => char.characterName),
                     }
                 }
             },
@@ -144,7 +151,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包<br>包含三国志与山海经系列武将",
             author: "Loihan",
-            version: "3.1",
+            version: "3.2",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };
