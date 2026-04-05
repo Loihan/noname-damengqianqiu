@@ -7,6 +7,7 @@ import sgzZhonghui from './character/sgz_zhonghui.js';
 import sgzHuangyueying from './character/sgz_huangyueying.js';
 import sgzZhaoyun from './character/sgz_zhaoyun.js';
 import sgzGuojia from './character/sgz_guojia.js';
+import sgzLuxun from './character/sgz_luxun.js';
 
 // === 山海经武将 ===
 import shjBaize from './character/shj_baize.js'; 
@@ -22,7 +23,7 @@ import mfsdXingyushenqi from './character/mfsd_xingyushenqi.js';
 import wgxdHeyuxingzun from './character/wgxd_heyuxingzun.js';
 
 // 分类数组定义
-const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia];
+const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia, sgzLuxun];
 const shjCharacters = [shjBaize, shjXiangliu, shjChaofeng, shjNvwa
 
 ];
@@ -152,9 +153,9 @@ export default function () {
                 skill: Object.assign({}, ...allCharacters.map(char => char.skills || {})),
                 translate: Object.assign({}, ...allCharacters.map(char => char.skillTranslate || {})),
             },
-            intro: "大梦千秋扩展包<br>包含三国志与山海经系列武将",
+            intro: "大梦千秋扩展包",
             author: "Loihan",
-            version: "3.3",
+            version: "3.4",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };
