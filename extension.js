@@ -12,6 +12,7 @@ import sgzGuojia from './character/sgz_guojia.js';
 import shjBaize from './character/shj_baize.js'; 
 import shjXiangliu from './character/shj_xiangliu.js';
 import shjChaofeng from './character/shj_chaofeng.js';
+import shjNvwa from './character/shj_nvwa.js';
 
 // === 魔法时代武将 ===
 import mfsdAnyuanmofa from './character/mfsd_anyuanmofa.js';
@@ -22,7 +23,9 @@ import wgxdHeyuxingzun from './character/wgxd_heyuxingzun.js';
 
 // 分类数组定义
 const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia];
-const shjCharacters = [shjBaize, shjXiangliu, shjChaofeng];
+const shjCharacters = [shjBaize, shjXiangliu, shjChaofeng, shjNvwa
+
+];
 const mfsdCharacters = [mfsdAnyuanmofa, mfsdXingyushenqi]; 
 const wgxdCharacters = [wgxdHeyuxingzun];
 
@@ -151,7 +154,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包<br>包含三国志与山海经系列武将",
             author: "Loihan",
-            version: "3.2",
+            version: "3.3",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };

@@ -4,7 +4,7 @@ export default {
             "male", 
             "shen", 
             "4/9", 
-            ["sgz_jiufa"], 
+            ["sgz_jiufa", "sgz_youming"], 
             [
                 "des:姜维字伯约，受武侯遗命，内抗权阉之谗，外御司马之师。<br>时蜀中凋敝，谯周辈交章言降，维孤身秉政，九伐中原。景耀六年，维出洮西，大破魏将王经，斩首数万，魏人闭关不敢出。当此时，汉祚如幽明之夜烛，摇摇欲坠。维感兴复之期将逝，遂燃逐日之志，不顾积劳成疾，率疲卒复出祁山。<br>及邓艾潜袭阴平，成都危殆，后主欲降。维于剑阁闻讯，未流连于关隘，竟奇兵反戈，诱魏军主力入渭水之谷。维效武侯火攻之法，纵火焚林，烈焰滔天，如薪燃不尽，魏师万人皆成绝烬。是役也，维以孤炬残影之躯，竟焚灭司马氏篡汉之精锐。<br>乘此大捷，维长驱入关，复还长安。捷报传至益州，蜀人心气大振，汉旗复耀于中原。史载，还都之日，维发尽白，袍甲尽碎，然其目中神采，犹若当年天水之少年。其志不灭，终使大汉之余火，燃成中兴之烈焰。", 
                 "ext:大梦千秋/image/sgz_jiangwei.png",
@@ -317,6 +317,7 @@ sgz_youming: {
             // 添加临时效果，有效期直到 phaseAfter (确保全流程覆盖)
             player.addTempSkill('sgz_youming_effect', {player:'phaseAfter'});
             player.addTempSkill('sgz_youming_counter', {player:'phaseAfter'});
+            player.addTempSkill('sgz_youming_die', {player:'phaseAfter'});
             
             game.playAudio(`../extension/大梦千秋/audio/sgz_jiangwei/sgz_youming${[1,2,3].randomGet()}.mp3`);
         }
@@ -347,7 +348,7 @@ sgz_youming_effect: {
         // 1. 拦截濒死
         if (event.name == 'dying') return true;
         // 2. 拦截回合结束（万一跳过了出牌阶段，在此处抓取死亡）
-        if (event.name == 'phase') return true;
+        if (event.name == 'phaseAfter') return true;
         // 3. 拦截出牌
         var target = player.storage.sgz_youming_target;
         return target && event.targets && event.targets.includes(target);
@@ -363,7 +364,7 @@ sgz_youming_effect: {
         
         // 如果是回合结束或第9张牌逻辑，进入最终谢幕
         var isFinalCard = (trigger.name == 'useCard' && player.storage.sgz_youming_count >= 8);
-        var isTurnEnd = (trigger.name == 'phase');
+        var isTurnEnd = (trigger.name == 'phaseAfter');
 
         if (isTurnEnd || isFinalCard) {
             event.goto(1); // 直接跳到交牌死步骤
@@ -416,6 +417,21 @@ sgz_youming_counter: {
             var count = storage || 0;
             return '已对目标使用 ' + count + '/9 张牌';
         }
+    },
+
+},
+sgz_youming_die: {
+    charlotte: true,
+    mark: true,
+    forced:true,
+    trigger:{player:["phaseUseAfter","phaseDiscardBegin","phaseEnd"]},
+    marktext: "死亡",
+    intro: {
+        name: "死亡",
+        content: "出牌阶段结束时你死亡",
+    },
+    content: function() {
+        player.die();
     }
 }
 
@@ -433,7 +449,7 @@ sgz_youming_counter: {
         sgz_guju: "孤炬",
         sgz_guju_info: "持恒技，出牌阶段限一次。你可以选择一名其他角色，令其将手牌摸至其体力上限。然后，你观看其手牌，并可以用任意张你的手牌交换其等量的手牌。",
         sgz_youming: "幽明",
-        sgz_youming_info: "持恒技，限定技。当你进入濒死状态时，你可以立即终止濒死结算，并防止之后你的所有濒死结算，你在本回合结束后进入一个额外的“复汉”回。，“复汉”回合开始时你摸X张牌（X为你的体力上限），且此回合内，你使用牌只能指定自己和令你进入濒死的伤害来源，且无次数和距离限制；当你对其使用第9张牌时，你可以将所有手牌交给一名角色，然后令你进入濒死的角色和你立即死亡。",
+        sgz_youming_info: "持恒技，限定技，当你进入濒死状态时，你可以立即终止濒死结算，并防止之后你的所有濒死结算。你在本回合结束后进入一个额外的“复汉”回合。“复汉”回合开始时你摸X张牌（X为你的体力上限），此回合内，你使用牌只能指定自己和令你进入濒死的伤害来源且无次数和距离限制。“复汉”回合结束时你立即死亡；当你累计对其使用9张牌时，你可以将所有手牌交给一名角色，然后令你进入濒死的角色和你立即死亡。",
     },
     characterTaici:{
         "sgz_jiufa":{order: 1,content:"汉贼岂能两相立，长驱河洛王业安！/雄关高岭壮英姿，一腔热血谱汉风!/残兵盘据雄关险，独梁力支大厦倾！/谋伐布划方寸内，驰马试剑天地间！/北望三千雄关，何忍山河倒悬！"},
