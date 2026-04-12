@@ -3,7 +3,7 @@ export default {
         sgz_zhugedan: [
             "male", 
             "shen", 
-            "4/9", 
+            "6/9", 
             ["sgz_dingpan", "sgz_fani", "sgz_fenyu", "sgz_kunzhu", "sgz_gujue"], 
             [
                 "des:诸葛诞字公休，魏之勋旧，宿望淮南。<br>甘露三年，司马氏权倾宇内，弑君凌下，魏室江山名存实亡。诞内怀忧愤，望洛阳而泣血，遂斥司马为国贼，传檄天下，兴复曹氏之威。司马昭亲率六军，蚁聚寿春，重围如铁。城中粮匮援绝，外无救应，部属离散，境遇危殆。<br>诞慨然有玉碎之志，不欲受辱于篡臣。乃命残兵自焚行营，伪作弃城而走，诱敌贪功深入。及贼众陷于死地，诞仗剑而起，亲率死士五百人陷阵冲杀。烈焰冲天，乱军之中，诞手刃元凶，逆党遂崩。是役也，司马覆灭，皇权复归。然诞麾下精锐尽皆尽忠，及至捷报传至洛阳，公虽克敌生还，唯孤影对斜阳。大梦初醒，百战余生，世人皆赞其忠烈，虽处孤绝而终不改其节，遂成魏室之中兴名臣。", 
@@ -45,7 +45,7 @@ export default {
                 "step 1"
                 // 检测子技能注入的标记名
                 if (target.hasSkill("sgz_dingpan_pan")) {
-                    target.damage(); 
+                    target.loseMaxHp();
                 } else {
                     target.loseMaxHp();
                     target.addSkill("sgz_dingpan_pan");
@@ -203,7 +203,7 @@ sgz_fenyu_mark: {
             trigger: { player: "phaseJieshuBegin" },
             filter: function(event, player) {
                 // 排除第一轮
-                if (game.roundNumber <= 1) return false;
+                //if (game.roundNumber <= 1) return false;
                 return game.countPlayer(p => p.hasSkill("sgz_dingpan_pan")) > 0;
             },
             content: function() {
@@ -213,7 +213,7 @@ sgz_fenyu_mark: {
                 player.logSkill("sgz_gujue");
                 game.playAudio('../extension/大梦千秋/audio/sgz_zhugedan/sgz_gujue.mp3');
                 
-                player.loseMaxHp(x);
+                if (game.roundNumber > 1) player.loseMaxHp(x);
                 player.changeHujia(x);
                 "step 1"
                 player.draw(event.countX);
@@ -222,16 +222,16 @@ sgz_fenyu_mark: {
     },
     skillTranslate: {
         sgz_dingpan: "定叛",
-        sgz_dingpan_info: "持恒技，出牌阶段，每名角色限一次，你可以减少1点体力上限并令一名其他角色减少一点体力上限，然后若其没有“叛”标记，其获得一个“叛”标记。",
+        sgz_dingpan_info: "出牌阶段每名角色限一次，你可以减少1点体力上限并令一名其他角色减少一点体力上限，然后若其没有“叛”标记，其获得一个“叛”标记。",
         sgz_fani: "伐逆",
-        sgz_fani_info: "持恒技，锁定技。①你的【杀】无距离限制。②当你使用【杀】时，若场上存在有“叛”标记的角色，则将目标改为所有拥有“叛”标记的角色。③你每对一名拥有“叛”标记的角色使用牌时便摸一张牌。④你对拥有“叛”标记的角色即将造成的伤害改为令其减少等量的体力上限。",
+        sgz_fani_info: "锁定技，①你的【杀】无距离限制。②当你使用【杀】时，若场上存在有“叛”标记的角色，则将目标改为所有拥有“叛”标记的角色。③你每对一名拥有“叛”标记的角色使用牌时便摸一张牌。④你对拥有“叛”标记的角色即将造成的伤害改为令其减少等量的体力上限。",
         sgz_fenyu: "焚玉",
-        sgz_fenyu_info: "持恒技，锁定技。当一名拥有“叛”标记的角色死亡时，你摸两张牌并增加3点体力上限。然后你于当前回合结束后获得一个额外的回合（此效果可累加）。",
+        sgz_fenyu_info: "锁定技。当一名拥有“叛”标记的角色死亡时，你摸两张牌并增加3点体力上限。然后你于当前回合结束后获得一个额外的回合（此效果可累加）。",
         sgz_fenyu_mark: "梦回",
         sgz_kunzhu: "困诛",
-        sgz_kunzhu_info: "持恒技，锁定技。若场上拥有“叛”标记的角色数大于你的体力上限，你使用的牌不可被响应。",
+        sgz_kunzhu_info: "锁定技。若场上拥有“叛”标记的角色数大于你的体力上限，你使用的牌不可被响应。",
         sgz_gujue: "孤绝",
-        sgz_gujue_info: "持恒技，锁定技。除第一轮外，你的结束阶段开始时，你减少X点体力上限，然后获得X点护甲并摸X张牌（X为场上拥有“叛”标记的角色数）。",
+        sgz_gujue_info: "锁定技，你的结束阶段开始时，你减少X点体力上限（除第一轮外），然后获得X点护甲并摸X张牌（X为场上拥有“叛”标记的角色数）。",
     },
     characterTaici:{
         "sgz_dingpan":{order: 1,content:"守护之獒，虽无龙鳞虎爪，亦可保家国太平！/诞必镇卫四境，以全大魏之江水！/观中原魏旗凋零，唯淮南独树义帜！/诞愿效方邵，为国之爪牙！/念先王之祀，当举义伐之！"},

@@ -21,14 +21,13 @@ import mfsdXingyushenqi from './character/mfsd_xingyushenqi.js';
 
 // === 万古仙道武将 ===
 import wgxdHeyuxingzun from './character/wgxd_heyuxingzun.js';
+import wgxdYinianshenmo from './character/wgxd_yinianshenmo.js';
 
 // 分类数组定义
 const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia, sgzLuxun];
-const shjCharacters = [shjBaize, shjXiangliu, shjChaofeng, shjNvwa
-
-];
+const shjCharacters = [shjBaize, shjXiangliu, shjChaofeng, shjNvwa];
 const mfsdCharacters = [mfsdAnyuanmofa, mfsdXingyushenqi]; 
-const wgxdCharacters = [wgxdHeyuxingzun];
+const wgxdCharacters = [wgxdHeyuxingzun, wgxdYinianshenmo];
 
 const allCharacters = [...sgzCharacters, ...shjCharacters, ...mfsdCharacters, ...wgxdCharacters];
 
@@ -50,7 +49,7 @@ export default function () {
             lib.qhlypkg.push({
                 isExt: true,
                 filterCharacter: function(name) {
-                    return name.indexOf('sgz_') == 0 || name.indexOf('shj_') == 0 || name.indexOf('mfsd_') == 0;
+                    return name.indexOf('sgz_') == 0 || name.indexOf('shj_') == 0 || name.indexOf('mfsd_') == 0 || name.indexOf('wgxd_') == 0;
                 },
                 characterNameTranslate: function(name) {
                     return get.translation(name);
@@ -71,7 +70,62 @@ export default function () {
         },
     
         precontent: function () { 
-
+            // === 1. 核心劫持：注入武将包前言 (参考飞鸿印雪逻辑) ===
+            if (ui?.create?.menu) {
+                const originMenu = ui.create.menu;
+                ui.create.menu = function () {
+                    const result = originMenu.apply(this, arguments);
+                    
+                    // A. 寻找主菜单中的“武将”按钮
+                    const characterPackBtn = Array.from(document.getElementsByTagName('div')).find(div => div.innerHTML === '武将');
+                    if (characterPackBtn) {
+                        const originClick = characterPackBtn.onclick || function () { };
+                        characterPackBtn.onclick = function() {
+                            originClick.apply(this, arguments);
+                            
+                            // B. 在左侧列表里寻找名为“大梦千秋”的按钮
+                            const myPackBtn = Array.from(document.querySelectorAll('.menubutton.large')).find(div => div.innerHTML === '大梦千秋');
+                            if (myPackBtn) {
+                                const originClick2 = myPackBtn.onclick || function () { };
+                                myPackBtn.onclick = function() {
+                                    originClick2.apply(this, arguments);
+                                    
+                                    // C. 寻找右侧设置区域并在“仅点将可用”选项下插入前言
+                                    const rightPane = document.querySelector('.menu-buttons.leftbutton');
+                                    // 检查是否已经初始化，防止重复插入
+                                    if (rightPane && !rightPane._dmqc_init) {
+                                        rightPane._dmqc_init = true;
+                                        const cfgNodes = rightPane.querySelectorAll('.config.toggle');
+                                        for (let i = 0; i < cfgNodes.length; i++) {
+                                            if (cfgNodes[i].textContent === '仅点将可用') {
+                                                const addIntro = document.createElement('div');
+                                                addIntro.classList.add('config', 'pointerspan');
+                                                addIntro.style.display = 'block';
+                                                addIntro.style.marginTop = '10px';
+                                                addIntro.style.padding = '5px';
+                                                
+                                                // 自定义你的前言内容
+                                                addIntro.innerHTML = `
+                                                    <span class="firetext" style="font-weight:bold; font-size:16px;">【本包前言】</span><br>
+                                                    <span style="color:#e0c5ff; font-family: yuanli; line-height:1.5;">
+                                                        大梦谁先觉，平生我自知。<br>
+                                                        本包武将技能均为<span style="color:#ffeb3b">持恒技</span>，强调资源状态的长期改变与阶梯式能力解锁。
+                                                    </span>
+                                                `;
+                                                
+                                                // 在“仅点将可用”节点之后插入这段话
+                                                cfgNodes[i].parentNode.insertBefore(addIntro, cfgNodes[i].nextSibling);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                };
+                            }
+                        };
+                    }
+                    return result;
+                };
+            }
             // === 分包名翻译注入 ===
             lib.translate["三国志"] = "三国志";
             lib.translate["山海经"] = "山海经";
@@ -155,7 +209,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包",
             author: "Loihan",
-            version: "3.4",
+            version: "4.0",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };

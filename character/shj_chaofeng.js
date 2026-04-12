@@ -24,7 +24,7 @@ shj_jingyue: {
     // === 核心: 完全恢复您最初的稳定代码结构 ===
     audio: "ext:大梦千秋/audio/shj_chaofeng:5",
     persevereSkill: true,
-    enable: ["chooseToUse", "chooseToRespond"],
+    enable: ["chooseToUse"],
     mod: {
         targetInRange: function (card, player, target) {
             if (_status.event.skill == 'shj_jingyue' && card.name == 'sha' && card.cards && card.cards.length > 0 && get.color(card.cards[0], player) == 'black') {
@@ -288,7 +288,7 @@ shj_weilin: {
     persevereSkill: true,
     awakenSkill: true,
     skillAnimation: true,
-    animationColor: "thunder",
+    animationColor: "gold",
     derivation: ["shj_xianming", "shj_linxu", "shj_chiling"],
     trigger: { 
         source: "damageAfter", // 【惊跃】在这里增加标记
@@ -297,7 +297,7 @@ shj_weilin: {
     silent: true,
     // 简单的filter，只检查两个条件：是否已觉醒，标记数是否达标
     filter: function(event, player) {
-        return !player.storage.shj_weilin_awaken && player.countMark('shj_jingyue') >= 7;
+        return !player.storage.shj_weilin_awaken && player.countMark('shj_jingyue') >= 5;
     },
     content: function() {
         player.logSkill('shj_weilin');
@@ -421,21 +421,21 @@ shj_chiling: {
 
 skillTranslate: {
     shj_jingyue: "惊跃",
-    shj_jingyue_info: "持恒技，①你可以将一张：红色牌视为【火杀】使用或打出；黑色牌视为【雷杀】使用（每回合限一次，无距离限制，伤害+1且不可被响应）。②你每以此法使用一张牌：你摸一张牌，本回合内你的【杀】使用次数+1且攻击范围+1。③若你依此法造成伤害：你回复一点体力并获得一个“威”标记。",
+    shj_jingyue_info: "①你可以将一张黑/红色牌视为雷【杀】（每回合限一次，且无距离限制，伤害+1且不可被响应）/火【杀】使用。②你每以此法使用一张牌：你摸一张牌，本回合你与其他角色计算距离时-1且可以多出一张【杀】。③若你依此法造成伤害：你回复一点体力并获得一个“威”标记。",
     shj_tingzong: "霆踪",
-    shj_tingzong_info: "持恒技，锁定技，其他角色与你计算距离+X（X为7-“威”标记数，且至少为1）。",
+    shj_tingzong_info: "锁定技，其他角色与你计算距离+X（X为7-“威”标记数，且至少为1）。",
     shj_lieying: "裂影",
-    shj_lieying_info: "持恒技，出牌阶段限一次，你可以消耗任意枚“威”标记，令你的下一张【杀】可以额外指定等量的目标。",
+    shj_lieying_info: "出牌阶段限一次，你可以消耗任意枚“威”标记，令你的下一张【杀】可以额外指定等量的目标。",
     shj_pini: "睥睨",
-    shj_pini_info: "持恒技，锁定技，当你于回合外成为一张牌的目标后，你摸一张牌然后你可以获得一个“威”标记。",
+    shj_pini_info: "锁定技，当你于回合外成为一张牌的目标时，你摸一张牌并获得一个“威”标记。",
     shj_weilin: "威临",
-    shj_weilin_info: "持恒技，觉醒技，当你造成伤害后，若“威”标记数大于等于7，你获得技能【临虚】、【敕令】。",
+    shj_weilin_info: "觉醒技，当你造成伤害后，若“威”标记数大于等于5，你获得技能【临虚】、【敕令】。",
     //shj_xianming: "先明",
-    //shj_xianming_info: "持恒技，出牌阶段，你可以移除所有“威”标记，摸等量的牌，然后立即结束你的出牌阶段。",
+    //shj_xianming_info: "出牌阶段，你可以移除所有“威”标记，摸等量的牌，然后立即结束你的出牌阶段。",
     shj_linxu: "临虚",
-    shj_linxu_info: "持恒技，准备阶段，你可以对至多等量于“威”标记数量的角色各造成一点雷电伤害。",
+    shj_linxu_info: "准备阶段，你可以对至多等量于“威”标记数量的角色各造成一点雷电伤害。",
     shj_chiling: "敕令",
-    shj_chiling_info: "持恒技，锁定技，当你对一名角色造成伤害后，立即其将其体力上限调整至与其当前体力值相同，然后你增加其以此法减少的体力上限。",
+    shj_chiling_info: "锁定技，当你对一名角色造成伤害后，立即其将其体力上限调整至与其当前体力值相同，然后你增加其以此法减少的体力上限。",
 },
 characterTaici:{
     "shj_jingyue":{order:1,content:"天雷地炎，淬为吾刃！/众生结愿，天佑人间！/诸事皆安，愿归星汉！/佑九州辽阔，前途无量！/承众愿，祈九天！"},
