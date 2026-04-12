@@ -92,10 +92,10 @@ export default {
 
                 if (event.choice == '神') {
                     player.node.avatar.setBackgroundImage('extension/大梦千秋/image/wgxd_yinianshenmo_shen.jpg');
-                    player.addSkill(['wgxd_hengyu', 'wgxd_xusheng', 'wgxd_fenze', 'wgxd_huamo', 'wgxd_shenluo']);
+                    player.addSkill(['wgxd_hengyu', 'wgxd_shenluo', 'wgxd_xusheng', 'wgxd_fenze', 'wgxd_huamo']);
                 } else {
                     player.node.avatar.setBackgroundImage('extension/大梦千秋/image/wgxd_yinianshenmo_mo.jpg');
-                    player.addSkill(['wgxd_xuanbi', 'wgxd_xinyuan', 'wgxd_liuxing', 'wgxd_rongshen', 'wgxd_mosha']);
+                    player.addSkill(['wgxd_mosha', 'wgxd_xuanbi', 'wgxd_xinyuan', 'wgxd_liuxing', 'wgxd_rongshen']);
                 }
                 player.update();
                 player.addTempSkill('wgxd_transformed_lock', 'phaseAfter');
@@ -426,7 +426,7 @@ export default {
         wgxd_xusheng: "煦生", wgxd_xusheng_info: "锁定技，你造成火焰伤害时回复等量的体力。",
         wgxd_fenze: "焚泽", wgxd_fenze_info: "出牌阶段限一次，令任意名其他角色各交给你X张牌（X为游戏轮数），然后其受到等同于少交牌数量的火焰伤害。",
         wgxd_huamo: "化魔", wgxd_huamo_info: "出牌阶段限一次，弃置一张红色牌，转换为“魔”形态。",
-        wgxd_mosha: "魔杀", wgxd_mosha_info: "当你使用或打出【闪】、使用【闪电】时，你可以进行一次判定：若为♣️/♠️，你选择一名角色受到1点雷电伤害然后你回复1点体力/选择一名角色受到2点雷电伤害。",
+        wgxd_mosha: "魔杀", wgxd_mosha_info: "当你使用或打出【闪】、使用【闪电】时，你可以进行一次判定，若为黑色，你令一名角色受到2点雷电伤害。",
         wgxd_xuanbi: "玄壁", wgxd_xuanbi_info: "锁定技，当你成为其他角色牌的目标后：若此牌为红/黑色，你摸一张牌并弃置使用者一张牌/摸两张牌。",
         wgxd_xinyuan: "心渊", wgxd_xinyuan_info: "锁定技，①你的手牌上限+2X（X为你手牌中无花色点数牌的数量）。②当你即将受到伤害时，若伤害来源的攻击范围不为1，此伤害-1。",
         wgxd_liuxing: "流形", wgxd_liuxing_info: "锁定技，出牌阶段你使用有花色点数的牌后进行判定，若不为红色则你获得一张无花色点数的同名牌。",
