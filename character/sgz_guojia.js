@@ -239,6 +239,7 @@ export default {
                     game.log(player, '受梦境反噬，体力上限被修正为', player.hp);
                     // 使用 loseMaxHp(diff, true) 以强制、静默的方式对齐
                     player.loseMaxHp(diff, true);
+                    player.changeHujia(diff);
                 }
             }
         },
@@ -313,7 +314,7 @@ export default {
         sgz_jihui: "极慧",
         sgz_jihui_info: "出牌阶段限一次或当你每回合首次受到伤害后，若你的体力上限<10，你可重复执行以下流程：{①进行一次判定；②若出现过相同花色或你的体力上限≥10则跳出大括号里的内容；③增加一点体力上限}，你获得所有以此法产生的判定牌。",
         sgz_tianshang: "天殇",
-        sgz_tianshang_info: "锁定技，每名角色的回合结束时，若你已受伤，你将体力上限调整至与体力相同。",
+        sgz_tianshang_info: "锁定技，每名角色的回合结束时，若你已受伤，你将额外的体力上限转化为护甲。",
     },
     characterTaici:{
         "sgz_kuitian": { order: 1, content: "公行此策，必获大捷！<br>笑揽世间众生，坐观天行定数！<br>人心所向，未来之事，皆一睹而尽知。<br>时事兼备，主公复有何忧？<br>主公且看，锦绣山河已尽在囊中！<br>今九州纷乱，当祈天翊佑。<br>此乃天助，主公万勿失其时也。<br>丧家之犬，主公实不足虑也。" },

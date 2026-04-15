@@ -127,10 +127,10 @@ export default function () {
                 };
             }
             // === 分包名翻译注入 ===
-            lib.translate["三国志"] = "三国志";
-            lib.translate["山海经"] = "山海经";
-            lib.translate["魔法时代"] = "魔法时代";
-            lib.translate["万古仙道"] = "万古仙道";
+            lib.translate["三国志"] = "<span style=\"color:#ff3333; font-family: yuanli; line-height:1.5;\">三国志</span>";
+            lib.translate["山海经"] = "<span style=\"color:#FFFF00; font-family: yuanli; line-height:1.5;\">山海经</span>";
+            lib.translate["魔法时代"] = "<span style=\"color:#9900ff; font-family: yuanli; line-height:1.5;\">魔法时代</span>";
+            lib.translate["万古仙道"] = "<span style=\"color:#3333ff; font-family: yuanli; line-height:1.5;\">万古仙道</span>";
             //lib.translate["大梦千秋_character_config"] = "大梦千秋";
 
             // 【核心配置】：卡牌音效劫持逻辑（保持原封不动）
@@ -209,7 +209,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包",
             author: "Loihan",
-            version: "4.1",
+            version: "4.2",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };

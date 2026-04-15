@@ -306,7 +306,7 @@ export default {
                 var new_cards = trigger.cards.map(card => card.name).unique();
                 var changed = false;
                 for(var name of new_cards) {
-                    if(get.type(name) != 'equip' && !player.storage.shj_dongxu.includes(name)) {
+                    if(get.type(name) != 'equip' && !player.storage.shj_dongxu.includes(name) ) {
                         player.storage.shj_dongxu.push(name);
                         changed = true;
                     }
@@ -322,6 +322,7 @@ export default {
                         player.awakenSkill('shj_dongxu');
                         player.node.avatar.setBackgroundImage('extension/大梦千秋/image/shj_baize2.jpg');
                         player.addSkill('shj_zhen_e');
+                        player.removeSkill('shj_tuna');
                     }
                 }
             }
@@ -348,9 +349,9 @@ export default {
     },
     skillTranslate: {
         shj_zhaorui: "昭瑞",
-        shj_zhaorui_info: "锁定技，①每当你受到或造成的伤害结算后，或你的准备阶段时你获得一个“祥瑞”标记，然后若洞虚：未觉醒：你从游戏外获得一张白泽图未记录的非装备牌（无花色点数）；已觉醒：你摸一张牌。②你不能成为延时性囊牌的目标。",
+        shj_zhaorui_info: "锁定技，①每当你受到或造成的伤害结算后，或你的准备阶段时你获得一个“祥瑞”标记，然后从游戏外随机获得一张白泽图未记录的无花色点数的非装备牌（若洞虚已觉醒则改为摸一张牌）。②你不能成为延时性囊牌的目标。",
         shj_tuna:"图纳",
-        shj_tuna_info: "摸牌阶段，若白泽图未记录所有非装备牌，你可改为指定三种白泽图未记录的非装备牌（若不足三种则全选），然后从游戏外获得本次指定牌中的随机两种牌各一张（若指定牌数为1则获得一张），依此法获得的牌无花色点数。若如此做，你增加一点体力上限并回复一点体力。",
+        shj_tuna_info: "摸牌阶段，你可改为指定三种白泽图未记录的非装备牌（若不足三种则全选），然后从游戏外获得本次指定牌中的随机两种牌各一张（若指定牌数为1则获得一张），依此法获得的牌无花色点数。若如此做，你增加一点体力上限并回复一点体力。",
         shj_baizhao: "白沼",
         shj_baizhao_info: "锁定技，你使用白泽图已记录牌名的 牌无次数和距离限制；当你成为白泽图已记录牌名的牌的目标时，若你已受伤/未受伤，你回复1点体力/增加1点体力上限。",
         shj_pixie: "辟邪",
@@ -358,7 +359,7 @@ export default {
         shj_lingyou: "灵佑",
         shj_lingyou_info: "出牌阶段，你可以移除5个“祥瑞”标记并摸5张牌。",
         shj_dongxu: "洞虚",
-        shj_dongxu_info: "觉醒技，当你获得未记录的非装备牌后，白泽图记录其牌名。当你已记录所有非装备牌名时，你获得技能【镇厄】。",
+        shj_dongxu_info: "觉醒技，当你获得未记录的非装备牌后，白泽图记录其牌名。当你已记录所有非装备牌名时，你修改【昭瑞】，失去【图纳】，获得【镇厄】。",
         shj_zhen_e: "镇厄",
         shj_zhen_e_info: "出牌阶段限一次，你可以指定一名其他角色，令其立即死亡，然后你获得其区域内所有牌。"
     },

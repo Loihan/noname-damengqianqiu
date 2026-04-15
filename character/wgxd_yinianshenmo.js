@@ -101,6 +101,7 @@ export default {
                 player.addTempSkill('wgxd_transformed_lock', 'phaseAfter');
             }
         },
+
         // --- 一念觉醒技---
         wgxd_yinian: {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo:2",
@@ -144,7 +145,6 @@ export default {
                 player.update();
             }
         },
-
         // === 因果追踪器：记录全场伤害与濒死状态 ===
         wgxd_event_tracker: {
             charlotte: true,
@@ -158,7 +158,7 @@ export default {
                     // 记录进入濒死
                     trigger.player.storage.wgxd_ever_dying = true;
                     game.log(trigger.player, '于生死边缘徘徊...');
-                } else {
+                } else if (trigger.source) {
                     // 记录造成伤害 (trigger.player 在 damageSource 时机是伤害来源)
                     trigger.source.storage.wgxd_ever_dealt_damage = true;
                     game.log(trigger.source, '已沾染因果之血...');
@@ -327,25 +327,41 @@ export default {
             persevereSkill: true,
             trigger: { player: ["useCard", "respond"] },
             filter: function(event, player) {
-                return event.card.name == "shan" || (event.name == "useCard" && event.card.name == "shandian");
+                return event.card.name == "shan" || (event.name == "useCard" && event.card.name == "shandian")||(event.name == "useCard" && event.card.name == "wuxie")|| (event.name == "respond" && event.card.name == "sha");
             },
             async content(event, trigger, player) {
                 // 判定逻辑实现
                 const { result } = await player.judge(function(card) {
                     var suit = get.suit(card);
-                    if (suit == "spade") {
-                        if (get.number(card) > 1 && get.number(card) < 10) return 5;
+                    var num = get.number(card);
+                    if (suit == "spade"||suit=="club") {
+                        if (num == 1 || num > 10) return 1;
+                        return 2;
+                    }
+                    if (suit == "heart"||suit=="diamond") {
+                        if (num == 1 || num > 10) return 3;
                         return 4;
                     }
-                    return (suit == "club") ? 2 : 0;
                 });
                 
                 // 雷击效果由判定成功触发 (result.bool)
-                if (result.bool) {
+                if (result.judge == 1) {
+                    const { result: targetRes } = await player.chooseTarget("魔杀：选择一名角色受到3点雷电伤害", true).set('ai', t => get.damageEffect(t, player, player, "thunder"));
+                    if (targetRes.bool) {
+                        await targetRes.targets[0].damage(3, "thunder");
+                    }
+                }
+                if(result.judge == 2) {
                     const { result: targetRes } = await player.chooseTarget("魔杀：选择一名角色受到2点雷电伤害", true).set('ai', t => get.damageEffect(t, player, player, "thunder"));
                     if (targetRes.bool) {
                         await targetRes.targets[0].damage(2, "thunder");
                     }
+                }
+                if(result.judge == 3) {
+                    player.changeHujia(3);
+                }
+                if(result.judge == 4) {
+                    player.changeHujia(2);
                 }
             },
             ai: {
@@ -417,20 +433,24 @@ export default {
         wgxd_transformed_lock: { charlotte: true }
     },
     skillTranslate: {
+        //初始形态技能
         wgxd_renling: "人灵", wgxd_renling_info: "锁定技，①当你造成或受到伤害时、每轮开始时、你的回合开始时，你摸一张牌并获得一个“人灵”标记（至多为8）。②你的手牌上限+1。",
         wgxd_fenjie: "分劫", wgxd_fenjie_info: "出牌阶段，你可以将一张红/黑色手牌当【火攻】/【过河拆桥】使用并获得一个“灵”标记。",
         wgxd_tianze: "天择", wgxd_tianze_info: "限定技，变身技，出牌阶段，若你的“灵”标记数不小于3，你可以移去所有标记并变身为“神”形态或“魔”形态。你将体力上限调整为X并摸X张牌（X为移去的“灵”标记数）。",
-        wgxd_yinian: "一念", wgxd_yinian_info: "觉醒技，变身技，准备阶段，若所有角色均进入过濒死状态，你融合神魔形态，失去“化魔”或“融神”，获得“神”形态与“魔”形态的所有非变身技。",
+        //变身后觉醒技
+        wgxd_yinian: "一念", wgxd_yinian_info: "觉醒技，变身技，准备阶段，若所有角色均造成过伤害或进入过濒死状态，你融合神魔形态，失去【化魔】或【融神】，获得“神”形态与“魔”形态的所有非变身技。",
+        //神形态
         wgxd_hengyu: "恒燠", wgxd_hengyu_info: "锁定技，①你手牌中的所有【杀】均视为火【杀】。②你使用【杀】可额外指定至多2个目标、伤害+1且无距离限制。",
         wgxd_shenluo: "神络", wgxd_shenluo_info: "锁定技，当你造成火焰伤害后，你与受伤角色各摸一张牌，然后你对其使用牌无距离次数限制直至其回合开始。",
         wgxd_xusheng: "煦生", wgxd_xusheng_info: "锁定技，你造成火焰伤害时回复等量的体力。",
         wgxd_fenze: "焚泽", wgxd_fenze_info: "出牌阶段限一次，令任意名其他角色各交给你X张牌（X为游戏轮数），然后其受到等同于少交牌数量的火焰伤害。",
-        wgxd_huamo: "化魔", wgxd_huamo_info: "出牌阶段限一次，弃置一张红色牌，转换为“魔”形态。",
-        wgxd_mosha: "魔杀", wgxd_mosha_info: "当你使用或打出【闪】、使用【闪电】时，你可以进行一次判定，若为黑色，你令一名角色受到2点雷电伤害。",
+        wgxd_huamo: "化魔", wgxd_huamo_info: "变身技，弃置一张红色牌，转换为“魔”形态。",
+        //魔形态
+        wgxd_mosha: "魔杀", wgxd_mosha_info: "当你使用【闪】、【闪电】或【无懈可击】、打出【闪】或【杀】时你可以进行判定，若为红/黑色，你获得2点护甲/对一名角色造成2点雷电伤害（若判定点数为字母，则基础数值+1）。",
         wgxd_xuanbi: "玄壁", wgxd_xuanbi_info: "锁定技，当你成为其他角色牌的目标后：若此牌为红/黑色，你摸一张牌并弃置使用者一张牌/摸两张牌。",
         wgxd_xinyuan: "心渊", wgxd_xinyuan_info: "锁定技，①你的手牌上限+2X（X为你手牌中无花色点数牌的数量）。②当你即将受到伤害时，若伤害来源的攻击范围不为1，此伤害-1。",
-        wgxd_liuxing: "流形", wgxd_liuxing_info: "锁定技，出牌阶段你使用有花色点数的牌后进行判定，若不为红色则你获得一张无花色点数的同名牌。",
-        wgxd_rongshen: "融神", wgxd_rongshen_info: "出牌阶段限一次，弃置一张黑色牌，转换为“神”形态。",
+        wgxd_liuxing: "流形", wgxd_liuxing_info: "锁定技，出牌阶段你使用有花色点数的非虚拟非转化牌后进行判定，若不为红色则你获得一张无花色点数的同名牌。",
+        wgxd_rongshen: "融神", wgxd_rongshen_info: "变身技，弃置一张黑色牌，转换为“神”形态。",
     },
     characterTaici: {
         "wgxd_renling": { order: 1, content: "此天命也！/百炼之志，当我问鼎！" },

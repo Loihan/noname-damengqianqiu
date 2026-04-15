@@ -398,6 +398,7 @@ mfsd_panjie: {
         }
         'step 2'
         player.recover(trigger.num);
+        trigger.source.update();
     },
     intro: { content: 'limited' }
 },

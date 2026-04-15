@@ -3,7 +3,7 @@ export default {
         wgxd_heyuxingzun: ['male', 'shen', 7, ['wgxd_jianzhen', 'wgxd_qixia', 'wgxd_jianyun','wgxd_heyuxingzun_texiao'], [
             "des:三界御剑第一尊。",
             "ext:大梦千秋/image/wgxd_heyuxingzun.jpg",
-            "die:ext:大梦千秋/audio/die.mp3"
+            "die:ext:大梦千秋/audio/wgxd_heyuxingzun/die.mp3"
         ]],
     },
     characterName: 'wgxd_heyuxingzun',
