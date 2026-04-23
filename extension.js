@@ -209,7 +209,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包",
             author: "Loihan",
-            version: "4.2",
+            version: "4.3",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };

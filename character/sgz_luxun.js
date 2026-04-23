@@ -1,7 +1,7 @@
 export default {
     character: {
         // 梦陆逊：梦势力，5体力
-        sgz_luxun: ["male", "shen", 4, ["sgz_qujian", "sgz_lianying", "sgz_taohui", "sgz_fenmie"], [
+        sgz_luxun: ["male", "shen", "1/6", ["sgz_qujian", "sgz_lianying", "sgz_taohui", "sgz_fenmie"], [
             "des:书生拜将，火烧连营。梦回夷陵，这一场泼天大火，终将焚尽旧时代的残梦。",
             "ext:大梦千秋/image/sgz_luxun.jpg",
             "die:ext:大梦千秋/audio/sgz_luxun/die.mp3"
