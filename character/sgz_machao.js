@@ -23,10 +23,10 @@ export default {
                 var all = game.filterPlayer();
                 for (var i = 0; i < all.length; i++) {
                     var target = all[i];
-                    if (target != player) {
+                    //if (target != player) {
                         target.disableEquip(1); 
                         target.disableEquip(2); 
-                    }
+                    //}
                     target.expandEquip(3); 
                     target.expandEquip(4); 
                     target.update();
@@ -37,7 +37,7 @@ export default {
                 var suits = ['spade', 'heart', 'club', 'diamond'];
                 for (var i = 0; i < game.players.length; i++) {
                     var target = game.players[i];
-                    for (var j = 0; j < 2; j++) {
+                    for (var j = 0; j < 1; j++) {
                         var card_def = game.createCard({
                             name: horses_def.randomGet(),
                             suit: suits.randomGet(),
@@ -45,7 +45,7 @@ export default {
                         });
                         target.equip(card_def);
                     }
-                    for (var k = 0; k < 2; k++) {
+                    for (var k = 0; k < 1; k++) {
                         var card_atk = game.createCard({
                             name: horses_atk.randomGet(),
                             suit: suits.randomGet(),
@@ -115,14 +115,13 @@ sgz_leiji: {
                 target.addTempSkill('sgz_leiji_tag', { player: 'phaseAfter' });
 
                 game.log(player, '为', target, '系上了“⚡”，对其使用牌无距离和次数限制');
-            
-                if (cardName == 'sha') {
-                    target.enableEquip(1);
-                };
-                if (cardName == 'shan') {
-                    target.enableEquip(2);
-                };
             }
+            if (cardName == 'sha') {
+                target.enableEquip(1);
+            };
+            if (cardName == 'shan') {
+                target.enableEquip(2);
+            };
         }
 
         // 【杀】无距离+不计次数
@@ -156,14 +155,13 @@ sgz_leiji: {
                 
 
                 game.log(player, '为', target, '系上了“⚡”，对其使用牌无距离和次数限制');
-            
-                if (cardName == 'sha') {
-                    target.enableEquip(1);
-                };
-                if (cardName == 'shan') {
-                    target.enableEquip(2);
-                };
             }
+            if (cardName == 'sha') {
+                target.enableEquip(1);
+            };
+            if (cardName == 'shan') {
+                target.enableEquip(2);
+            };
         }
         if (cardName == 'sha') {
             result.card.unlimited = true;
@@ -312,9 +310,9 @@ sgz_mingzong: {
 
     skillTranslate: {
         sgz_shouli: "狩骊",
-        sgz_shouli_info: "锁定技，游戏开始时，所有角色废除武器栏与防具栏（除你以外），获得一个额外的进攻马栏与防御马栏，然后依次装备两张游戏外的进攻马和防御马（随机花色点数）。",
+        sgz_shouli_info: "锁定技，游戏开始时，所有角色废除武器栏与防具栏并获得一个额外的进攻马栏与防御马栏，然后依次装备一张游戏外的进攻马和防御马（随机花色点数）。",
         sgz_leiji: "雷殛",
-        sgz_leiji_info: "当你需要使用或打出【杀】/【闪】时，你可以弃置一名角色装备区的随机一张进攻/防御坐骑牌，视为你使用或打出了一张【杀】/【闪】（依此法使用的杀不计入次数，且目标始终为为依此法失去坐骑牌的角色），依此法失去坐骑牌的其他角色依次执行：<br>1.其受到的伤害+1且改为雷电伤害直到其回合结束；<br>2.你对其使用牌无距离次数限制直到你的回合结束。<br>3.若其依此法失去了进攻/防御坐骑牌且其有废除的武器栏/防具栏，其恢复之。",
+        sgz_leiji_info: "当你需要使用或打出【杀】/【闪】时，你可以弃置一名角色装备区的随机一张进攻/防御坐骑牌，视为你使用或打出了一张【杀】/【闪】（依此法使用的杀不计入次数，且目标始终为为依此法失去坐骑牌的角色），依此法失去坐骑牌的其他角色：①受到的伤害+1且改为雷电伤害直到其回合结束；②你对其使用牌无距离次数限制直到你的回合结束。此牌结算后，依此法失去了进攻/防御坐骑牌的角色若有废除的武器栏/防具栏，恢复之。",
         sgz_mingzong:"鸣踪",
         sgz_mingzong_info:"每回合限一次，当有装备牌被弃置时，你可以将其中一张置入一名角色装备区，然后获得其所有手牌。",
     },
