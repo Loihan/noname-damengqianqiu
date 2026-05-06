@@ -12,11 +12,10 @@ export default {
         sgz_guojia: "郭嘉",
     },
     skills: {
-        // === 1. 窥天 (印锦囊) ===
+        // === 1. 窥天 (AI 强效引导版) ===
         sgz_kuitian: {
             audio: "ext:大梦千秋/audio/sgz_guojia/skill:8",
             persevereSkill: true,
-            // 修改点：允许在使用牌和响应牌的时机发动（涵盖了回合内所有可操作瞬间）
             enable: ["chooseToUse", "chooseToRespond"],
             onChooseToUse: function(event) {
                 if (!game.online) {
@@ -29,7 +28,6 @@ export default {
                     event.set("sgz_kuitian_list", cards);
                 }
             },
-            // 修改点：限制只能在自己的回合内发动
             filter: function(event, player) { 
                 return _status.currentPhase == player && event.sgz_kuitian_list?.length; 
             },
@@ -39,26 +37,44 @@ export default {
                     return ui.create.dialog("窥天", [list, "vcard"]);
                 },
                 check: function(button) {
-                    const player = get.player(), card = get.autoViewAs({ name: button.link[2], isCard: true }, []);
-                    if (["wugu", "zhulu_card", "yiyi", "lulitongxin", "lianjunshengyan", "diaohulishan"].includes(card.name)) return 0;
+                    const player = get.player();
+                    const cardName = button.link[2];
+                    const count = player.countMark("sgz_kuitian_used");
+                    if (count >= player.maxHp && player.maxHp <= 7) return 0;
+
+                    // 诱导 AI 选火攻（为了刷极慧）
+                    if (!player.hasHistory('damage') && cardName == 'huogong') {
+                        if (player.hp > 1) return 20; 
+                    }
+                    // 回复优先级
+                    if (player.hp < Math.min(player.maxHp, 7) && cardName == 'taoyuan') return 15;
+
+                    const card = get.autoViewAs({ name: cardName, isCard: true }, []);
+                    if (["wugu", "zhulu_card", "yiyi", "lulitongxin", "lianjunshengyan", "diaohulishan"].includes(cardName)) return 0;
                     return player.getUseValue(card);
                 },
                 backup: function(links, player) {
+                    const selectedTrick = links[0][2]; 
                     return {
                         filterCard: false,
                         selectCard: 0,
                         popname: true,
-                        viewAs: get.autoViewAs({ name: links[0][2], isCard: true }, []),
+                        viewAs: get.autoViewAs({ name: selectedTrick, isCard: true }, []),
+                        ai: {
+                            // 针对火攻自己的特殊目标评估
+                            result: {
+                                target: function(player, target) {
+                                    if (selectedTrick == 'huogong' && player == target && !player.hasHistory('damage')) return 2;
+                                    return get.effect(target, {name: selectedTrick}, player, player);
+                                }
+                            }
+                        },
                         async precontent(event, trigger, player) {
                             var num = [1, 2, 3, 4, 5, 6, 7, 8].randomGet();
                             game.playAudio('../extension/大梦千秋/audio/sgz_guojia/skill/sgz_kuitian' + num + '.mp3');
-
-                            // 修改点：标记现在持续到整个回合结束 (phaseAfter)
                             player.addTempSkill("sgz_kuitian_used", { player: "phaseAfter" });
                             player.addMark("sgz_kuitian_used", 1, false);
-                            
                             player.when({ player: "useCardAfter" }).filter(evt => evt.skill == "sgz_kuitian_backup").step(async function (event, trigger, player) {
-                                // 判定标准：当前回合总次数 > 体力上限
                                 if (player.countMark("sgz_kuitian_used") > player.maxHp) {
                                     await player.loseMaxHp(1);
                                     game.log(player, '本回合连续发动【窥天】，受到梦境反噬减1上限');
@@ -66,8 +82,7 @@ export default {
                             });
                         },
                     };
-                },
-                prompt: function(links, player) { return "窥天：视为使用一张" + get.translation(links[0][2]); },
+                }
             },
             subSkill: {
                 backup: { sub: true },
@@ -83,6 +98,16 @@ export default {
                     },
                 },
             },
+            ai: {
+                order: 11,
+                result: {
+                    player: function(player) {
+                        const count = player.countMark("sgz_kuitian_used");
+                        if (count < player.maxHp || player.maxHp > 7) return 1;
+                        return 0;
+                    }
+                }
+            }
         },
         // === 2. 观虚(傲才体力上限)===
         sgz_guanxu: {
@@ -243,66 +268,72 @@ export default {
                 }
             }
         },
-        // === 4. 极慧 (慧识) ===
+        // === 4. 极慧 (慧识) AI 卖血信仰版 ===
         sgz_jihui: {
             audio: "ext:大梦千秋/audio/sgz_guojia/skill:5",
             persevereSkill: true,
-            // 触发时机：出牌阶段主动 或 受到伤害后
             enable: "phaseUse",
             usable: 1, 
             trigger: { player: "damageEnd" },
             frequent: true,
             filter: function(event, player) {
-                // 两个条件：受损或主动阶段。且体力上限小于10。
                 return player.maxHp < 10;
+            },
+            // === 【核心修改：根据教程 02 节改写】 ===
+            ai: {
+                maixie: true, // 标记为卖血技
+                skillTagFilter: function(player, tag) {
+                    if (tag == 'maixie') return player.maxHp < 10;
+                },
+                effect: {
+                    // 当火攻或其他伤害来源指向梦郭嘉时
+                    target: function(card, player, target) {
+                        // 如果梦郭嘉还没发动过极慧，且受到的是火焰伤害
+                        if (get.tag(card, 'fireDamage') && target.maxHp < 10 && !target.hasHistory('damage')) {
+                            // 返回 [系数, 增加值]
+                            // 0: 抵消伤害带来的负面评估
+                            // 2: 赋予 4 点正向价值评估
+                            return [0, 4]; 
+                        }
+                    }
+                },
+                order: 12,
+                result: { player: 1 }
             },
             content: function() {
                 "step 0"
-                event.cards = []; // 存储所有判定牌
-                event.suits = []; // 存储所有判定出的花色
+                event.cards = [];
+                event.suits = [];
                 "step 1"
-                // 进行判定，使用 callback 处理循环逻辑
                 player.judge(function(result) {
                     var evt = _status.event.getParent("sgz_jihui");
-                    // 核心逻辑：若判定牌花色与之前花色不重复，则成功(返回1)，否则失败(返回0)
                     if (evt && evt.suits && evt.suits.includes(get.suit(result))) return 0;
                     return 1;
                 }).set("callback", lib.skill.sgz_jihui.callback).judge2 = function(result) {
                     return result.bool ? true : false;
                 };
                 "step 2"
-                // 流程结束，获得所有位于处理区的判定牌（过滤掉由于其他原因丢失的牌）
                 var cardsToGain = event.cards.filterInD('o');
                 if (cardsToGain.length) {
                     player.gain(cardsToGain, 'gain2');
-                    game.log(player, '获得了判定牌：', cardsToGain);
                 }
             },
-            // 处理循环逻辑的 callback
             callback: function() {
                 "step 0"
-                var evt = event.getParent(2); // 获取主技能事件对象
-                // 将判定牌移出 orderingCards（处理区弃置队列），使其不入弃牌堆
+                var evt = event.getParent(2);
                 event.getParent().orderingCards.remove(event.judgeResult.card);
-                evt.cards.push(event.judgeResult.card); // 记录这张牌
-                
-                // 如果判定成功且体力上限仍小于10
+                evt.cards.push(event.judgeResult.card);
                 if (event.getParent().result.bool && player.maxHp < 10) {
-                    evt.suits.push(event.getParent().result.suit); // 记录花色
-                    player.gainMaxHp(1); // 增加1点体力上限
-                    // 询问是否重复流程
+                    evt.suits.push(event.getParent().result.suit);
+                    player.gainMaxHp(1);
                     player.chooseBool("极慧：判定花色不重复且增加了一点体力上限，是否继续？").set("frequentSkill", "sgz_jihui");
                 } else {
                     event._result = { bool: false };
                 }
                 "step 1"
                 if (result.bool) {
-                    event.getParent(2).goto(1); // 回到 step 1 重复判定
+                    event.getParent(2).goto(1);
                 }
-            },
-            ai: {
-                order: 9,
-                result: { player: 1 }
             }
         }
     },

@@ -12,88 +12,86 @@ export default {
         sgz_luxun: "陆逊",
     },
     skills: {
-        // === 1. 驱剑 (重构版：体力值标记、连招消耗、阶段末清除) ===
+        // === 1. 驱剑 (AI 连招强化版) ===
         sgz_qujian: {
-            audio: "ext:大梦千秋/audio/sgz_luxun:2",
+            audio: "ext:大梦千秋/audio/sgz_luxun/skill:2",
             persevereSkill: true,
-            // --- 标记系统 ---
             mark: true,
             marktext: "驱剑",
             intro: {
                 name: "驱剑",
-                content: "mark", // 自动显示标记层数
+                content: "mark",
             },
-            // --- 逻辑组 ---
+            // === 核心 AI 注入：驱动连招意识 ===
+            mod: {
+                aiOrder: function(player, card, num) {
+                    // 只有拥有标记时才启动连招诱导
+                    if (player.countMark('sgz_qujian') > 0) {
+                        const history = player.getHistory('useCard');
+                        const lastEntry = history.length > 0 ? history[history.length - 1] : null;
+                        const hasSha = player.hasCard(c => c.name == 'sha', 'h');
+                        const hasTrick = player.hasCard(c => get.type2(c) == 'trick', 'h');
+
+                        // 情况 A：刚刚出过【杀】，现在必须立刻出锦囊来完成连招
+                        if (lastEntry && lastEntry.card.name == 'sha' && get.type2(card) == 'trick') {
+                            return 16; // 优先级 16：超越焚灭(15)，绝对首选
+                        }
+
+                        // 情况 B：还没出【杀】，但手里有连招组件
+                        if ((!lastEntry || lastEntry.card.name != 'sha') && hasSha && hasTrick) {
+                            // 提升【杀】的优先级，使其在所有锦囊之前打出
+                            if (card.name == 'sha') return 14; 
+                            // 压低【锦囊】的优先级，防止它破坏连招顺序
+                            if (get.type2(card) == 'trick') return 2;
+                        }
+                    }
+                }
+            },
             group: ["sgz_qujian_combo", "sgz_qujian_setup", "sgz_qujian_cleanup"],
             subSkill: {
-                // ① 回合开始：获得标记
                 setup: {
                     trigger: { player: "phaseBegin" },
                     forced: true,
                     silent: true,
                     content: function() {
                         "step 0"
-                        // 获得等同于当前体力值的标记
                         player.addMark('sgz_qujian', player.hp);
                         player.addTempSkill('sgz_qujian_addsha', 'phaseAfter');
                         game.log(player, '的回合开始，获得了', player.hp, '枚“剑”标记');
                     }
                 },
-                // ② 连招判定与消耗
                 combo: {
                     forced: true,
                     trigger: { player: "useCard" },
                     filter: function(event, player) {
-                        // 1. 检查是否有标记
                         if (player.countMark('sgz_qujian') <= 0) return false;
-
-                        // 2. 锦囊牌检查
                         if (get.type2(event.card) != 'trick') return false;
-
-                        // 3. 连招检查：上一张牌必须是【杀】
                         var history = player.getHistory('useCard');
                         if (history.length < 2) return false;
                         var prev = history[history.length - 2];
                         if (prev.card.name != 'sha') return false;
-
                         return true;
                     },
                     content: function() {
                         "step 0"
-                        // 消耗一个标记
                         player.removeMark('sgz_qujian', 1);
                         player.logSkill('sgz_qujian');
-
-                        // 效果1：选择一名其他角色横置
                         player.chooseTarget('驱剑：请选择一名其他角色横置', function(card, player, target) {
                             return target != player;
                         }).set('ai', function(target) {
                             return !target.isLinked() ? -get.attitude(_status.event.player, target) : 0;
                         });
-
                         "step 1"
                         if (result.bool && result.targets.length) {
-                            var target = result.targets[0];
-                            target.link(true);
+                            result.targets[0].link(true);
                         }
-
                         "step 2"
-                        // 效果2：摸 X 张牌 (X为场上横置角色数)
-                        var x = game.countPlayer(function(current) {
-                            return current.isLinked();
-                        });
-                        if (x > 0) {
-                            player.draw(x);
-                        }
-
-                        // 效果3：本回合额外杀次数 +1
-                        if (player.storage.sgz_qujian_addsha_count === undefined) {
-                            player.storage.sgz_qujian_addsha_count = 0;
-                        }
+                        var x = game.countPlayer(current => current.isLinked());
+                        if (x > 0) player.draw(x);
+                        if (player.storage.sgz_qujian_addsha_count === undefined) player.storage.sgz_qujian_addsha_count = 0;
                         player.storage.sgz_qujian_addsha_count++;
                     }
                 },
-                // ③ 清理逻辑：出牌阶段结束或回合结束时移除
                 cleanup: {
                     trigger: { player: ["phaseUseAfter", "phaseAfter"] },
                     forced: true,
@@ -102,12 +100,10 @@ export default {
                         return player.countMark('sgz_qujian') > 0;
                     },
                     content: function() {
-                        var num = player.countMark('sgz_qujian');
-                        player.removeMark('sgz_qujian', num);
+                        player.removeMark('sgz_qujian', player.countMark('sgz_qujian'));
                         game.log(player, '的“剑”标记已清空');
                     }
                 },
-                // 辅助 MOD 技能 (负责额外杀次数)
                 addsha: {
                     onremove: function(player) {
                         delete player.storage.sgz_qujian_addsha_count;
@@ -156,12 +152,11 @@ export default {
             }
         },
 
-        // === 3. 韬晦 (终极修正版：无数字标记、不发动不显示) ===
+        // === 3. 韬晦 (终极逻辑强化版：强制选择、梅花自动判空) ===
         sgz_taohui: {
             audio: "ext:大梦千秋/audio/sgz_luxun:4",
             persevereSkill: true,
             forced: true, 
-            // 游戏开始或获得技能时，添加标记技能
             init: function(player) {
                 player.addSkill('sgz_taohui_mark');
             },
@@ -169,20 +164,20 @@ export default {
             priority: 10,
             group: "sgz_taohui_refresh",
             filter: function(event, player) {
-                // 判定：只有拥有标记子技能时才能发动
                 return player.hasSkill('sgz_taohui_mark');
             },
             content: function() {
                 "step 0"
                 player.logSkill('sgz_taohui');
-                // 核心修改：发动瞬间移除子技能，标记图标会立即物理消失
                 player.removeSkill('sgz_taohui_mark');
+                // 切换为战斗形态原画
                 player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun_taohui.jpg');
                 
                 player.gainMaxHp(1);
                 player.recover(1 - player.hp);
                 
                 "step 1"
+                // 检查是否还有可执行的效果，若无则结束
                 var canContinue = false;
                 if (player.isDamaged()) canContinue = true;
                 if (game.hasPlayer(p => p != player && !p.isLinked())) canContinue = true;
@@ -199,89 +194,105 @@ export default {
                 var suit = get.suit(event.card);
                 event.effect_done = false;
                 game.playAudio(`../extension/大梦千秋/audio/sgz_luxun/sgz_hit${[1,2].randomGet()}.mp3`);
+                
                 switch (suit) {
                     case 'heart': 
-                        if (player.isDamaged()) { player.recover(); event.effect_done = true; } 
+                        if (player.isDamaged()) { 
+                            player.recover(); 
+                            event.effect_done = true; 
+                        } 
                         break;
                     case 'club': 
-                        player.chooseTarget('韬晦：选择至多三名其他角色横置', [1, 3], function(card, player, target){
-                            return target != player && !target.isLinked();
-                        }).set('ai', t => -get.attitude(player, t));
+                        // 梅花逻辑优化：先检查是否有人可连
+                        if (game.hasPlayer(p => p != player && !p.isLinked())) {
+                            // 第三个参数设为 true，强制选择且不可取消
+                            player.chooseTarget('韬晦：请选择1~3名其他角色横置', [1, 3], true, function(card, player, target){
+                                return target != player && !target.isLinked();
+                            }).set('ai', t => -get.attitude(player, t));
+                        } else {
+                            game.log('场上已无未横置的角色，效果中断');
+                            event.finish();
+                        }
                         break;
                     case 'diamond': 
-                        player.chooseUseTarget({name: 'sha', nature: 'fire'}, false, '韬晦：选择一名其他角色使用【火杀】')
-                            .set('filterTarget', function(card, player, target){
-                                return target != player && lib.filter.targetEnabled(card, player, target);
-                            });
-                        break;
-                    case 'spade': 
-                        player.chooseUseTarget({name: 'sha', nature: 'thunder'}, false, '韬晦：选择一名其他角色使用【雷杀】')
-                            .set('filterTarget', function(card, player, target){
-                                return target != player && lib.filter.targetEnabled(card, player, target);
-                            });
+                    case 'spade':
+                        var nature = (suit == 'diamond') ? 'fire' : 'thunder';
+                        var sha = {name: 'sha', nature: nature};
+                        // 杀逻辑优化：先检查是否有合法目标
+                        if (game.hasPlayer(p => p != player && player.canUse(sha, p))) {
+                            // 第二个参数设为 true，强制选择且不可取消
+                            player.chooseUseTarget(sha, true, '韬晦：请选择一名其他角色使用【' + get.translation(nature) + '杀】')
+                                .set('filterTarget', function(card, player, target){
+                                    return target != player && lib.filter.targetEnabled(card, player, target);
+                                });
+                        } else {
+                            game.log('场上已无合法的【杀】目标，效果中断');
+                            event.finish();
+                        }
                         break;
                 }
                 
                 "step 3"
+                // 处理交互结果
                 if (result && result.bool) {
                     event.effect_done = true;
+                    // 如果是梅花，手动执行横置
                     if (get.suit(event.card) == 'club' && result.targets) {
                         for (var i = 0; i < result.targets.length; i++) {
                             result.targets[i].link(true);
                         }
                     }
                 }
+                
+                // 若效果成功执行，循环回到 step 1
                 if (event.effect_done) {
                     event.goto(1);
+                } else {
+                    event.finish();
                 }
             },
             subSkill: {
-                // === 标记子技能：专门负责显示“韬”字图标 ===
                 mark: {
                     charlotte: true,
                     mark: true,
                     marktext: "韬晦",
                     intro: { 
                         name: "韬晦", 
-                        content: "进入濒死状态时自动触发。" 
+                        content: "处于韬光养晦状态。进入濒死时自动触发特殊回复与火烧连营。" 
                     }
                 },
-                // === 刷新逻辑 ===
                 refresh: {
                     trigger: { global: "roundStart" },
                     forced: true,
                     silent: true,
                     filter: function(event, player) {
-                        // 判定：如果这一轮陆逊没有标记，则补上
                         return !player.hasSkill('sgz_taohui_mark');
                     },
                     content: function() {
                         player.addSkill('sgz_taohui_mark');
+                        // 换回常态原画
                         player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun.jpg');
                     }
                 }
             }
         },
 
-        // === 4. 焚灭 (终极修正版） ===
-        sgz_fenmie: {
+        // === 4. 焚灭 (权重强化与精准AI版) ===
+        sgz_fenmie: { 
             audio: "ext:大梦千秋/audio/sgz_luxun:2",
-            enable: "phaseUse",
-            usable: 1, // 改为出牌阶段限一次
             persevereSkill: true,
-            skillAnimation: false,
-            // 修正：可以选任何其他角色
-            filter(event, player) {
+            enable: "phaseUse",
+            usable: 1, 
+            filter: function(event, player) {
                 return game.hasPlayer(target => target != player);
             },
-            filterTarget(card, player, target) {
+            filterTarget: function(card, player, target) {
                 return target != player;
             },
             selectTarget: [1, Infinity],
             multitarget: true,
             multiline: true,
             async content(event, trigger, player) {
-                // 移除原本的觉醒逻辑，改为添加临时补牌技能
                 player.addTempSkill(event.name + "_draw", "phaseAfter");
                 player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun_fenmie.jpg');
                 let { targets } = event;
@@ -289,15 +300,13 @@ export default {
                 // 1. 初始摸牌
                 await player.draw(targets.length);
 
-                // 2. 进入核心逻辑循环
+                // 2. 核心逻辑循环
                 while (true) {
-                    // 过滤出还在场且有手牌的目标
                     targets = targets.filter(target => target.isIn() && target.countCards("h"));
                     if (!targets.length) break;
 
-                    // 3. 多人同时展示手牌 (修复 AI 报错点)
+                    // 3. 目标集体展示牌
                     const showEvent = player.chooseCardOL(targets, "焚灭：请各目标展示一张牌", true);
-                    // 采用最稳健的 AI 选牌赋值
                     showEvent.set('aiCard', function(target) {
                         var hs = target.getCards('h');
                         if (hs.length) return { bool: true, cards: [hs.randomGet()] };
@@ -307,13 +316,11 @@ export default {
                     const result = await showEvent.forResult();
                     const cards = [];
                     for (var i = 0; i < targets.length; i++) {
-                        if (result[i] && result[i].cards) {
-                            cards.push(result[i].cards[0]);
-                        }
+                        if (result[i] && result[i].cards) cards.push(result[i].cards[0]);
                     }
-                    if (cards.length < targets.length) break; // 防止异常中断
+                    if (cards.length < targets.length) break;
 
-                    // 4. 展示花色并创建 UI 提示框
+                    // 4. 展示效果与 UI 同步
                     const suits = cards.map(card => get.suit(card)).unique();
                     const next = player.showCards(cards, `${get.translation(player)} 发动了【焚灭】`, false)
                         .set("showers", targets)
@@ -324,27 +331,14 @@ export default {
                                 div.innerHTML = "<span style='font-weight:bold'>" + get.translation(get.suit(button.link, target)) + target.getName() + "</span>";
                             }
                         })
-                        .set("delay_time", targets.length * 2)
+                        .set("delay_time", 0.3) // 极短延迟，提升流畅度
                         .set("closeDialog", false);
                     await next;
                     const id = next.videoId;
 
-                    // 5. 更新提示文案
-                    const updateCaption = function (id, suits) {
-                        const dialog = get.idDialog(id);
-                        if (dialog) {
-                            const div = dialog.querySelector(".caption");
-                            const suitStr = suits.map(s => get.translation(s)).join('、');
-                            div.innerHTML = `焚灭：弃置花色为 <span style='font-weight:bold;font-size:120%;color:#ff4400'>${suitStr}</span> 的牌对目标造成1点火焰伤害`;
-                            ui.update();
-                        }
-                    };
-                    if (player == game.me) updateCaption(id, suits);
-                    else if (player.isOnline()) player.send(updateCaption, id, suits);
-
-                    // 6. 陆逊选择弃牌并指定目标
+                    // 5. 陆逊选择弃牌 (每种花色仅需一张)
                     const nextx = player.chooseCardTarget({
-                        prompt: false,
+                        prompt: `焚灭：弃置花色为 ${suits.map(s=>get.translation(s)).join('或')} 的牌造成火焰伤害 (同花色弃置一张即可)`,
                         dialog: get.idDialog(id),
                         filterCard(card, player) {
                             return suits.includes(get.suit(card, player)) && lib.filter.cardDiscardable.apply(this, arguments);
@@ -362,13 +356,28 @@ export default {
                         cards: cards,
                         targets: targets,
                         position: "he",
-                        ai1(card) { return 10 - get.value(card); }
+                        // --- 核心 AI 逻辑优化 ---
+                        ai1: function(card) {
+                            const player = get.player();
+                            // 关键：如果已经选了这种花色的牌，就不再选第二张（每种花色只弃一张）
+                            if (ui.selected.cards.some(c => get.suit(c, player) == get.suit(card, player))) return 0;
+                            // 检查是否有对应的敌人目标可以被这张牌打到
+                            const suit = get.suit(card, player);
+                            const hasEnemy = _status.event.targets.some((t, index) => {
+                                return get.attitude(player, t) < 0 && get.suit(_status.event.cards[index], t) == suit;
+                            });
+                            if (!hasEnemy) return 0;
+                            return 15 - get.value(card);
+                        },
+                        ai2: function(target) {
+                            return -get.attitude(_status.event.player, target);
+                        }
                     });
 
                     const resultx = await nextx.forResult();
                     game.broadcastAll("closeDialog", id);
 
-                    // 7. 结算伤害
+                    // 6. 结算伤害与循环判定
                     if (resultx && resultx.bool && resultx.cards && resultx.targets) {
                         const damageTargets = resultx.targets;
                         await player.discard(resultx.cards);
@@ -379,26 +388,15 @@ export default {
                         await game.doAsyncInOrder(damageTargets, async target => {
                             const dEvent = target.damage("fire");
                             await dEvent;
-                            // 检查伤害是否真正造成，用于判断是否继续循环
                             if (target.hasHistory("damage", evt => (evt.getParent()?.getTrigger() || evt) == dEvent)) {
                                 damaged.push(target);
                             }
                         });
 
-                        // 如果有人没受到伤害（被防止），则根据原逻辑跳出
-                        if (damaged.length != damageTargets.length) {
-                            damageTargets.forEach(target => {
-                                if (!damaged.includes(target)) {
-                                    //target.chat("☝🤓唉，没打着");
-                                    //target.throwEmotion(player, ["egg", "shoe"].randomGet());
-                                }
-                            });
-                            break;
-                        }
+                        // 连营效果：若伤害全额造成则继续，否则中断
+                        if (damaged.length != damageTargets.length) break;
                     } else {
-                        // 玩家点取消或没选够，也跳出循环
-                        //targets.forEach(t => t.throwEmotion(player, ["egg", "shoe"].randomGet()));
-                        break;
+                        break; 
                     }
                 }
                 player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun.jpg');
@@ -413,24 +411,30 @@ export default {
                         player: "loseAfter",
                         global: ["gainAfter","loseAsyncAfter","addJudgeAfter","addToExpansionAfter","equipAfter"],
                     },
-                    filter(event, player) {
-                        return event.getl?.(player)?.cards2?.length;
+                    filter: function(event, player) {
+                        return event.getl && event.getl(player) && event.getl(player).cards2 && event.getl(player).cards2.length > 0;
                     },
                     async content(event, trigger, player) {
-                        await player.draw(trigger.getl?.(player)?.cards2?.length);
+                        await player.draw(trigger.getl(player).cards2.length);
                     },
                 },
             },
             ai: {
-                order: 1,
-                result: { target: -1 }
+                // 提升使用优先级，出牌阶段一进来就用
+                order: 15,
+                result: { 
+                    player: function(player) {
+                        // 场上敌人越多，且有牌可抓，收益越高
+                        return game.countPlayer(t => get.attitude(player, t) < 0) > 0 ? 1 : 0;
+                    }
+                }
             }
         },
     },
     skillTranslate: {
-        sgz_qujian: "驱剑", sgz_qujian_info: "锁定技，连招技（杀+锦囊牌），出牌阶段限X次（X为你回合开始时的体力数），你可以横置一名角色，你摸Y张牌且本回合可以额外使用一张【杀】（Y为场上已横置的角色数）。",
-        sgz_lianying: "连营", sgz_lianying_info: "锁定技，①摸牌阶段，你多摸X张牌，手牌上限+X。②当你失去最后一张手牌时，你摸至X张牌。（X为场上人数）",
-        sgz_taohui: "韬晦", sgz_taohui_info: "每轮限一次，当你进入濒死状态时，你可以增加1点体力上限并回复至1点体力，然后重复亮出牌堆顶的一张牌并根据其花色执行对应效果直至被不可执行或你取消（♥️：你回复一点体力；♦️/♠️：视为使用一张无距离限制的火/雷【杀】；♣️：横置至多三名未横置角色）。",
+        sgz_qujian: "驱剑", sgz_qujian_info: "锁定技，连招技（杀+锦囊牌），出牌阶段限X次（X为你回合开始时的体力数），横置至多一名角色，然后摸场上已横置角色数张牌且本回合你使用【杀】的额定次数+1。",
+        sgz_lianying: "连营", sgz_lianying_info: "锁定技，①摸牌阶段你多摸X张牌，你的手牌上限+X。②当你失去最后一张手牌时，你摸至X张牌。（X为场上人数）",
+        sgz_taohui: "韬晦", sgz_taohui_info: "每轮限一次，当你进入濒死状态时，你可以增加1点体力上限并回复至1点体力，然后重复亮出牌堆顶的一张牌并根据其花色执行对应效果，直到不可被执行：<br>♥️：回复一点体力；<br>♦️/♠️：视为使用一张无距离限制的火/雷【杀】；<br>♣️：横置1~3名未横置角色。",
         sgz_fenmie: "焚灭", sgz_fenmie_info: "出牌阶段限一次。你可以选择任意名其他角色并摸等量的牌，然后重复以下流程：<br>①被选中的所有角色同时展示一张手牌；<br>②你可以弃置任意张相同花色的牌并对其中展示对应花色牌的角色各造成1点火焰伤害;<br>③若这些对应花色的角色均受到了伤害，则重复此流程，否则技能结束。<br>此技能结算期间每当你失去牌时便摸等量的牌。",
     },
     characterTaici: {

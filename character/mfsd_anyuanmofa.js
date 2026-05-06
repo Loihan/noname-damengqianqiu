@@ -11,7 +11,7 @@ export default {
         mfsd_anyuanmofa: "暗渊魔法",
     },
     skills: {
-// === 1. 鬼噬 (最终修正版：修复报错、初始化计数、回归结算) ===
+        // === 1. 鬼噬 (最终修正版：修复报错、初始化计数、回归结算) ===
         mfsd_guishi: {
             audio: "ext:大梦千秋/audio/mfsd_anyuanmofa/skill:4",
             persevereSkill: true,
