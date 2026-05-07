@@ -1,15 +1,19 @@
 export default {
     character: {
-        wgxd_heyuxingzun: ['male', 'shen', 7, ['wgxd_jianzhen', 'wgxd_qixia', 'wgxd_jianyun','wgxd_heyuxingzun_texiao'], [
-            "des:三界御剑第一尊。",
-            "ext:大梦千秋/image/wgxd_heyuxingzun.jpg",
-            "die:ext:大梦千秋/audio/wgxd_heyuxingzun/die.mp3"
-        ]],
+        wgxd_heyuxingzun: [
+            'male', 
+            'shen', 
+            7, 
+            ['wgxd_jianzhen', 'wgxd_qixia', 'wgxd_jianyun','wgxd_heyuxingzun_texiao'], 
+            [
+                "des:三界御剑第一尊。",
+                "ext:大梦千秋/image/wgxd_heyuxingzun.jpg",
+                "die:ext:大梦千秋/audio/wgxd_heyuxingzun/die.mp3"
+            ]
+        ],
     },
     characterName: 'wgxd_heyuxingzun',
-    characterTranslate: {
-        wgxd_heyuxingzun: '鹤羽星尊',
-    },
+    characterTranslate: {wgxd_heyuxingzun: '鹤羽星尊',},
     skills: {
         wgxd_jianzhen: {
             audio: "ext:大梦千秋/audio/wgxd_heyuxingzun:2",
@@ -254,7 +258,6 @@ export default {
     skillTranslate: {
         wgxd_jianzhen: '剑阵',
         wgxd_jianzhen_info: '锁定技，①游戏开始时，你拥有7个武器栏，废除你的所有非武器装备栏。②当你获得非武器装备牌时立即重铸之。',
-        // === 修改点: 将 "减1点" 改为 "减3点" ===
         wgxd_qixia: '启匣',
         wgxd_qixia_info: '锁定技，①游戏开始时，你在手牌里开辟出一个初始上限为1的区域。称之为“剑匣”，你将一张初始手牌加入“剑匣”。②当“剑匣”里的牌即将离开“剑匣”时立即摸等量的牌加入“剑匣”。③“剑匣”里的牌无次数限制。④当你受到伤害时，若“剑匣”的上限小于7，则你摸一张牌、“剑匣”上限+1，你选择一张手牌加入“剑匣”。',
         wgxd_qixia_jian: '剑',

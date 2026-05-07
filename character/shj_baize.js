@@ -13,9 +13,7 @@ export default {
         ],
     },
     characterName: 'shj_baize',
-    characterTranslate: {
-        shj_baize: "白泽",
-    },
+    characterTranslate: {shj_baize: "白泽",},
     skills: {
         shj_zhaorui: {
             audio:"ext:大梦千秋/audio/shj_baize:3",
@@ -159,49 +157,48 @@ export default {
                 player.recover(1);
             },
         },
-    shj_baizhao: {
-        persevereSkill: true,
-        audio: "ext:大梦千秋/audio/shj_baize:5",
-        group: ["shj_baizhao_mod", "shj_baizhao_effect"],
-        subSkill: {
-            // === 核心修正点: 为 mod 子技能添加了正确的结构 ===
-            mod: {
-                // 这个子技能现在是一个正确的技能对象, 它包含一个 mod 属性
+        shj_baizhao: {
+            persevereSkill: true,
+            audio: "ext:大梦千秋/audio/shj_baize:5",
+            group: ["shj_baizhao_mod", "shj_baizhao_effect"],
+            subSkill: {
+                // === 核心修正点: 为 mod 子技能添加了正确的结构 ===
                 mod: {
-                    cardUsable: function(card, player) {
-                        var recorded = player.storage.shj_dongxu || [];
-                        if (recorded.includes(card.name)) {
-                            return Infinity;
-                        }
-                    },
-                    targetInRange: function(card, player) {
-                        var recorded = player.storage.shj_dongxu || [];
-                        if (recorded.includes(card.name)) {
-                            return true;
+                    // 这个子技能现在是一个正确的技能对象, 它包含一个 mod 属性
+                    mod: {
+                        cardUsable: function(card, player) {
+                            var recorded = player.storage.shj_dongxu || [];
+                            if (recorded.includes(card.name)) {
+                                return Infinity;
+                            }
+                        },
+                        targetInRange: function(card, player) {
+                            var recorded = player.storage.shj_dongxu || [];
+                            if (recorded.includes(card.name)) {
+                                return true;
+                            }
                         }
                     }
-                }
-            },
-            effect: {
-                
-                trigger: { target: "useCardToTargeted" },
-                forced: true,
-                filter: function(event, player) {
-                    var recorded = player.storage.shj_dongxu || [];
-                    return recorded.includes(event.card.name);
                 },
-                content: function() {
-                    'step 0'
-                    player.logSkill('shj_baizhao');
-                    if (player.isDamaged()) {
-                        player.recover();
-                    } else {
-                        player.gainMaxHp();
+                effect: {
+                    trigger: { target: "useCardToTargeted" },
+                    forced: true,
+                    filter: function(event, player) {
+                        var recorded = player.storage.shj_dongxu || [];
+                        return recorded.includes(event.card.name);
+                    },
+                    content: function() {
+                        'step 0'
+                        player.logSkill('shj_baizhao');
+                        if (player.isDamaged()) {
+                            player.recover();
+                        } else {
+                            player.gainMaxHp();
+                        }
                     }
                 }
             }
-        }
-    },
+        },
         shj_pixie: {
             audio: "ext:大梦千秋/audio/shj_baize:3",
             persevereSkill: true,
@@ -210,6 +207,85 @@ export default {
             filter(event, player) {
                 return player.countMark('shj_zhaorui') > 0;
             },
+            ai: {
+                order: function(item, player) {
+                    var marks = player.countMark('shj_zhaorui');
+
+                    // 已觉醒更激进
+                    var bonus = player.storage.shj_dongxu_awaken? 4: 0;
+
+                    // 偶数优先级极高
+                    if (marks % 2 == 0) {
+                        var value = 3+bonus;
+                        var enemyNum = 0;
+                        game.countPlayer(function(current){
+                            enemyNum++;
+                            if (get.attitude(player,current) < 0 && !current.isLinked()) {
+                                value += 1;
+                            }
+                        });
+                        if( enemyNum + 3 + bonus == value) {return 0;}
+                        return value;
+                    }
+
+                    // 奇数情况
+                    var linkedEnemies = 0;
+                    game.countPlayer(function(current){
+                        if (get.attitude(player,current) < 0 && current.isLinked()) {
+                            linkedEnemies++;
+                        }
+                    });
+                    // 连环多则提高奇数价值
+                    return linkedEnemies * 2 ;
+                },
+                result: {
+                    player: function(player) {
+                    var marks = player.countMark('shj_zhaorui');
+                    var value = 0;
+                    // ===== 偶数收益 =====
+                    if (marks % 2 == 0) {
+                        game.countPlayer(function(current){
+                            if (get.attitude(player,current) < 0 && !current.isLinked()) {
+                                value += 2.5;
+                                // 高威胁角色
+                                value += get.threaten(current);
+                            }
+                        });
+                    }
+                    // ===== 奇数收益 =====
+                    else {
+                        game.countPlayer(function(current){
+                            if (get.attitude(player,current) < 0) {
+                                value += 1;
+                                // 连环目标雷伤收益高
+                                if (current.isLinked()) {
+                                    value += 3;
+                                }
+                                // 残血斩杀
+                                if (current.hp <= 1) {
+                                    value += 2;
+                                }
+                            }
+                        });
+                    }
+                    // 标记越多越想开
+                    value += Math.min(marks,6)-5;
+                    game.countPlayer(function(current){
+                            if (get.attitude(player,current) < 0) {
+                                value += 1;
+                            }});
+                    return value;
+                    }
+                },
+                threaten: function(player,target){
+                    var marks =
+                    player.countMark('shj_zhaorui');
+                    // 偶数时威慑极高
+                    if (marks % 2 == 0) {return 4;}
+                    return 2.5;
+                }
+            },
+
             content: function () {
                 'step 0';
                 event.num_mark = player.countMark('shj_zhaorui');
@@ -218,7 +294,21 @@ export default {
 
                 if(event.is_odd) {
                     player.chooseTarget(`辟邪：请选择至多${max_targets}名角色，对他们各造成1点雷电伤害`, [1, max_targets], true)
-                    .set('ai', target => -get.attitude(_status.event.player, target));
+                    .set('ai', function(target){
+                        var player = _status.event.player;
+                        var value = -get.attitude(player,target);
+                        // 连环雷伤收益
+                        if (target.isLinked()) {
+                            value += 3;
+                        }
+                            // 残血收头
+                            if (target.hp <= 1) {
+                                value += 4;
+                            }   
+                            // 高威胁角色
+                            value += get.threaten(target);  
+                        return value;
+                    });
                 } else {
                     player.chooseTarget(
                         `辟邪：请选择至多${max_targets}名未横置的角色，横置并翻面他们并弃置他们各一张牌`, 
@@ -230,7 +320,21 @@ export default {
                             return !target.isLinked();
                         }
                     )
-                    .set('ai', target => -get.attitude(_status.event.player, target*1.5));
+                    .set('ai', function(target){
+                        var player = _status.event.player;
+                        var value = -get.attitude(player,target);
+                        // 未横置收益极高
+                        if (!target.isLinked()) {
+                            value += 4;
+                        }
+                            // 当前回合角色翻面爆赚
+                        if (_status.currentPhase == target) {
+                            value -= 100;
+                        }
+                        // 高威胁优先控
+                        value += get.threaten(target);
+                        return value;
+                    });
                 }
                 'step 1';
                 if(result.bool && result.targets) {
@@ -384,4 +488,3 @@ export default {
         "die":{content:"妖火湮灭..."}
     }
 };
-//#FFD700金色

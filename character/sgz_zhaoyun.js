@@ -1,21 +1,23 @@
 export default {
     character: {
         // 梦赵云：神势力，1体力，上限由引擎根据技能或初始化处理（原版神赵云逻辑）
-        sgz_zhaoyun: ["male", "shen", "1/2", ["sgz_juejing", "sgz_longhun", "sgz_jiuzhu"], [
-            "des:建安十三年，先主奔走当阳，曹操精骑追及。云怀抱幼主，单骑陷于百万军中。四顾皆敌，矢石如雨，云身被重创，力战至竭，几近绝地。<br>当此时，云意气陡升，若有苍龙破云而入，神威骤发。其枪尖所向，寒芒万丈，杀透重围，出入曹营如履平地。及救幼主于危难，曹操登高望之，惊叹为神。自此，赵子龙之名震慑北国。<br>此后数十载，云以不老之躯，镇守汉土。每逢两军对垒，云一骑当先，威震三军，使敌胆寒。先主欲伐吴，云以大义极谏，终保荆益之势。及至诸葛秉政，云为北伐先驱，六出祁山，所向披靡。岁至古稀，英姿飒爽如壮年，终助汉室克复旧都。世人皆传，长坂一役，云已得真龙护体，永为大汉之坚盾，虽历千秋而不朽。",
-            "ext:大梦千秋/image/sgz_zhaoyun.jpg",
-            "die:ext:大梦千秋/audio/sgz_zhaoyun/die.mp3"
-        ]],
+        sgz_zhaoyun: [
+            "male", 
+            "shen", 
+            "1/2", 
+            ["sgz_juejing", "sgz_longhun", "sgz_jiuzhu"], 
+            [
+                "des:建安十三年，先主奔走当阳，曹操精骑追及。云怀抱幼主，单骑陷于百万军中。四顾皆敌，矢石如雨，云身被重创，力战至竭，几近绝地。<br>当此时，云意气陡升，若有苍龙破云而入，神威骤发。其枪尖所向，寒芒万丈，杀透重围，出入曹营如履平地。及救幼主于危难，曹操登高望之，惊叹为神。自此，赵子龙之名震慑北国。<br>此后数十载，云以不老之躯，镇守汉土。每逢两军对垒，云一骑当先，威震三军，使敌胆寒。先主欲伐吴，云以大义极谏，终保荆益之势。及至诸葛秉政，云为北伐先驱，六出祁山，所向披靡。岁至古稀，英姿飒爽如壮年，终助汉室克复旧都。世人皆传，长坂一役，云已得真龙护体，永为大汉之坚盾，虽历千秋而不朽。",
+                "ext:大梦千秋/image/sgz_zhaoyun.jpg",
+                "die:ext:大梦千秋/audio/sgz_zhaoyun/die.mp3"
+            ]
+        ],
     },
     characterName: 'sgz_zhaoyun',
-    characterTitle: {
-        sgz_zhaoyun: "神龙天降",
-    },
-    characterTranslate: {
-        sgz_zhaoyun: "赵云",
-    },
+    characterTitle: {sgz_zhaoyun: "神龙天降",},
+    characterTranslate: {sgz_zhaoyun: "赵云",},
     skills: {
-        // === 1. 绝境 (修改版：体力上限加成 & 体力锁定) ===
+        // === 1. 绝境  ===
         sgz_juejing: {
             persevereSkill: true,
             audio: "ext:大梦千秋/audio/sgz_zhaoyun:2",
@@ -201,9 +203,7 @@ export default {
                 }
             }
         },
-
-
-        // === 2. 龙魂 (核心逻辑适配) ===
+        // === 2. 龙魂  ===
         sgz_longhun: {
             persevereSkill: true,
             audio: "ext:大梦千秋/audio/sgz_zhaoyun:4",
@@ -515,7 +515,7 @@ export default {
             },
             ai: { save: true, respondSha: true, respondShan: true, respondWuxie: true, order: 4, result: { player: 1 } }
         },
-        // === 3. 救主 (适配版) ===
+        // === 3. 救主  ===
         sgz_jiuzhu: {
             persevereSkill: true,
             audio: "ext:大梦千秋/audio/sgz_zhaoyun:2",

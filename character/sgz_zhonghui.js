@@ -1,21 +1,23 @@
 export default {
     character: {
         // 梦钟会：势力神，体力1，上限按原版逻辑由技能维持
-        sgz_zhonghui: ["male", "shen", 1, ["sgz_quanji", "sgz_fensi", "sgz_jitian", "sgz_zhuyue", "sgz_xingfa","sgz_audio_effect", "sgz_zhonghui_texiao"], [
-            "des:钟会字士季，颖川之杰也。少负绝代之才，精于权略，时人比之子房。<br>景元四年，会统大军入蜀，剑指成都。及蜀汉既平，会功冠诸军，然其心高傲，不甘久居司马氏之下。彼深忿邓艾先入之功，遂假权谋之策，诬艾谋逆，籍没其军，由是独擅益州，威震西南。<br>会有揽月逐影之志，自谓才足冠世，何必为人臣之列？见洛阳篡臣当道，汉鼎迁移，遂萌觊觎神器之心。会乃称帝于成都，布告天下，正式自立。司马昭闻变震怒，起倾国之兵远征。会仗剑立于剑阁，激赏士卒，反兴义师而北伐。是役也，会奇计百出，诱敌深入于巴蜀险峻之间，终使中原大军折戟山谷。<br>自此，会据秦岭之险，分天下之半，三足鼎立之势复兴。后世论之，谓其志虽肆，其才实奇，终能于乱世孤影之中，强自逐月，开一朝之基命，成不世之枭雄。",
-            "ext:大梦千秋/image/sgz_zhonghui.jpg",
-            "die:ext:大梦千秋/audio/sgz_zhonghui/die/die.mp3"
-        ]],
+        sgz_zhonghui: [
+            "male", 
+            "shen",
+            1, 
+            ["sgz_quanji", "sgz_fensi", "sgz_jitian", "sgz_zhuyue", "sgz_xingfa","sgz_audio_effect", "sgz_zhonghui_texiao"], 
+            [
+                "des:钟会字士季，颖川之杰也。少负绝代之才，精于权略，时人比之子房。<br>景元四年，会统大军入蜀，剑指成都。及蜀汉既平，会功冠诸军，然其心高傲，不甘久居司马氏之下。彼深忿邓艾先入之功，遂假权谋之策，诬艾谋逆，籍没其军，由是独擅益州，威震西南。<br>会有揽月逐影之志，自谓才足冠世，何必为人臣之列？见洛阳篡臣当道，汉鼎迁移，遂萌觊觎神器之心。会乃称帝于成都，布告天下，正式自立。司马昭闻变震怒，起倾国之兵远征。会仗剑立于剑阁，激赏士卒，反兴义师而北伐。是役也，会奇计百出，诱敌深入于巴蜀险峻之间，终使中原大军折戟山谷。<br>自此，会据秦岭之险，分天下之半，三足鼎立之势复兴。后世论之，谓其志虽肆，其才实奇，终能于乱世孤影之中，强自逐月，开一朝之基命，成不世之枭雄。",
+                "ext:大梦千秋/image/sgz_zhonghui.jpg",
+                "die:ext:大梦千秋/audio/sgz_zhonghui/die/die.mp3"
+            ]
+        ],
     },
     characterName: 'sgz_zhonghui',
-    characterTranslate: {
-        sgz_zhonghui: "钟会",
-    },
-    characterTitle: {
-        sgz_zhonghui: "白霜降世",
-    },
+    characterTranslate: {sgz_zhonghui: "钟会",},
+    characterTitle: {sgz_zhonghui: "白霜降世",},
     skills: {
-        // === 1. 权计 (保留 async 结构与核心逻辑) ===
+        // === 1. 权计   ===
         sgz_quanji: {
             forced: true,
             trigger: {
@@ -125,8 +127,7 @@ export default {
                 },
             },
         },
-
-        // === 2. 忿肆 (适配) ===
+        // === 2. 忿肆  ===
         sgz_fensi: {
             audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:10",
             persevereSkill: true,
@@ -190,8 +191,7 @@ export default {
                 },
             },
         },
-
-        // === 3. 觊天 (适配) ===
+        // === 3. 觊天  ===
         sgz_jitian: {
             audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:7",
             persevereSkill: true,
@@ -263,8 +263,7 @@ export default {
                 }
             }
         },
-
-        // === 4. 逐月 (适配) ===
+        // === 4. 逐月  ===
         sgz_zhuyue: {
             audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:3",
             persevereSkill: true,
@@ -300,8 +299,7 @@ export default {
                 player.markSkill("sgz_zhuyue");
             },
         },
-
-        // === 5. 兴伐 (适配) ===
+        // === 5. 兴伐  ===
         sgz_xingfa: {
             audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:4",
             persevereSkill: true,
@@ -351,7 +349,7 @@ export default {
                 }
             }
         },
-// === 梦钟会：特写音效控制器 ===
+        // === 特写音效控制器 ===
         "sgz_zhonghui_texiao": {
             charlotte: true, // 隐藏技能
             forced: true,
@@ -382,7 +380,6 @@ export default {
                 }
             }
         },        
-
     },
     skillTranslate: {
         sgz_quanji: "权计",

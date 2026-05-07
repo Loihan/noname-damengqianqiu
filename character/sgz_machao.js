@@ -1,16 +1,21 @@
 export default {
     character: {
-        sgz_machao: ["male", "shen", 4, ["sgz_shouli","sgz_leiji","sgz_mingzong"], [
-            "des:西凉锦马超，统领万众铁骑。当他踏入战场之时，甲胄与兵刃皆化为尘土，唯有万马奔腾的轰鸣响彻星域。",
-            "ext:大梦千秋/image/sgz_machao.jpg",
-            "die:ext:大梦千秋/audio/sgz_machao/die.mp3"
-        ]],
+        sgz_machao: [
+            "male", 
+            "shen", 
+            4, 
+            ["sgz_shouli","sgz_leiji","sgz_mingzong"], 
+            [
+                "des:西凉锦马超，统领万众铁骑。当他踏入战场之时，甲胄与兵刃皆化为尘土，唯有万马奔腾的轰鸣响彻星域。",
+                "ext:大梦千秋/image/sgz_machao.jpg",
+                "die:ext:大梦千秋/audio/sgz_machao/die.mp3"
+            ]
+        ],
     },
     characterName: 'sgz_machao',
-    characterTranslate: {
-        sgz_machao: "马超",
-    },
+    characterTranslate: {sgz_machao: "马超",},
     skills: {
+        // === 技能1：【狩骊】 ===
         sgz_shouli: {
             persevereSkill: true,
             audio: "ext:大梦千秋/audio/sgz_machao:4",
@@ -61,9 +66,8 @@ export default {
                 });
             }
         },
-
-        // === 技能：雷殛 ===
-sgz_leiji: {
+        // === 技能2：【雷殛】及其衍生效果 ===
+        sgz_leiji: {
             audio: "ext:大梦千秋/audio/sgz_machao:4",
             enable: ["chooseToUse", "chooseToRespond"],
             persevereSkill: true,
@@ -123,7 +127,7 @@ sgz_leiji: {
                         player.addTempSkill('sgz_leiji_effect', { player: 'phaseAfter' });
                         target.addTempSkill('sgz_leiji_thunder', { player: 'phaseAfter' });
                         target.addSkill('sgz_leiji_boom');
-                        game.log(player, '对', target, '施加了⚡与💥');
+                        game.log(player, '对', target, '施加了⚡与💥效果');
                     }
                     if (cardName == 'sha') target.enableEquip(1);
                     if (cardName == 'shan') target.enableEquip(2);
@@ -150,7 +154,7 @@ sgz_leiji: {
                         player.addTempSkill('sgz_leiji_effect', { player: 'phaseAfter' });
                         target.addTempSkill('sgz_leiji_thunder', { player: 'phaseAfter' });
                         target.addSkill('sgz_leiji_boom');
-                        game.log(player, '对', target, '施加了⚡与💥');
+                        game.log(player, '对', target, '施加了⚡与💥效果');
                     }
                     if (cardName == 'sha') target.enableEquip(1);
                     if (cardName == 'shan') target.enableEquip(2);
@@ -162,184 +166,142 @@ sgz_leiji: {
                 }
             }
         },
-
-
-sgz_leiji_effect: {
-
-    charlotte: true,
-
-    onremove: function(player) {
-
-        if (player.storage.sgz_leiji_targets) {
-
-            player.storage.sgz_leiji_targets.forEach(function(target){
-
-                if (
-                    target &&
-                    target.hasSkill('sgz_leiji_boom')
-                ) {
-                    target.removeSkill('sgz_leiji_boom');
+            sgz_leiji_effect: {
+                charlotte: true,
+                onremove: function(player) {
+                    if (player.storage.sgz_leiji_targets) {
+                        player.storage.sgz_leiji_targets.forEach(function(target){
+                            if (target && target.hasSkill('sgz_leiji_boom')) {
+                                target.removeSkill('sgz_leiji_boom');
+                            }
+                        });
+                    }
+                    delete player.storage.sgz_leiji_targets;
+                },
+                mod: {
+                    targetInRange: function(card, player, target) {
+                        if (player.storage.sgz_leiji_targets && player.storage.sgz_leiji_targets.contains(target)) {
+                            return true;
+                        }
+                    },
+                    cardUsableTarget: function(card, player, target) {
+                        if (player.storage.sgz_leiji_targets && player.storage.sgz_leiji_targets.contains(target)) {
+                            return true;
+                        }
+                    }
                 }
-
-            });
-        }
-
-        delete player.storage.sgz_leiji_targets;
-    },
-
-    mod: {
-
-        targetInRange: function(card, player, target) {
-
-            if (
-                player.storage.sgz_leiji_targets &&
-                player.storage.sgz_leiji_targets.contains(target)
-            ) {
-                return true;
-            }
-        },
-
-        cardUsableTarget: function(card, player, target) {
-
-            if (
-                player.storage.sgz_leiji_targets &&
-                player.storage.sgz_leiji_targets.contains(target)
-            ) {
-                return true;
-            }
-        }
-    }
-},
-
-sgz_leiji_thunder: {
-
-    charlotte: true,
-
-    mark: true,
-
-    marktext: "⚡",
-
-    intro: {
-        name: "雷殛·雳",
-        content: "受到的伤害+1且改为雷电伤害"
-    },
-
-    trigger: {
-        player: "damageBegin"
-    },
-
-    forced: true,
-
-    content: function() {
-
-        trigger.num++;
-
-        trigger.nature = 'thunder';
-
-        game.log(
-            player,
-            '受⚡影响，伤害+1且改为雷电伤害'
-        );
-    },
-},
-sgz_leiji_boom: {
-
-    charlotte: true,
-
-    mark: true,
-
-    marktext: "💥",
-
-    intro: {
-        name: "雷殛·破",
-        content: "马超对你使用牌无距离和次数限制"
-    },
-},
-
-sgz_mingzong: {
-    audio: "ext:大梦千秋/audio/sgz_machao:4",
-    persevereSkill: true,
-    trigger: {
-        global: ["loseAfter","loseAsyncAfter","cardsDiscardAfter","equipAfter"],
-    },
-    usable: 1,
-    filter: function(event, player) {
-        if (!event.getd) {
-            return false;
-        }
-        let cards = event.getd();
-        return cards.some(card => {
-            if (get.position(card) != "d" || get.type(card) != "equip") {
-                return false;
-            }
-            if (card.willBeDestroyed("discardPile", get.owner(card), event)) {
-                return false;
-            }
-            return game.hasPlayer(current => {
-                return current.canEquip(card, true);
-            });
-        });
-    },
-    cost: async function(event, trigger, player) {
-        const cards = trigger.getd().filter(card => {
-            if (get.position(card) != "d" || get.type(card) != "equip") {
-                return false;
-            }
-            if (card.willBeDestroyed("discardPile", get.owner(card), trigger)) {
-                return false;
-            }
-            return true;
-        });
-        const {
-            result: { bool, targets, links },
-        } = await player.chooseButtonTarget({
-            createDialog: [get.prompt2(event.skill), cards],
-            filterTarget(card, player, target) {
-                const buttons = ui.selected.buttons;
-                if (!buttons.length) {
+            },
+            sgz_leiji_thunder: {
+                charlotte: true,
+                mark: true,
+                marktext: "⚡",
+                intro: {
+                    name: "雷殛·雳",
+                    content: "受到的伤害+1且改为雷电伤害"
+                },
+                trigger: {player: "damageBegin"},
+                forced: true,
+                content: function() {
+                    trigger.num++;
+                    trigger.nature = 'thunder';
+                    game.log(
+                        player,
+                        '受⚡影响，伤害+1且改为雷电伤害'
+                    );
+                },
+            },
+            sgz_leiji_boom: {
+                charlotte: true,
+                mark: true,
+                marktext: "💥",
+                intro: {
+                    name: "雷殛·破",
+                    content: "马超对你使用牌无距离和次数限制"
+                },
+            },
+        // === 技能2：【鸣踪】 ===
+        sgz_mingzong: {
+            audio: "ext:大梦千秋/audio/sgz_machao:4",
+            persevereSkill: true,
+            trigger: {
+                global: ["loseAfter","loseAsyncAfter","cardsDiscardAfter","equipAfter"],
+            },
+            usable: 1,
+            filter: function(event, player) {
+                if (!event.getd) {
                     return false;
                 }
-                return target.canEquip(buttons[0].link, true);
+                let cards = event.getd();
+                return cards.some(card => {
+                    if (get.position(card) != "d" || get.type(card) != "equip") {
+                        return false;
+                    }
+                    if (card.willBeDestroyed("discardPile", get.owner(card), event)) {
+                        return false;
+                    }
+                    return game.hasPlayer(current => {
+                        return current.canEquip(card, true);
+                    });
+                });
             },
-            ai1(button) {
-                return 20 - get.value(button.link);
+            cost: async function(event, trigger, player) {
+                const cards = trigger.getd().filter(card => {
+                    if (get.position(card) != "d" || get.type(card) != "equip") {
+                        return false;
+                    }
+                    if (card.willBeDestroyed("discardPile", get.owner(card), trigger)) {
+                        return false;
+                    }
+                    return true;
+                });
+                const {
+                    result: { bool, targets, links },
+                } = await player.chooseButtonTarget({
+                    createDialog: [get.prompt2(event.skill), cards],
+                    filterTarget(card, player, target) {
+                        const buttons = ui.selected.buttons;
+                        if (!buttons.length) {
+                            return false;
+                        }
+                        return target.canEquip(buttons[0].link, true);
+                    },
+                    ai1(button) {
+                        return 20 - get.value(button.link);
+                    },
+                    ai2(target) {
+                        const player = get.player();
+                        const card = ui.selected.buttons[0]?.link;
+                        if (!card) {
+                            return 0;
+                        }
+                        if (!target.countCards("h")) {
+                            return get.value(card, target) * get.attitude(player, target);
+                        }
+                        return (get.value(card, target) - 2 * target.countCards("h")) * get.attitude(player, target);
+                    },
+                });
+                event.result = {
+                    bool: bool,
+                    targets: targets,
+                    cards: links,
+                };
             },
-            ai2(target) {
-                const player = get.player();
-                const card = ui.selected.buttons[0]?.link;
-                if (!card) {
-                    return 0;
+            content: async function(event, trigger, player) {
+                const {
+                    targets: [target],
+                    cards: [card],
+                } = event;
+                target.$gain2(card);
+                await game.delay();
+                await target.equip(card);
+                const num = target.countCards("h");
+                if (num > 0 && target != player) {
+                    await player.gainPlayerCard(target, true, "h", num);
                 }
-                if (!target.countCards("h")) {
-                    return get.value(card, target) * get.attitude(player, target);
-                }
-                return (get.value(card, target) - 2 * target.countCards("h")) * get.attitude(player, target);
             },
-        });
-        event.result = {
-            bool: bool,
-            targets: targets,
-            cards: links,
-        };
-    },
-    content: async function(event, trigger, player) {
-        const {
-            targets: [target],
-            cards: [card],
-        } = event;
-        target.$gain2(card);
-        await game.delay();
-        await target.equip(card);
-        const num = target.countCards("h");
-        if (num > 0 && target != player) {
-            await player.gainPlayerCard(target, true, "h", num);
+            "_priority": 0,
         }
     },
-    "_priority": 0,
-
-}
-    },
-
     skillTranslate: {
         sgz_shouli: "狩骊",
         sgz_shouli_info: "锁定技，游戏开始时，所有角色废除武器栏与防具栏并获得一个额外的进攻马栏与防御马栏，然后依次装备一张游戏外的进攻马和防御马（随机花色点数）。",

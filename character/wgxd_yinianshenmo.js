@@ -1,15 +1,18 @@
 export default {
     character: {
-        wgxd_yinianshenmo: ["male", "shen", 6, ["wgxd_renling", "wgxd_fenjie", "wgxd_tianze"], [
-            "des:一念成神，慈悯众生；一念成魔，覆灭万物。此为星域之端的至高法相，于生死轮转间定夺因果。", 
-            "ext:大梦千秋/image/wgxd_yinianshenmo.jpg",
-            "die:ext:大梦千秋/audio/wgxd_yinianshenmo/die/die.mp3"
-        ]],
+        wgxd_yinianshenmo: [
+            "male", 
+            "shen", 
+            6, 
+            ["wgxd_renling", "wgxd_fenjie", "wgxd_tianze"], [
+                "des:一念成神，慈悯众生；一念成魔，覆灭万物。此为星域之端的至高法相，于生死轮转间定夺因果。", 
+                "ext:大梦千秋/image/wgxd_yinianshenmo.jpg",
+                "die:ext:大梦千秋/audio/wgxd_yinianshenmo/die/die.mp3"
+            ],
+        ]
     },
     characterName: 'wgxd_yinianshenmo',
-    characterTranslate: {
-        wgxd_yinianshenmo: "一念神魔",
-    },
+    characterTranslate: {wgxd_yinianshenmo: "一念神魔",},
     dynamicTranslate: {
         wgxd_yinianshenmo: function(player) {
             if (player.hasSkill('wgxd_hengyu')) return '一念神魔·神';
@@ -17,9 +20,10 @@ export default {
             return '一念神魔';
         },
     },
-
     skills: {
-        // --- 1. 初始形态逻辑 ---
+        //====================================
+        //             初始形态                  
+        //====================================
         wgxd_renling: {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo/ren:2",
             persevereSkill: true,
@@ -101,8 +105,9 @@ export default {
                 player.addTempSkill('wgxd_transformed_lock', 'phaseAfter');
             }
         },
-
-        // --- 一念觉醒技---
+        //====================================
+        //            二次觉醒              
+        //====================================
         wgxd_yinian: {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo:2",
             awakenSkill: true,
@@ -165,8 +170,9 @@ export default {
                 }
             }
         },
-
-        // --- 2. 神形态技能 (祝融) ---
+        //====================================
+        //             神形态                     
+        //====================================
         wgxd_hengyu: {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo/shen:4",
             persevereSkill: true,
@@ -228,37 +234,35 @@ export default {
                 game.log(player, '为', target, '系上了“神络”，对其使用牌无距离和次数限制');
             }
         },
-        // === 神络衍生：逻辑效果技能 ===
-        wgxd_shenluo_effect: {
-            charlotte: true,
-            onremove: function(player) {
-                delete player.storage.wgxd_shenluo_targets;
-            },
-            mod: {
-                // 对标记的目标使用牌无距离限制
-                targetInRange: function(card, player, target) {
-                    if (player.storage.wgxd_shenluo_targets && player.storage.wgxd_shenluo_targets.contains(target)) {
-                        return true;
-                    }
+            wgxd_shenluo_effect: {
+                charlotte: true,
+                onremove: function(player) {
+                    delete player.storage.wgxd_shenluo_targets;
                 },
-                // 对标记的目标使用牌无次数限制 (核心 mod: cardUsableTarget)
-                cardUsableTarget: function(card, player, target) {
-                    if (player.storage.wgxd_shenluo_targets && player.storage.wgxd_shenluo_targets.contains(target)) {
-                        return true;
+                mod: {
+                    // 对标记的目标使用牌无距离限制
+                    targetInRange: function(card, player, target) {
+                        if (player.storage.wgxd_shenluo_targets && player.storage.wgxd_shenluo_targets.contains(target)) {
+                            return true;
+                        }
+                    },
+                    // 对标记的目标使用牌无次数限制 (核心 mod: cardUsableTarget)
+                    cardUsableTarget: function(card, player, target) {
+                        if (player.storage.wgxd_shenluo_targets && player.storage.wgxd_shenluo_targets.contains(target)) {
+                            return true;
+                        }
                     }
                 }
-            }
-        },
-        // === 神络衍生：UI 显示标记 ===
-        wgxd_shenluo_tag: {
-            charlotte: true,
-            mark: true,
-            marktext: "神络",
-            intro: {
-                name: "神络",
-                content: "一念神魔对其使用牌无距离和次数限制。"
-            }
-        },
+            },
+            wgxd_shenluo_tag: {
+                charlotte: true,
+                mark: true,
+                marktext: "神络",
+                intro: {
+                    name: "神络",
+                    content: "一念神魔对其使用牌无距离和次数限制。"
+                }
+            },
         wgxd_xusheng: {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo/shen:2",
             persevereSkill: true,
@@ -320,8 +324,9 @@ export default {
                 player.addTempSkill('wgxd_transformed_lock', 'phaseAfter');
             }
         },
-
-        // --- 3. 魔形态技能 ---
+        //====================================
+        //             魔形态                     
+        //====================================
         wgxd_mosha: {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo/mo:6",
             persevereSkill: true,
@@ -430,6 +435,7 @@ export default {
                 player.addTempSkill('wgxd_transformed_lock', 'phaseAfter');
             }
         },
+        //======== 回合转换形态限一次 =========
         wgxd_transformed_lock: { charlotte: true }
     },
     skillTranslate: {

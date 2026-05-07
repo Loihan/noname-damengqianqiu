@@ -1,15 +1,19 @@
 export default {
     character: {
-        mfsd_anyuanmofa: ["male", "shen", 1, ["mfsd_guishi", "mfsd_zhouyv", "mfsd_jiangming", "mfsd_xiongtun"], [
-            "des:源自深渊的禁忌魔法。",
-            "ext:大梦千秋/image/mfsd_anyuanmofa.jpg",
-            "die:ext:大梦千秋/audio/mfsd_anyuanmofa/die/die.mp3"
-        ]],
+        mfsd_anyuanmofa: [
+            "male", 
+            "shen", 
+            1, 
+            ["mfsd_guishi", "mfsd_zhouyv", "mfsd_jiangming", "mfsd_xiongtun"], 
+            [
+                "des:源自深渊的禁忌魔法。",
+                "ext:大梦千秋/image/mfsd_anyuanmofa.jpg",
+                "die:ext:大梦千秋/audio/mfsd_anyuanmofa/die/die.mp3"
+            ]
+        ],
     },
     characterName: 'mfsd_anyuanmofa',
-    characterTranslate: {
-        mfsd_anyuanmofa: "暗渊魔法",
-    },
+    characterTranslate: {mfsd_anyuanmofa: "暗渊魔法",},
     skills: {
         // === 1. 鬼噬 (最终修正版：修复报错、初始化计数、回归结算) ===
         mfsd_guishi: {
@@ -94,7 +98,6 @@ export default {
                 }
             }
         },
-
         // === 2. 咒域 (保持逻辑) ===
         mfsd_zhouyv: {
             audio: "ext:大梦千秋/audio/mfsd_anyuanmofa/skill:6",
@@ -129,7 +132,6 @@ export default {
                 player.draw(player.getDamagedHp() + 1);
             }
         },
-
         // === 3. 降冥 (修改：变火焰伤害 + 标记回血) ===
         mfsd_jiangming: {
             audio: "ext:大梦千秋/audio/mfsd_anyuanmofa/skill:3",
@@ -197,7 +199,6 @@ export default {
                 }
             }
         },
-
         // === 4. 凶吞 (保持单次动画逻辑) ===
         mfsd_xiongtun: {
             audio: "ext:大梦千秋/audio/mfsd_anyuanmofa/skill:4",

@@ -1,16 +1,20 @@
 export default {
     character: {
         // 梦陆逊：梦势力，5体力
-        sgz_luxun: ["male", "shen", "1/6", ["sgz_qujian", "sgz_lianying", "sgz_taohui", "sgz_fenmie"], [
-            "des:书生拜将，火烧连营。梦回夷陵，这一场泼天大火，终将焚尽旧时代的残梦。",
-            "ext:大梦千秋/image/sgz_luxun.jpg",
-            "die:ext:大梦千秋/audio/sgz_luxun/die.mp3"
-        ]],
+        sgz_luxun: [
+            "male", 
+            "shen", 
+            "1/6", 
+            ["sgz_qujian", "sgz_lianying", "sgz_taohui", "sgz_fenmie"], 
+            [
+                "des:书生拜将，火烧连营。梦回夷陵，这一场泼天大火，终将焚尽旧时代的残梦。",
+                "ext:大梦千秋/image/sgz_luxun.jpg",
+                "die:ext:大梦千秋/audio/sgz_luxun/die.mp3"
+            ]
+        ],
     },
     characterName: 'sgz_luxun',
-    characterTranslate: {
-        sgz_luxun: "陆逊",
-    },
+    characterTranslate: {sgz_luxun: "陆逊",},
     skills: {
         // === 1. 驱剑 (AI 连招强化版) ===
         sgz_qujian: {
@@ -118,7 +122,6 @@ export default {
                 }
             }
         },
-
         // === 2. 连营 (修改：失去最后一张手牌摸至人数) ===
         sgz_lianying: {
             audio: "ext:大梦千秋/audio/sgz_luxun:2",
@@ -151,7 +154,6 @@ export default {
                 }
             }
         },
-
         // === 3. 韬晦 (终极逻辑强化版：强制选择、梅花自动判空) ===
         sgz_taohui: {
             audio: "ext:大梦千秋/audio/sgz_luxun:4",
@@ -276,7 +278,6 @@ export default {
                 }
             }
         },
-
         // === 4. 焚灭 (权重强化与精准AI版) ===
         sgz_fenmie: { 
             audio: "ext:大梦千秋/audio/sgz_luxun:2",

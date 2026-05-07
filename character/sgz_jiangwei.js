@@ -14,109 +14,109 @@ export default {
         ],
     },
     characterName: 'sgz_jiangwei',
-    characterTitle: {
-        sgz_jiangwei: "炽剑补天",
-    },
-    characterTranslate: {
-        sgz_jiangwei: "姜维",
-    },
+    characterTitle: {sgz_jiangwei: "炽剑补天",},
+    characterTranslate: {sgz_jiangwei: "姜维",},
     skills: {
-        // === 核心技能: 【九伐】 ===
-sgz_jiufa: {
-    audio: "ext:大梦千秋/audio/sgz_jiangwei:5",
-    persevereSkill: true,
-    forced: true,
-    mark: true,
-    marktext: "伐",
-    intro: {
-        name: "九伐",
-        content: "mark",
-        onunmark: function(storage, player) {
-            player.removeSkill(["sgz_xinran", "sgz_zhuri", "sgz_juejin", "sgz_guju", "sgz_youming"]);
+        //====================================
+        //          核心技能：九伐                   
+        //====================================
+        sgz_jiufa: {
+            audio: "ext:大梦千秋/audio/sgz_jiangwei:5",
+            persevereSkill: true,
+            forced: true,
+            mark: true,
+            marktext: "伐",
+            intro: {
+                name: "九伐",
+                content: "mark",
+                onunmark: function(storage, player) {
+                    player.removeSkill(["sgz_xinran", "sgz_zhuri", "sgz_juejin", "sgz_guju", "sgz_youming"]);
+                },
+            },
+            derivation: ["sgz_xinran", "sgz_zhuri", "sgz_juejin", "sgz_guju", "sgz_youming"],
+            trigger: { global: "phaseBegin" },
+            //  filter: function(event, player) {
+            //      return event.player != player;
+            //  },
+            content: function() {
+                'step 0'
+
+                var draw_target = Math.min(9, player.maxHp);
+
+                if (player.countCards('h') < draw_target) {
+                    player.drawTo(draw_target);
+                } else {
+                    player.draw();
+                }
+                
+                // 【核心】在这里，我们只做逻辑判断，不播放音频
+                if (player.countMark('sgz_jiufa') >= 9) {
+                    event.finish();
+                }
+                'step 1'
+                var can_compare_target_exists = game.hasPlayer(function(current) {
+                    return player.canCompare(current) && current != player;
+                });
+
+                if (can_compare_target_exists) {
+                    player.chooseTarget('九伐：请选择一名其他角色进行拼点', true, function(card, player, target){
+                        return target != player && player.canCompare(target);
+                    }).set('ai', function(target){
+                        return -get.attitude(_status.event.player, target);
+                    });
+                } else {
+                    game.log('场上没有可以拼点的目标，【九伐】失效');
+                    event.finish();
+                }
+                'step 2'
+                if (result.bool && result.targets) {
+                    var target = result.targets[0];
+                    event.target = target;
+
+                    // 【核心】在这里，在发起拼点前，唯一一次地播放音频和记录日志
+                    player.logSkill('sgz_jiufa', target);
+
+                    player.chooseToCompare(target);
+                } else {
+                    event.finish();
+                }
+                'step 3'
+                if (result.bool) { 
+                    // 不再需要 logSkill
+                    player.addMark('sgz_jiufa', 1);
+                    player.draw();
+                    player.gainMaxHp();
+                    player.addSkill('sgz_jiufa_sha');
+                } else {
+                    event.finish();
+                }
+                'step 4'
+                if(player.hasSkill('sgz_jiufa_sha')){
+                    player.useCard({ name: "sha", nature: "fire" }, event.target, false, 'sgz_jiufa_sha');
+                    player.removeSkill('sgz_jiufa_sha');
+                }
+                'step 5'
+                var num = player.countMark('sgz_jiufa');
+                var skills_to_add = [];
+                if (num >= 1 && !player.hasSkill('sgz_xinran')) skills_to_add.push('sgz_xinran');  
+                if (num >= 3 && !player.hasSkill('sgz_zhuri')) skills_to_add.push('sgz_zhuri');
+                if (num >= 5 && !player.hasSkill('sgz_juejin')) skills_to_add.push('sgz_juejin');
+                if (num >= 7 && !player.hasSkill('sgz_guju')) skills_to_add.push('sgz_guju');
+                if (num >= 9 && !player.hasSkill('sgz_youming')) {
+                    skills_to_add.push('sgz_youming');
+                    player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_jiangwei_9.png');
+                }
+                if (skills_to_add.length) {
+                    player.addSkill(skills_to_add);
+                }
+            },
         },
-    },
-    derivation: ["sgz_xinran", "sgz_zhuri", "sgz_juejin", "sgz_guju", "sgz_youming"],
-    trigger: { global: "phaseBegin" },
-    //  filter: function(event, player) {
-    //      return event.player != player;
-    //  },
-    content: function() {
-        'step 0'
-
-        var draw_target = Math.min(9, player.maxHp);
-
-        if (player.countCards('h') < draw_target) {
-            player.drawTo(draw_target);
-        } else {
-            player.draw();
-        }
-        
-        // 【核心】在这里，我们只做逻辑判断，不播放音频
-        if (player.countMark('sgz_jiufa') >= 9) {
-            event.finish();
-        }
-        'step 1'
-        var can_compare_target_exists = game.hasPlayer(function(current) {
-            return player.canCompare(current) && current != player;
-        });
-
-        if (can_compare_target_exists) {
-            player.chooseTarget('九伐：请选择一名其他角色进行拼点', true, function(card, player, target){
-                return target != player && player.canCompare(target);
-            }).set('ai', function(target){
-                return -get.attitude(_status.event.player, target);
-            });
-        } else {
-            game.log('场上没有可以拼点的目标，【九伐】失效');
-            event.finish();
-        }
-        'step 2'
-        if (result.bool && result.targets) {
-            var target = result.targets[0];
-            event.target = target;
-
-            // 【核心】在这里，在发起拼点前，唯一一次地播放音频和记录日志
-            player.logSkill('sgz_jiufa', target);
-
-            player.chooseToCompare(target);
-        } else {
-            event.finish();
-        }
-        'step 3'
-        if (result.bool) { 
-            // 不再需要 logSkill
-            player.addMark('sgz_jiufa', 1);
-            player.draw();
-            player.gainMaxHp();
-            player.addSkill('sgz_jiufa_sha');
-        } else {
-            event.finish();
-        }
-        'step 4'
-        if(player.hasSkill('sgz_jiufa_sha')){
-             player.useCard({ name: "sha", nature: "fire" }, event.target, false, 'sgz_jiufa_sha');
-             player.removeSkill('sgz_jiufa_sha');
-        }
-        'step 5'
-        var num = player.countMark('sgz_jiufa');
-        var skills_to_add = [];
-        if (num >= 1 && !player.hasSkill('sgz_xinran')) skills_to_add.push('sgz_xinran');  
-        if (num >= 3 && !player.hasSkill('sgz_zhuri')) skills_to_add.push('sgz_zhuri');
-        if (num >= 5 && !player.hasSkill('sgz_juejin')) skills_to_add.push('sgz_juejin');
-        if (num >= 7 && !player.hasSkill('sgz_guju')) skills_to_add.push('sgz_guju');
-        if (num >= 9 && !player.hasSkill('sgz_youming')) {
-            skills_to_add.push('sgz_youming');
-            player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_jiangwei_9.png');
-        }
-        if (skills_to_add.length) {
-            player.addSkill(skills_to_add);
-        }
-    },
-},
         // 临时技能，用于正确触发视为使用杀
         sgz_jiufa_sha: { charlotte: true },
 
-        // --- 衍生技能 ---
+        //====================================
+        //            衍生技能                  
+        //====================================
         sgz_xinran: {
             audio: "ext:大梦千秋/audio/sgz_jiangwei:3",
             persevereSkill: true,
@@ -201,7 +201,6 @@ sgz_jiufa: {
                 if (event.player_wins > 0) event.target.loseMaxHp(event.player_wins);
             },
         },
-        // === 孤炬 (sgz_guju) 精准交换版 ===
         sgz_guju: {
             audio: "ext:大梦千秋/audio/sgz_jiangwei:2",
             persevereSkill: true,
@@ -277,175 +276,167 @@ sgz_jiufa: {
                 }
             },
         },
+        // === 【幽明】及其衍生效果 (最终逻辑闭环版) ===
+        sgz_youming: {
+            audio: "ext:大梦千秋/audio/sgz_jiangwei:3",
+            persevereSkill: true,
+            limited: true,
+            skillAnimation: true,
+            animationColor: 'fire',
+            mark: true,
+            intro: { content: 'limited' },
+            trigger: { player: "dying" },
+            priority: 6,
+            direct: true,
+            filter: function(event, player) {
+                // === 修改点1：无来源伤害不能发动 ===
+                // trigger.source 必须存在且存活，否则无法进行后续复仇逻辑
+                return event.source && event.source.isAlive();
+            },
+            content: function() {
+                'step 0'
+                player.chooseBool(get.prompt('sgz_youming'), '是否发动【幽明】进入复汉回合？（若成功发动，此回合结束你必死亡）').set('ai', () => true);
+                'step 1'
+                if (result.bool) {
+                    player.awakenSkill('sgz_youming');
+                    trigger.cancel(); // 取消濒死
 
+                    // 1. 插入新回合
+                    player.insertPhase();
 
-// === 梦姜维：【幽明】修复版 (严格遵循原逻辑) ===
-// === 梦姜维：【幽明】及其衍生效果 (最终逻辑闭环版) ===
-
-sgz_youming: {
-    audio: "ext:大梦千秋/audio/sgz_jiangwei:3",
-    persevereSkill: true,
-    limited: true,
-    skillAnimation: true,
-    animationColor: 'fire',
-    mark: true,
-    intro: { content: 'limited' },
-    trigger: { player: "dying" },
-    priority: 6,
-    direct: true,
-    filter: function(event, player) {
-        // === 修改点1：无来源伤害不能发动 ===
-        // trigger.source 必须存在且存活，否则无法进行后续复仇逻辑
-        return event.source && event.source.isAlive();
-    },
-    content: function() {
-        'step 0'
-        player.chooseBool(get.prompt('sgz_youming'), '是否发动【幽明】进入复汉回合？（若成功发动，此回合结束你必死亡）').set('ai', () => true);
-        'step 1'
-        if (result.bool) {
-            player.awakenSkill('sgz_youming');
-            trigger.cancel(); // 取消濒死
-
-            // 1. 插入新回合
-            player.insertPhase();
-
-            // 2. 中断当前回合
-            var evt = _status.event;
-            for (var i = 0; i < 10; i++) {
-                if (evt && evt.name == 'phase') {
-                    evt.skipped = true;
-                    break;
+                    // 2. 中断当前回合
+                    var evt = _status.event;
+                    for (var i = 0; i < 10; i++) {
+                        if (evt && evt.name == 'phase') {
+                            evt.skipped = true;
+                            break;
+                        }
+                        if (evt && evt.getParent) evt = evt.getParent();
+                        else break;
+                    }
+                    
+                    // 3. 记录目标并添加核心效果
+                    player.draw(player.maxHp);
+                    player.storage.sgz_youming_target = trigger.source;
+                    // 添加临时效果，有效期直到 phaseAfter (确保全流程覆盖)
+                    player.addTempSkill('sgz_youming_effect', {player:'phaseAfter'});
+                    player.addTempSkill('sgz_youming_counter', {player:'phaseAfter'});
+                    player.addTempSkill('sgz_youming_die', {player:'phaseAfter'});
+                    
+                    game.playAudio(`../extension/大梦千秋/audio/sgz_jiangwei/sgz_youming${[1,2,3].randomGet()}.mp3`);
                 }
-                if (evt && evt.getParent) evt = evt.getParent();
-                else break;
-            }
-            
-            // 3. 记录目标并添加核心效果
-            player.draw(player.maxHp);
-            player.storage.sgz_youming_target = trigger.source;
-            // 添加临时效果，有效期直到 phaseAfter (确保全流程覆盖)
-            player.addTempSkill('sgz_youming_effect', {player:'phaseAfter'});
-            player.addTempSkill('sgz_youming_counter', {player:'phaseAfter'});
-            player.addTempSkill('sgz_youming_die', {player:'phaseAfter'});
-            
-            game.playAudio(`../extension/大梦千秋/audio/sgz_jiangwei/sgz_youming${[1,2,3].randomGet()}.mp3`);
-        }
-    },
-},
-
-sgz_youming_effect: {
-    charlotte: true,
-    onremove: function(player) { 
-        delete player.storage.sgz_youming_target; 
-        delete player.storage.sgz_youming_count;
-        player.removeSkill('sgz_youming_counter');
-    },
-    mod: {
-        playerEnabled: function(card, player, target) {
-            var youming_target = player.storage.sgz_youming_target;
-            if (youming_target && target != player && target != youming_target) return false;
+            },
         },
-        cardUsable: () => Infinity,
-        targetInRange: () => true,
-    },
-    trigger: { 
-        player: ["useCard", "dying", "phaseAfter"] // 增加 phaseAfter 作为最终死亡补丁
-    },
-    forced: true,
-    silent: true,
-    filter: function(event, player) {
-        // 1. 拦截濒死
-        if (event.name == 'dying') return true;
-        // 2. 拦截回合结束（万一跳过了出牌阶段，在此处抓取死亡）
-        if (event.name == 'phaseAfter') return true;
-        // 3. 拦截出牌
-        var target = player.storage.sgz_youming_target;
-        return target && event.targets && event.targets.includes(target);
-    },
-    content: function() {
-        "step 0"
-        // 如果是濒死，直接取消，防止特效循环
-        if (trigger.name == 'dying') {
-            trigger.cancel();
-            event.finish();
-            return;
-        }
-        
-        // 如果是回合结束或第9张牌逻辑，进入最终谢幕
-        var isFinalCard = (trigger.name == 'useCard' && player.storage.sgz_youming_count >= 8);
-        var isTurnEnd = (trigger.name == 'phaseAfter');
+            sgz_youming_effect: {
+                charlotte: true,
+                onremove: function(player) { 
+                    delete player.storage.sgz_youming_target; 
+                    delete player.storage.sgz_youming_count;
+                    player.removeSkill('sgz_youming_counter');
+                },
+                mod: {
+                    playerEnabled: function(card, player, target) {
+                        var youming_target = player.storage.sgz_youming_target;
+                        if (youming_target && target != player && target != youming_target) return false;
+                    },
+                    cardUsable: () => Infinity,
+                    targetInRange: () => true,
+                },
+                trigger: { 
+                    player: ["useCard", "dying", "phaseAfter"] // 增加 phaseAfter 作为最终死亡补丁
+                },
+                forced: true,
+                silent: true,
+                filter: function(event, player) {
+                    // 1. 拦截濒死
+                    if (event.name == 'dying') return true;
+                    // 2. 拦截回合结束（万一跳过了出牌阶段，在此处抓取死亡）
+                    if (event.name == 'phaseAfter') return true;
+                    // 3. 拦截出牌
+                    var target = player.storage.sgz_youming_target;
+                    return target && event.targets && event.targets.includes(target);
+                },
+                content: function() {
+                    "step 0"
+                    // 如果是濒死，直接取消，防止特效循环
+                    if (trigger.name == 'dying') {
+                        trigger.cancel();
+                        event.finish();
+                        return;
+                    }
+                    
+                    // 如果是回合结束或第9张牌逻辑，进入最终谢幕
+                    var isFinalCard = (trigger.name == 'useCard' && player.storage.sgz_youming_count >= 8);
+                    var isTurnEnd = (trigger.name == 'phaseAfter');
 
-        if (isTurnEnd || isFinalCard) {
-            event.goto(1); // 直接跳到交牌死步骤
-        } else {
-            // 普通出牌计数逻辑
-            game.playAudio(`../extension/大梦千秋/audio/sgz_jiangwei/sgz_youming${[1,2,3].randomGet()}.mp3`);
-            if (typeof player.storage.sgz_youming_count !== 'number') player.storage.sgz_youming_count = 0;
-            player.storage.sgz_youming_count++;
-            player.storage.sgz_youming_counter = player.storage.sgz_youming_count;
-            player.markSkill('sgz_youming_counter');
-            event.finish();
-        }
-        "step 1"
-        // === 最终谢幕步骤 1：先交牌 ===
-        if (player.countCards('h') > 0) {
-            player.chooseTarget('幽明：请将所有手牌交给一名角色', true).set('ai', target => get.attitude(player, target));
-        } else {
-            event.goto(3);
-        }
-        "step 2"
-        if (result.bool && result.targets) {
-            player.give(player.getCards('h'), result.targets[0]);
-        }
-        "step 3"
-        // === 最终谢幕步骤 2：仇敌立即死亡 (仅限完成9张牌时) ===
-        if (player.storage.sgz_youming_count >= 8) {
-            var target = player.storage.sgz_youming_target;
-            if (target && target.isAlive()) {
-                game.log(player, '完成了最后的复汉使命，', target, '立即死亡');
-                target.die();
+                    if (isTurnEnd || isFinalCard) {
+                        event.goto(1); // 直接跳到交牌死步骤
+                    } else {
+                        // 普通出牌计数逻辑
+                        game.playAudio(`../extension/大梦千秋/audio/sgz_jiangwei/sgz_youming${[1,2,3].randomGet()}.mp3`);
+                        if (typeof player.storage.sgz_youming_count !== 'number') player.storage.sgz_youming_count = 0;
+                        player.storage.sgz_youming_count++;
+                        player.storage.sgz_youming_counter = player.storage.sgz_youming_count;
+                        player.markSkill('sgz_youming_counter');
+                        event.finish();
+                    }
+                    "step 1"
+                    // === 最终谢幕步骤 1：先交牌 ===
+                    if (player.countCards('h') > 0) {
+                        player.chooseTarget('幽明：请将所有手牌交给一名角色', true).set('ai', target => get.attitude(player, target));
+                    } else {
+                        event.goto(3);
+                    }
+                    "step 2"
+                    if (result.bool && result.targets) {
+                        player.give(player.getCards('h'), result.targets[0]);
+                    }
+                    "step 3"
+                    // === 最终谢幕步骤 2：仇敌立即死亡 (仅限完成9张牌时) ===
+                    if (player.storage.sgz_youming_count >= 8) {
+                        var target = player.storage.sgz_youming_target;
+                        if (target && target.isAlive()) {
+                            game.log(player, '完成了最后的复汉使命，', target, '立即死亡');
+                            target.die();
+                        }
+                    }
+                    "step 4"
+                    // === 最终谢幕步骤 3：姜维回复至上限后立即死亡 ===
+                    // 这是修复死亡特效循环的关键：先重置体力和状态
+                    player.removeSkill('sgz_youming_effect'); 
+                    player.recover(player.maxHp - player.hp); // 强行回满
+                    "step 5"
+                    player.die(); // 满血死亡，系统会正确处理此事件并清除所有濒死监听
+                }
+            },
+            sgz_youming_counter: {
+                charlotte: true,
+                mark: true,
+                marktext: "复明",
+                intro: {
+                    name: "幽明",
+                    content: function(storage) {
+                        var count = storage || 0;
+                        return '已对目标使用 ' + count + '/9 张牌';
+                    }
+                },
+
+            },
+            sgz_youming_die: {
+                charlotte: true,
+                mark: true,
+                forced:true,
+                trigger:{player:["phaseUseAfter","phaseDiscardBegin","phaseEnd"]},
+                marktext: "死亡",
+                intro: {
+                    name: "死亡",
+                    content: "出牌阶段结束时你死亡",
+                },
+                content: function() {
+                    player.die();
+                }
             }
-        }
-        "step 4"
-        // === 最终谢幕步骤 3：姜维回复至上限后立即死亡 ===
-        // 这是修复死亡特效循环的关键：先重置体力和状态
-        player.removeSkill('sgz_youming_effect'); 
-        player.recover(player.maxHp - player.hp); // 强行回满
-        "step 5"
-        player.die(); // 满血死亡，系统会正确处理此事件并清除所有濒死监听
-    }
-},
-
-sgz_youming_counter: {
-    charlotte: true,
-    mark: true,
-    marktext: "复明",
-    intro: {
-        name: "幽明",
-        content: function(storage) {
-            var count = storage || 0;
-            return '已对目标使用 ' + count + '/9 张牌';
-        }
     },
-
-},
-sgz_youming_die: {
-    charlotte: true,
-    mark: true,
-    forced:true,
-    trigger:{player:["phaseUseAfter","phaseDiscardBegin","phaseEnd"]},
-    marktext: "死亡",
-    intro: {
-        name: "死亡",
-        content: "出牌阶段结束时你死亡",
-    },
-    content: function() {
-        player.die();
-    }
-}
-
-    },
-    
     skillTranslate: {
         sgz_jiufa: "九伐",
         sgz_jiufa_info: "锁定技。①每名角色回合开始时，若你的手牌数小于X，你将手牌摸至X（X为你的体力上限且至多为9）；否则，你摸一张牌。然后你选择一名其他角色拼点：若你赢，你获得一个“伐”标记、摸一张牌、手牌上限+1、增加1点体力上限并视为对其使用一张火【杀】。<br>②根据你的“伐”标记数量，你视为拥有以下技能：<br>1：【薪燃】 3：【逐日】 5：【绝烬】 7：【孤炬】 9：【幽明】<br>③当“伐”标记达到9时此技能失去拼点效果。",

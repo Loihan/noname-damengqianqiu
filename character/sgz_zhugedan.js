@@ -13,15 +13,10 @@ export default {
         ],
     },
     characterName: 'sgz_zhugedan',
-    characterTranslate: {
-        sgz_zhugedan: "诸葛诞",
-        sgz_zhugedan_prefix:"梦",
-    },
-    characterTitle: {
-        sgz_zhugedan: "寿春举义",
-    },
+    characterTranslate: {sgz_zhugedan: "诸葛诞"},
+    characterTitle: {sgz_zhugedan: "寿春举义",},
     skills: {
-        // === 1. 定叛 (每人限一次，逻辑对齐范本) ===
+        // === 1. 定叛  ===
         sgz_dingpan: {
             audio: "ext:大梦千秋/audio/sgz_zhugedan:5",
             persevereSkill: true,
@@ -91,8 +86,7 @@ export default {
                 }
             }
         },
-
-        // === 2. 伐逆 (1:1 移植范本逻辑) ===
+        // === 2. 伐逆  ===
         sgz_fani: {
             audio: "ext:大梦千秋/audio/sgz_zhugedan:6",
             forced: true,
@@ -191,54 +185,52 @@ export default {
                 }
             }
         },
-
-        // === 3. 焚玉 (计数标记模式：有多少回合就有多少梦标记) ===
-sgz_fenyu: {
-    audio: "ext:大梦千秋/audio/sgz_zhugedan:3",
-    persevereSkill: true,
-    forced: true,
-    trigger: { global: "die" },
-    filter: function(event, player) {
-        return event.player.hasSkill("sgz_dingpan_pan");
-    },
-    content: function() {
-        "step 0"
-        player.logSkill("sgz_fenyu");
-        player.draw(2);
-        player.gainMaxHp(3);
-        
-        // 核心：必须先添加逻辑技能，标记的自动扣减才会生效
-        player.addSkill('sgz_fenyu_mark');
-        player.addMark('sgz_fenyu_mark', 1);
-        
-        // 插入额外回合
-        player.insertPhase();
-        
-        game.playAudio('../extension/大梦千秋/audio/sgz_zhugedan/sgz_fenyu.mp3');
-    }
-},
-sgz_fenyu_mark: {
-    charlotte: true, // 彻底隐藏技能，仅显示标记
-    mark: true,
-    marktext: "梦",
-    intro: {
-        name: "梦回",
-        content: "mark", // 自动显示标记数量
-    },
-    // 逻辑：每当任何回合（包括额外回合）开始时，消耗一个标记
-    trigger: { player: "phaseBeginStart" },
-    forced: true,
-    silent: true,
-    content: function() {
-        player.removeMark('sgz_fenyu_mark', 1);
-        // 如果标记扣完了，自动移除逻辑技能，保持面板干净
-        if (player.countMark('sgz_fenyu_mark') <= 0) {
-            player.removeSkill('sgz_fenyu_mark');
-        }
-    }
-},
-
-        // === 4. 困诛 (强命) ===
+        // === 3. 焚玉  ===
+        sgz_fenyu: {
+            audio: "ext:大梦千秋/audio/sgz_zhugedan:3",
+            persevereSkill: true,
+            forced: true,
+            trigger: { global: "die" },
+            filter: function(event, player) {
+                return event.player.hasSkill("sgz_dingpan_pan");
+            },
+            content: function() {
+                "step 0"
+                player.logSkill("sgz_fenyu");
+                player.draw(2);
+                player.gainMaxHp(3);
+                
+                // 核心：必须先添加逻辑技能，标记的自动扣减才会生效
+                player.addSkill('sgz_fenyu_mark');
+                player.addMark('sgz_fenyu_mark', 1);
+                
+                // 插入额外回合
+                player.insertPhase();
+                
+                game.playAudio('../extension/大梦千秋/audio/sgz_zhugedan/sgz_fenyu.mp3');
+            }
+        },
+        sgz_fenyu_mark: {
+            charlotte: true, // 彻底隐藏技能，仅显示标记
+            mark: true,
+            marktext: "焚玉",
+            intro: {
+                name: "焚玉",
+                content: "mark", // 自动显示标记数量
+            },
+            // 逻辑：每当任何回合（包括额外回合）开始时，消耗一个标记
+            trigger: { player: "phaseBeginStart" },
+            forced: true,
+            silent: true,
+            content: function() {
+                player.removeMark('sgz_fenyu_mark', 1);
+                // 如果标记扣完了，自动移除逻辑技能，保持面板干净
+                if (player.countMark('sgz_fenyu_mark') <= 0) {
+                    player.removeSkill('sgz_fenyu_mark');
+                }
+            }
+        },
+        // === 4. 困诛  ===
         sgz_kunzhu: {
             audio: "ext:大梦千秋/audio/sgz_zhugedan:4",
             persevereSkill: true,
@@ -254,8 +246,7 @@ sgz_fenyu_mark: {
                 game.playAudio('../extension/大梦千秋/audio/sgz_zhugedan/sgz_kunzhu.mp3');
             },
         },
-
-        // === 5. 孤绝 (回合末摸牌+护甲) ===
+        // === 5. 孤绝  ===
         sgz_gujue: {
             audio: "ext:大梦千秋/audio/sgz_zhugedan:3",
             persevereSkill: true,
