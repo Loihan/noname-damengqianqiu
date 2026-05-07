@@ -31,7 +31,6 @@ export default {
 
         // === 2. 璇和 (锁定技：用锦囊摸标记牌并执行花色效果) ===
         sgz_xuanhe: {
-            // 修改点：音频现在直接随机触发，不再区分花色
             audio: "ext:大梦千秋/audio/sgz_huangyueying:4",
             forced: true, 
             persevereSkill: true,
@@ -42,12 +41,25 @@ export default {
                 var suit = get.suit(event.card); 
                 return ['heart', 'diamond', 'club', 'spade'].includes(suit); 
             },
-            mod: {
-                // 标记牌不计入手牌上限
-                ignoredHandcard: function (card, player) { 
-                    if (card.hasGaintag('sgz_xuanhe_tag')) return true;
+            // 这一部分请在 sgz_xuanhe 的 mod 块中更新
+        mod: {
+            ignoredHandcard: function (card, player) { 
+                if (card.hasGaintag('sgz_xuanhe_tag')) return true;
+            },
+            // === 核心修正：让 AI 极度厌恶使用梦闪响应 ===
+            aiUseful: function(player, card, num) {
+                if (card.hasGaintag('sgz_xuanhe_shan')) {
+                    // 返回一个负数或极小的数，AI 只有在快被打死且没别的闪时才可能考虑
+                    return -100; 
                 }
             },
+            aiValue: function(player, card, num) {
+                if (card.hasGaintag('sgz_xuanhe_shan')) {
+                    // 价值设为极高，防止被各种弃牌、重铸效果选中
+                    return 30;
+                }
+            }
+        },
             content: function () {
                 "step 0"; 
                 player.draw(); 
@@ -110,31 +122,58 @@ export default {
             group: ["sgz_changming_prep", "sgz_changming_finish"], 
             mod: { 
                 ignoredHandcard: function (card, player) { if (card.hasGaintag('sgz_xuanhe_shan')) return true }, 
-                cardDiscardable: function (card, player, name) { if (name == 'phaseDiscard' && card.hasGaintag('sgz_xuanhe_shan')) return false } 
+                cardDiscardable: function (card, player, name) { if (name == 'phaseDiscard' && card.hasGaintag('sgz_xuanhe_shan')) return false },
+                // 梦闪保护
+                aiUseful: function(player, card, num) {
+                    if (card.hasGaintag('sgz_xuanhe_shan')) return -100; 
+                },
+                aiValue: function(player, card, num) {
+                    if (card.hasGaintag('sgz_xuanhe_shan')) return 30;
+                }
             }, 
             subSkill: { 
                 prep: { 
                     trigger: { player: "phaseZhunbeiBegin" }, 
                     forced: true, 
-                    filter(event, player) { return game.countPlayer() > 0; }, 
-                    async content(event, trigger, player) { 
+                    filter: function(event, player) { return game.countPlayer() > 0; }, 
+                    content: function() {
+                        "step 0"
                         var x = player.countCards('h', card => card.hasGaintag('sgz_xuanhe_shan')); 
                         var y = game.countPlayer();
                         var guanxing_num = Math.min(2 * x + y, 7); 
                         player.logSkill('sgz_changming'); 
-                        await player.chooseToGuanxing(guanxing_num); 
+                        
+                        // === 核心修正：使用 processAI 的标准数组包装结构 ===
+                        var next = player.chooseToGuanxing(guanxing_num);
+                        next.set('processAI', function(list) {
+                            var cards = list[0][1].slice(); // 获取观星牌原始数组
+                            var top = [];
+                            var bottom = [];
+                            for (var i = 0; i < cards.length; i++) {
+                                // 锦囊牌(trick)放顶，其他牌放底
+                                if (get.type(cards[i], 'trick') == 'trick') {
+                                    top.push(cards[i]);
+                                } else {
+                                    bottom.push(cards[i]);
+                                }
+                            }
+                            // 返回格式必须为 [置于顶部的数组, 置于底部的数组]
+                            return [bottom, top];
+                        });
                     }, 
                 }, 
                 finish: { 
                     trigger: { player: "phaseJieshuBegin" }, 
                     forced: true, 
-                    filter(event, player) { return game.countPlayer() > 0; }, 
-                    async content(event, trigger, player) { 
+                    filter: function(event, player) { return game.countPlayer() > 0; }, 
+                    content: function() {
+                        "step 0"
                         var x = player.countCards('h', card => card.hasGaintag('sgz_xuanhe_shan')); 
                         var y = game.countPlayer();
                         var guanxing_num = Math.min(2 * x + y, 7); 
                         player.logSkill('sgz_changming'); 
-                        await player.chooseToGuanxing(guanxing_num); 
+                        // 结束阶段维持默认观星 AI (不设置 processAI)
+                        player.chooseToGuanxing(guanxing_num);
                     }, 
                 }, 
             } 
@@ -144,55 +183,63 @@ export default {
         sgz_qimeng: {
             audio: "ext:大梦千秋/audio/sgz_huangyueying:4",
             persevereSkill: true,
-            forced: true,
-            trigger: {
-                player: "damageEnd",
-            },
-            // 判定：只要有牌就能发动
+            trigger: { player: "damageEnd" },
             filter: function(event, player) {
                 return player.countCards("hes") > 0;
             },
-            cost: async function(event, trigger, player) {
-                event.result = {
-                    bool: true,
-                    cost_data: "wuzhong",
-                };
+            ai: {
+                maixie: true,
+                effect: {
+                    target: function(card, player, target) {
+                        // AI 卖血倾向：血量 >= 3 时，认为受到伤害有极高收益 [0, 4]
+                        // 血量 < 3 时，返回默认评估，AI 会尽量躲避伤害
+                        if (get.tag(card, 'damage') && target.hp >= 3) return [0, 3];
+                    }
+                }
             },
-            content: async function(event, trigger, player) {
-                const name = event.cost_data;
-                
-                // 1. 播放语音
+            content: function() {
+                "step 0"
                 game.playAudio('../extension/大梦千秋/audio/sgz_huangyueying/sgz_qimeng.mp3');
-
-                // 2. 核心重写：劫持 chooseToUse
-                await player
-                    .chooseToUse(true) // true 表示物理移除“取消”按钮
-                    .set("openskilldialog", `将一张牌当作【无中生有】使用`)
-                    .set("norestore", true)
-                    .set("_backupevent", `${event.name}_backup`)
-                    .set("custom", {
-                        add: {},
-                        replace: { window() {} },
-                    })
-                    .backup(`${event.name}_backup`) // 绑定下方的备份子技能
-                    .set("targetRequired", true)
-                    .set("complexTarget", true)
-                    .set("complexSelect", true)
-                    .set("addCount", false); // 不计入次数
+                
+                player.chooseToUse({
+                    viewAs: { name: "wuzhong" },
+                    _backupevent: `sgz_qimeng_backup`,
+                    prompt: '绮梦：是否将一张牌当作【无中生有】使用？',
+                    openskilldialog: '将一张牌当作【无中生有】使用',
+                    norestore: true, 
+                    addCount: false,
+                    // === 核心 AI 劫持：选牌前的优先级排序 ===
+                    ai1: function(card) {
+                        var player = _status.event.player;
+                        var suit = get.suit(card);
+                        
+                        // 1. 血量 < 4 优先用红桃 (回血/加护甲收益最高)
+                        if (player.hp < 4 && suit == 'heart') return 300;
+                        // 2. 手牌 < 5 优先用黑桃 (抢牌收益高)
+                        if (player.countCards('h') < 5 && suit == 'spade') return 280;
+                        // 3. 方块 (稳定火杀)
+                        if (suit == 'diamond') return 260;
+                        // 4. 黑桃 (常规收益)
+                        if (suit == 'spade') return 240;
+                        // 5. 梅花 (梦闪收益)
+                        if (suit == 'club') return 220;
+                        // 6. 红桃 (常规收益)
+                        if (suit == 'heart') return 200;
+                        
+                        // 兜底：其他牌按价值反向排序（优先用垃圾牌）
+                        return 100 - get.value(card);
+                    }
+                }).backup(`sgz_qimeng_backup`);
             },
             subSkill: {
                 backup: {
                     log: false,
-                    filterCard: function(card) {
-                        // 允许选择所有实体牌
-                        return get.itemtype(card) == "card";
+                    filterCard: function(card) { return get.itemtype(card) == "card"; },
+                    // 确保花色被继承，以便触发璇和的对应效果
+                    viewAs: function(cards) {
+                        return { name: "wuzhong", suit: get.suit(cards[0]) };
                     },
                     position: "hes",
-                    // 强制指定转化为无中生有
-                    viewAs: { name: "wuzhong" },
-                    check: function(card) {
-                        return 7 - get.value(card);
-                    },
                     sub: true,
                 },
             },

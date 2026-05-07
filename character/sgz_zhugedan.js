@@ -27,7 +27,7 @@ export default {
             persevereSkill: true,
             enable: "phaseUse",
             filter: function(event, player) {
-                return player.maxHp > 1 && game.hasPlayer(target => target != player);
+                return game.hasPlayer(target => target != player);
             },
             filterTarget: function(card, player, target) {
                 if (target == player) return false;
@@ -35,6 +35,25 @@ export default {
                 return !player.storage.sgz_dingpan_targets || !player.storage.sgz_dingpan_targets.contains(target);
             },
             selectTarget: 1,
+            // === 核心 AI 注入：优先级与策略分配 ===
+            ai: {
+                order: 50, // 全局最高优先级，确保先定叛再伐逆
+                result: {
+                    target: function(player, target) {
+                        if (player.maxHp <= 1) return 0;
+                        var att = get.attitude(player, target);
+                        // 1. 优先给态度 < 4（敌对或中立）且无标记的人挂标记
+                        if (!target.hasSkill("sgz_dingpan_pan")) {
+                            if (att < 4) return -5; // 最高优先级分值
+                        } 
+                        // 2. 其次对已经有标记且态度 < 0（敌对）的人使用
+                        else if (att < 0) {
+                            return -4; // 略低于挂标记，确保先铺场再压制
+                        }
+                        return 0;
+                    }
+                }
+            },
             content: function() {
                 "step 0"
                 if (!player.storage.sgz_dingpan_targets) player.storage.sgz_dingpan_targets = [];
@@ -78,6 +97,47 @@ export default {
             audio: "ext:大梦千秋/audio/sgz_zhugedan:6",
             forced: true,
             persevereSkill: true,
+
+            // === 核心 AI 劫持：改变 AI 对锦囊和装备的世界观 ===
+            mod: {
+                // A. 价值评估：锦囊牌和核心装备被视为顶级资源
+                aiValue: function(player, card, num) {
+                    if (card.name == 'zhuge') return 300;     // 连弩：神器
+                    if (card.name == 'qinglong') return num + 20; 
+                    if (card.name == 'guanshi') return num + 10;
+                    
+                    // 只要是锦囊，赋予极高保留价值，防止被弃置
+                    if (get.type(card) == 'trick') return num + 80;
+                },
+                
+                // B. 使用意愿：消除 AI 的顾虑，实现“无脑用”
+                aiUseful: function(player, card, num) {
+                    if (card.name == 'zhuge') return 300;
+                    // 锦囊牌即便在常规判定中收益为负（如五谷救了敌人），在这里也被视为绝对有用
+                    if (get.type(card) == 'trick') return num + 80;
+                },
+                
+                // C. 收益重写 (关键点)：强行让 AI 认为锦囊总是正收益
+                aiResult: function(player, card, num) {
+                    // 对于所有锦囊（包含桃园、五谷、南蛮等），强行返回正数
+                    // 这会让 AI 略过“是否对敌人有利”的精密计算，直接选择“发动”
+                    if (get.type(card) == 'trick') return 1;
+                },
+
+                // D. 出牌优先级：锦囊必须排在最前面使用
+                aiOrder: function(player, card, num) {
+                    // 权重设为 15，确保在定叛(12)之后，但在普通杀(3)和普通顺手之前
+                    if (get.type(card) == 'trick') return 15;
+                    // 核心装备的装配优先级也提高
+                    if (['zhuge', 'qinglong', 'guanshi'].contains(card.name)) return 16;
+                },
+
+                // 距离逻辑保留
+                targetInRange: function(card, player, target) {
+                    if (card.name == "sha") return true;
+                },
+            },
+
             group: ["sgz_fani_range", "sgz_fani_target", "sgz_fani_draw", "sgz_fani_damage"],
             subSkill: {
                 range: {

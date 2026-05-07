@@ -35,6 +35,16 @@ export default {
             ai: {
                 noh: true,
                 reverseEquip: true,
+                maixie: true,
+                // === 【核心修改】：患标记少于2时，诱导AI主动受创 ===
+                effect: {
+                    target: function(card, player, target) {
+                        // 如果“患”标记少于 2，大幅提升受伤收益评分
+                        if (target.countMark('sgz_quanji_huan') < 2) {
+                            if (get.tag(card, 'damage')) return [0, 3]; 
+                        }
+                    }
+                }
             },
             // 音频路径适配
             audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:12", //开局一声获得4权
@@ -204,11 +214,23 @@ export default {
             ai: {
                 order: 0.5,
                 result: {
-                    player(player) {
-                        if (player.countMark("sgz_quanji_huan") > 1) return 1;
-                        if (player.hp > 1) return -5;
-                        return 1;
+                    player: function(player) {
+                        // 自己受伤或有患标记时，对自己使用是有收益的
+                        if (player.countMark("sgz_quanji_huan") > 1 || player.hp < player.maxHp) return 1;
+                        return 0;
                     },
+                    target: function(player, target) {
+                        // 情况 1：目标是自己，始终支持
+                        if (player == target) return 1;
+                        // 情况 2：目标是队友
+                        if (get.attitude(player, target) > 0) {
+                            // 只有权标记为 4 时，才愿意救队友
+                            if (player.countMark('sgz_quanji') >= 4) return 1;
+                            // 权标记不足时，假装没看到队友求救
+                            return 0;
+                        }
+                        return 0;
+                    }
                 },
             },
             group: "sgz_jitian_end",

@@ -156,25 +156,44 @@ sgz_jiufa: {
             filterTarget: function(card, player, target) {
                 return player.canCompare(target);
             },
+            // === 核心 AI 逻辑 ===
+            ai: {
+                order: 9, // 在孤炬之后执行，利用孤炬偷来的大牌进行拼点
+                result: {
+                    target: function(player, target) {
+                        if (get.attitude(player, target) >= 0) return 0;
+                        // 优先打击威胁值最高的目标
+                        return -get.threaten(target) - 2;
+                    },
+                    player: function(player) {
+                        // AI 评估：手里点数大的牌越多，发动欲望越强
+                        var hs = player.getCards('h');
+                        if (hs.length < 2) return 0;
+                        var bigCards = hs.filter(c => get.number(c) >= 9).length;
+                        return bigCards >= (hs.length / 2) ? 1 : 0;
+                    }
+                }
+            },
+            
             content: function() {
                 'step 0'
                 event.target = target;
                 event.player_wins = 0;
                 event.target_wins = 0;
-                'step 1' // 循环拼点
+                'step 1' 
                 if (player.canCompare(event.target)) {
                     player.chooseToCompare(event.target);
                 } else {
                     event.goto(3);
                 }
                 'step 2'
-                if (result.bool) { // 玩家赢
+                if (result.bool) { 
                     event.player_wins++;
-                } else { // 目标赢
+                } else { 
                     event.target_wins++;
                 }
-                event.goto(1); // 继续循环
-                'step 3' // 结算
+                event.goto(1); 
+                'step 3' 
                 if (event.player_wins > 0) player.gainMaxHp(event.player_wins);
                 if (event.target_wins > 0) event.target.gainMaxHp(event.target_wins);
                 'step 4'
@@ -182,92 +201,82 @@ sgz_jiufa: {
                 if (event.player_wins > 0) event.target.loseMaxHp(event.player_wins);
             },
         },
-sgz_guju: {
-    // === 核心修正: 技能已完全重写 ===
-    audio: "ext:大梦千秋/audio/sgz_jiangwei:2",
-    persevereSkill: true,
-    // a. 这是一个出牌阶段的主动技
-    enable: "phaseUse",
-    usable: 1,
-    // b. 筛选目标：必须是其他角色
-    filterTarget: function(card, player, target) {
-        return target != player;
-    },
-    // c. AI 逻辑
-    ai: {
-        order: 8, // 在出杀之前，适合用来调整手牌
-        result: {
-            target: function(player, target) {
-                // 这是一个复杂的交换技能，AI暂时难以评估，我们先给一个基础的负收益
-                return -1;
-            }
-        }
-    },
-    // d. 技能效果
-    content: function() {
-        'step 0' // 1. 令目标摸牌
-        var num_to_draw = target.maxHp - target.countCards('h');
-        if (num_to_draw > 0) {
-            target.draw(num_to_draw);
-        }
-        
-        'step 1' // 2. 观看并选择目标的手牌
-        // 检查双方是否都有牌，如果一方没牌，则无法交换
-        if (player.countCards('h') > 0 && target.countCards('h') > 0) {
-            // a. 计算最多可以交换多少张牌
-            var max_exchange = Math.min(player.countCards('h'), target.countCards('h'));
-            // b. 弹出选牌框，让玩家选择目标的手牌
-            player.choosePlayerCard(target, 'h', [1, max_exchange], '孤炬：请选择你想要的牌', 'visible').set('ai', function(button) {
-                // AI 优先选择价值高的牌
-                return get.value(button.link);
-            });
-        } else {
-            game.log('双方手牌不足，无法交换');
-            event.finish();
-        }
-        
-        'step 2' // 3. 记录你选择的目标的牌
-        if (result.bool && result.cards) {
-            // a. 将你选择的牌（来自目标）存入 event 对象
-            event.target_cards = result.cards;
-            // b. 记录你选择了多少张牌
-            event.num_to_exchange = result.cards.length;
-        } else {
-            event.finish();
-        }
-        
-        'step 3' // 4. 选择你自己的等量手牌
-        player.chooseCard('h', `孤炬：请选择${event.num_to_exchange}张你的手牌交给对方`, event.num_to_exchange, true)
-        .set('ai', function(card) {
-            // AI 优先给出价值低的牌
-            return 5 - get.value(card);
-        });
-        
-        'step 4' // 5. 执行交换
-        if (result.bool && result.cards) {
-            // a. 将你选择的牌（来自自己）存入 event 对象
-            event.player_cards = result.cards;
+        // === 孤炬 (sgz_guju) 精准交换版 ===
+        sgz_guju: {
+            audio: "ext:大梦千秋/audio/sgz_jiangwei:2",
+            persevereSkill: true,
+            enable: "phaseUse",
+            usable: 1,
+            filterTarget: function(card, player, target) {
+                return target != player;
+            },
+            ai: {
+                order: 10, // 出牌阶段非常靠前，先换牌，再根据换来的牌决定后续操作
+                result: {
+                    target: function(player, target) {
+                        if (get.attitude(player, target) >= 0) return 0;
+                        // 目标威胁越大，AI越想去拆他的牌
+                        return -get.threaten(target);
+                    }
+                }
+            },
+            content: function() {
+                'step 0'
+                var num_to_draw = target.maxHp - target.countCards('h');
+                if (num_to_draw > 0) {
+                    target.draw(num_to_draw);
+                }
+                
+                'step 1' 
+                if (player.countCards('h') > 0 && target.countCards('h') > 0) {
+                    var max_exchange = Math.min(player.countCards('h'), target.countCards('h'));
+                    // === AI 逻辑：拿走对方点数最大的牌 ===
+                    player.choosePlayerCard(target, 'h', [1, max_exchange], '孤炬：请选择你想要的牌', 'visible').set('ai', function(button) {
+                        // 返回点数，点数越大 AI 越优先选择
+                        return get.number(button.link);
+                    });
+                } else {
+                    game.log('双方手牌不足，无法交换');
+                    event.finish();
+                }
+                
+                'step 2' 
+                if (result.bool && result.cards) {
+                    event.target_cards = result.cards;
+                    event.num_to_exchange = result.cards.length;
+                } else {
+                    event.finish();
+                }
+                
+                'step 3' 
+                // === AI 逻辑：给出自己手里点数最小的牌 ===
+                player.chooseCard('h', `孤炬：请选择${event.num_to_exchange}张你的手牌交给对方`, event.num_to_exchange, true)
+                .set('ai', function(card) {
+                    // 20减点数，意味着点数越小返回的值越大，AI 越优先给出去
+                    return 20 - get.number(card);
+                });
+                
+                'step 4' 
+                if (result.bool && result.cards) {
+                    event.player_cards = result.cards;
 
-            // b. 使用 game.loseAsync 同时处理双方的牌交换，这是最稳定可靠的方式
-            game.loseAsync({
-                gain_list: [
-                    [player, event.target_cards], // 你获得目标的牌
-                    [target, event.player_cards]  // 目标获得你的牌
-                ],
-                player: player,
-                cards1: event.player_cards,
-                cards2: event.target_cards,
-                // 指定失去牌的来源
-                gaintag_map: {
-                    [player.playerid]: event.player_cards,
-                    [target.playerid]: event.target_cards
-                },
-                // 这是一个“交换”动作，而不是“获得”
-                type: 'swap',
-            }).setContent('gaincardMultiple');
-        }
-    },
-},
+                    game.loseAsync({
+                        gain_list: [
+                            [player, event.target_cards], 
+                            [target, event.player_cards]  
+                        ],
+                        player: player,
+                        cards1: event.player_cards,
+                        cards2: event.target_cards,
+                        gaintag_map: {
+                            [player.playerid]: event.player_cards,
+                            [target.playerid]: event.target_cards
+                        },
+                        type: 'swap',
+                    }).setContent('gaincardMultiple');
+                }
+            },
+        },
 
 
 // === 梦姜维：【幽明】修复版 (严格遵循原逻辑) ===

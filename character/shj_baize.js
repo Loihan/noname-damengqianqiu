@@ -344,7 +344,17 @@ export default {
                 if(cards.length > 0) {
                    player.gain(cards, target, 'gain2');
                 }
-            }
+            },
+            ai: {
+                order: 1000,
+                result: {
+                    target: function(player, target) {
+                        if (get.attitude(player, target) >= 0) return 0;
+                        // 优先打击威胁值最高的目标
+                        return -get.threaten(target) - 2;
+                    },
+                }
+            },
         },
     },
     skillTranslate: {

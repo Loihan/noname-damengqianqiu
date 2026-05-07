@@ -64,164 +64,196 @@ export default {
 
         // === 技能：雷殛 ===
 sgz_leiji: {
-    audio: "ext:大梦千秋/audio/sgz_machao:4",
-    enable: ["chooseToUse", "chooseToRespond"],
-    persevereSkill: true,
-    selectCard: 0,
+            audio: "ext:大梦千秋/audio/sgz_machao:4",
+            enable: ["chooseToUse", "chooseToRespond"],
+            persevereSkill: true,
+            selectCard: 0,
+            filter: function(event, player) {
+                var cardName = event.filterCard({ name: 'sha' }, player, event) ? 'sha' :
+                               event.filterCard({ name: 'shan' }, player, event) ? 'shan' : null;
+                if (!cardName) return false;
+                var horseType = (cardName == 'sha') ? 'equip4' : 'equip3';
+                return game.hasPlayer(t => t.countCards('e', { subtype: horseType }) > 0);
+            },
+            viewAs: function(cards, player) {
+                var event = _status.event;
+                if (event.filterCard({ name: 'sha' }, player, event)) return { name: 'sha' };
+                if (event.filterCard({ name: 'shan' }, player, event)) return { name: 'shan' };
+            },
+            filterTarget: function(card, player, target) {
+                var horseType = (card.name == 'sha') ? 'equip4' : 'equip3';
+                return target.countCards('e', { subtype: horseType }) > 0;
+            },
+            selectTarget: 1,
+            // === 核心 AI 注入：优先级与特定连招规避 ===
+            ai: {
+                respondSha: true,
+                respondShan: true,
+                order: 18, // 提高优先级，出牌阶段首选
+                result: {
+                    player: 1,
+                    target: function(player, target) {
+                        var evt = _status.event;
+                        // 判定是否为“主动使用杀”的情况
+                        var isUsingSha = evt.name == 'chooseToUse' && evt.filterCard({name:'sha'}, player, evt);
+                        
+                        // 逻辑：如果本回合发动过鸣踪，且现在是主动用杀，绝对不杀队友
+                        if (isUsingSha && player.hasHistory('useSkill', function(h_evt){return h_evt.skill == 'sgz_mingzong'})) {
+                            if (get.attitude(player, target) > 0) return 0;
+                        }
 
-    filter: function(event, player) {
-        var cardName = event.filterCard({ name: 'sha' }, player, event) ? 'sha' :
-                       event.filterCard({ name: 'shan' }, player, event) ? 'shan' : null;
-        if (!cardName) return false;
-
-        var horseType = (cardName == 'sha') ? 'equip4' : 'equip3';
-        return game.hasPlayer(t => t.countCards('e', { subtype: horseType }) > 0);
-    },
-
-    viewAs: function(cards, player) {
-        var event = _status.event;
-        if (event.filterCard({ name: 'sha' }, player, event)) return { name: 'sha' };
-        if (event.filterCard({ name: 'shan' }, player, event)) return { name: 'shan' };
-    },
-
-    filterTarget: function(card, player, target) {
-        var horseType = (card.name == 'sha') ? 'equip4' : 'equip3';
-        return target.countCards('e', { subtype: horseType }) > 0;
-    },
-
-    selectTarget: 1,
-
-    onuse: function(result, player) {
-        "step 0"
-        var target = result.targets[0];
-        var cardName = result.card.name;
-        var horseType = (cardName == 'sha') ? 'equip4' : 'equip3';
-
-        var horses = target.getCards('e', { subtype: horseType });
-        if (horses.length > 0) {
-            target.discard(horses[0]);
-            game.log(player, '弃置了', target, '的坐骑发动【雷殛】');
-
-            // 只有弃别人的马才加⚡标记
-            if (target != player) {
-                player.logSkill('sgz_leiji', target);
-
-                // 记录标记对象
-                if (!player.storage.sgz_leiji_targets) player.storage.sgz_leiji_targets = [];
-                player.storage.sgz_leiji_targets.add(target);
-
-                // 赋予效果技能（无距离、无次数）和视觉标记
-                player.addTempSkill('sgz_leiji_effect', { player: 'phaseAfter' });
-                target.addTempSkill('sgz_leiji_tag', { player: 'phaseAfter' });
-
-                game.log(player, '为', target, '系上了“⚡”，对其使用牌无距离和次数限制');
+                        // 基础逻辑：优先对态度低的角色（敌人）发动
+                        return -get.attitude(player, target);
+                    }
+                }
+            },
+            onuse: function(result, player) {
+                "step 0"
+                var target = result.targets[0];
+                var cardName = result.card.name;
+                var horseType = (cardName == 'sha') ? 'equip4' : 'equip3';
+                var horses = target.getCards('e', { subtype: horseType });
+                if (horses.length > 0) {
+                    target.discard(horses[0]);
+                    game.log(player, '弃置了', target, '的坐骑发动【雷殛】');
+                    if (target != player) {
+                        player.logSkill('sgz_leiji', target);
+                        if (!player.storage.sgz_leiji_targets) player.storage.sgz_leiji_targets = [];
+                        player.storage.sgz_leiji_targets.add(target);
+                        player.addTempSkill('sgz_leiji_effect', { player: 'phaseAfter' });
+                        target.addTempSkill('sgz_leiji_thunder', { player: 'phaseAfter' });
+                        target.addSkill('sgz_leiji_boom');
+                        game.log(player, '对', target, '施加了⚡与💥');
+                    }
+                    if (cardName == 'sha') target.enableEquip(1);
+                    if (cardName == 'shan') target.enableEquip(2);
+                }
+                if (cardName == 'sha') {
+                    result.card.unlimited = true;
+                    var parent = _status.event.getParent();
+                    if (parent) parent.addCount = false;
+                }
+            },
+            onrespond: function(result, player) {
+                "step 0"
+                var cardName = result.card.name;
+                var horseType = (cardName == 'sha') ? 'equip4' : 'equip3';
+                var target = (result.targets && result.targets[0]) || game.findPlayer(t => t != player && t.countCards('e', { subtype: horseType }) > 0);
+                if (!target) return;
+                var horses = target.getCards('e', { subtype: horseType });
+                if (horses.length > 0) {
+                    target.discard(horses[0]);
+                    if (target != player) {
+                        player.logSkill('sgz_leiji', target);
+                        if (!player.storage.sgz_leiji_targets) player.storage.sgz_leiji_targets = [];
+                        player.storage.sgz_leiji_targets.add(target);
+                        player.addTempSkill('sgz_leiji_effect', { player: 'phaseAfter' });
+                        target.addTempSkill('sgz_leiji_thunder', { player: 'phaseAfter' });
+                        target.addSkill('sgz_leiji_boom');
+                        game.log(player, '对', target, '施加了⚡与💥');
+                    }
+                    if (cardName == 'sha') target.enableEquip(1);
+                    if (cardName == 'shan') target.enableEquip(2);
+                }
+                if (cardName == 'sha') {
+                    result.card.unlimited = true;
+                    var parent = _status.event.getParent();
+                    if (parent) parent.addCount = false;
+                }
             }
-            if (cardName == 'sha') {
-                target.enableEquip(1);
-            };
-            if (cardName == 'shan') {
-                target.enableEquip(2);
-            };
-        }
+        },
 
-        // 【杀】无距离+不计次数
-        if (cardName == 'sha') {
-            result.card.unlimited = true;
-            var parent = _status.event.getParent();
-            if (parent) parent.addCount = false;
-        }
-    },
 
-    onrespond: function(result, player) {
-        "step 0"
-        var cardName = result.card.name;
-        var horseType = (cardName == 'sha') ? 'equip4' : 'equip3';
-
-        var target = (result.targets && result.targets[0]) || game.findPlayer(t => t.countCards('e', { subtype: horseType }) > 0);
-        if (!target) return;
-
-        var horses = target.getCards('e', { subtype: horseType });
-        if (horses.length > 0) {
-            target.discard(horses[0]);
-
-            if (target != player) {
-                player.logSkill('sgz_leiji', target);
-
-                if (!player.storage.sgz_leiji_targets) player.storage.sgz_leiji_targets = [];
-                player.storage.sgz_leiji_targets.add(target);
-
-                player.addTempSkill('sgz_leiji_effect', { player: 'phaseAfter' });
-                target.addTempSkill('sgz_leiji_tag', { player: 'phaseAfter' });
-                
-
-                game.log(player, '为', target, '系上了“⚡”，对其使用牌无距离和次数限制');
-            }
-            if (cardName == 'sha') {
-                target.enableEquip(1);
-            };
-            if (cardName == 'shan') {
-                target.enableEquip(2);
-            };
-        }
-        if (cardName == 'sha') {
-            result.card.unlimited = true;
-            var parent = _status.event.getParent();
-            if (parent) parent.addCount = false;
-        }
-    },
-
-    ai: {
-        respondSha: true,
-        respondShan: true,
-        order: 4,
-        result: {
-            target: function(player, target) {
-                return target == player ? 0 : -get.attitude(player, target);
-            }
-        }
-    }
-},
-
-// === 雷殛衍生效果技能（无距离、无次数） ===
 sgz_leiji_effect: {
+
     charlotte: true,
+
     onremove: function(player) {
+
+        if (player.storage.sgz_leiji_targets) {
+
+            player.storage.sgz_leiji_targets.forEach(function(target){
+
+                if (
+                    target &&
+                    target.hasSkill('sgz_leiji_boom')
+                ) {
+                    target.removeSkill('sgz_leiji_boom');
+                }
+
+            });
+        }
+
         delete player.storage.sgz_leiji_targets;
     },
+
     mod: {
+
         targetInRange: function(card, player, target) {
-            if (player.storage.sgz_leiji_targets && player.storage.sgz_leiji_targets.contains(target)) return true;
+
+            if (
+                player.storage.sgz_leiji_targets &&
+                player.storage.sgz_leiji_targets.contains(target)
+            ) {
+                return true;
+            }
         },
+
         cardUsableTarget: function(card, player, target) {
-            if (player.storage.sgz_leiji_targets && player.storage.sgz_leiji_targets.contains(target)) return true;
+
+            if (
+                player.storage.sgz_leiji_targets &&
+                player.storage.sgz_leiji_targets.contains(target)
+            ) {
+                return true;
+            }
         }
     }
 },
 
-// === 雷殛 UI 标记 ===
-sgz_leiji_tag: {
+sgz_leiji_thunder: {
+
     charlotte: true,
+
     mark: true,
+
     marktext: "⚡",
-    trigger: { player: "damageBegin" },
-    forced: true,
-    content: function() {
-            trigger.num++;
-            trigger.nature = 'thunder';
-            game.log(player, '受⚡状态影响，伤害+1且性质转为雷电');
-    },
+
     intro: {
-        name: "⚡",
-        content: "受到的伤害+1且改为雷电伤害。"
+        name: "雷殛·雳",
+        content: "受到的伤害+1且改为雷电伤害"
     },
-    mod: {
-        targetInRange: function(card, player, target) {
-            if (player.storage.sgz_leiji_targets && player.storage.sgz_leiji_targets.contains(target)) return true;
-        },
-        cardUsableTarget: function(card, player, target) {
-            if (player.storage.sgz_leiji_targets && player.storage.sgz_leiji_targets.contains(target)) return true;
-        }
-    }
+
+    trigger: {
+        player: "damageBegin"
+    },
+
+    forced: true,
+
+    content: function() {
+
+        trigger.num++;
+
+        trigger.nature = 'thunder';
+
+        game.log(
+            player,
+            '受⚡影响，伤害+1且改为雷电伤害'
+        );
+    },
+},
+sgz_leiji_boom: {
+
+    charlotte: true,
+
+    mark: true,
+
+    marktext: "💥",
+
+    intro: {
+        name: "雷殛·破",
+        content: "马超对你使用牌无距离和次数限制"
+    },
 },
 
 sgz_mingzong: {

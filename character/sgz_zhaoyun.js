@@ -30,6 +30,38 @@ export default {
                 "sgz_juejing_shangshi" ,
                 "sgz_juejing_limit" 
             ],
+            // === 核心 AI 注入一：价值体系与收益偏移 ===
+            ai: {
+                maixie: true,
+                // 一、价值重定向：濒死时所有牌价值强制设为 0，平时死保红桃
+                value: function(card, player) {
+                    if (_status.event.name == 'dying' || _status.dying) return 0.1; 
+                    var suit = get.suit(card, player);
+                    if (suit == 'heart') return 45;   // 平时死保红桃
+                    if (suit == 'diamond') return 40; 
+                    return get.value(card);
+                },
+                // 五、收益认知偏移：诱导卖血
+                effect: {
+                    target: function(card, player, target) {
+                        if (get.tag(card, 'damage') || get.tag(card, 'losehp')) {
+                            if (player == target || get.attitude(player, target) <= 0) {
+                                if (target.countCards('h', {suit: 'heart'}) > 0) return [0, 80];
+                            }
+                        }
+                    }
+                }
+            },
+            mod: {
+                // 二、禁疗逻辑：平时不吃桃，濒死优先级拉满
+                aiOrder: function(player, card, num) {
+                    if (get.tag(card, 'recover')) {
+                        if (player.isDying()) return 1000; 
+                        if (player.hp >= 1) return -100;   
+                    }
+                    return num;
+                }
+            },
             init: function(player) {
                 if (player.maxHp > 7) {
                     player.loseMaxHp(player.maxHp - 7);
@@ -176,9 +208,6 @@ export default {
             persevereSkill: true,
             audio: "ext:大梦千秋/audio/sgz_zhaoyun:4",
             enable: ["chooseToUse", "chooseToRespond"],
-            hiddenCard: function(player, name) {
-                if (name == 'wuxie' && player.countCards('hes', { suit: 'spade' })) return true;
-            },
             mod: {
                 targetInRange: function (card, player, target) {
                     if (card._sgz_longhun_diamond || (_status.event.skill == 'sgz_longhun' && card.name == 'sha')) {
@@ -189,8 +218,134 @@ export default {
                     if (card.name == 'sha' && (card._sgz_longhun_diamond || _status.event.skill == 'sgz_longhun')) {
                         return Infinity;
                     }
+                },
+                aiOrder(player, card, num) {
+                    if (num <= 0 || !player.isPhaseUsing() || player.needsToDiscard() < 2) {
+                        return num;
+                    }
+                    let suit = get.suit(card, player);
+                    if (suit === "heart") {
+                        return num - 3.6;
+                    }
+                },
+                aiValue(player, card, num) {
+                    if (num <= 0) {
+                        return num;
+                    }
+                    let suit = get.suit(card, player);
+                    if (suit === "heart") {
+                        return num + 3.6;
+                    }   
+                    if (suit === "spade") {
+                        return num + 1;
+                    }
+                    if (suit === "diamond") {
+                        return num + 1.8;
+                    }
+                },
+                aiUseful(player, card, num) {
+                    if (num <= 0) {
+                        return num;
+                    }
+                    let suit = get.suit(card, player);
+                    if (suit === "heart") {
+                        return num + 3;
+                    }
+                    if (suit === "diamond") {
+                        return num + 1;
+                    }
+                    if (suit === "spade") {
+                        return num + 1;
+                    }
+                },
+            },
+            ai: {
+                order: function(item, player) {
+                    // 如果手里有方块，优先级直接拉到 100（全游戏最高级出牌）
+                    if (player.countCards('hes', {suit: 'diamond'}) > 0) return 100;
+                    return 30; 
+                },
+                save: true,
+                respondSha: true, respondShan: true, respondWuxie: true,
+                skillTagFilter: function(player, tag) {
+                    var map = { save: 'heart', respondSha: 'diamond', respondShan: 'club', respondWuxie: 'spade' };
+                    if (map[tag] && player.countCards('hes', { suit: map[tag] }) > 0) return true;
+                },
+                // 【核心修复】：在计算救命收益时，返回断层高分 2000
+                save: function(card, player, target) {
+                    if (player.countCards('hes', {suit: 'heart'}) > 0) return 2000;
+                    return 0;
+                },
+                result: {
+                    player: function(player) {
+                        // 极大化出牌欲望：只要能印火杀，欲望值 1000
+                        if (_status.currentPhase == player && player.countCards('hes', {suit: 'diamond'})) return 1000;
+                        return 1;
+                    }
+                },
+                // 诱导卖血：不拦截伤害锦囊
+                onWuxie: function(card, player, target) {
+                    if (target == player && get.tag(card, 'damage') && player.hasCard(c => get.suit(c) == 'heart', 'h')) return 0;
                 }
             },
+
+            // === 核心 AI 注入三：阶梯选牌逻辑 (Check) ===
+            check: function(card) {
+                var player = _status.event.player;
+                var suit = get.suit(card, player);
+                var evt = _status.event;
+                var selected = ui.selected.cards.length;
+
+                // 1. 三、红桃阶梯救援 (逻辑最深处)
+                if (suit == 'heart') {
+                    // 动态寻找谁在死（解决 isMad 数组报错的关键）
+                    var target = evt.dying || (evt.getParent && evt.getParent().dying) || (_status.dying && _status.dying[0]);
+                    
+                    // 【安全检查】：如果找不到合法的玩家对象，直接返回，不执行 attitude 判定
+                    if (!target || get.itemtype(target) !== 'player') return 0;
+
+                    var att = get.attitude(player, target);
+
+                    if (att > 0) { // 如果是自己或队友
+                        // 1. 救自己：最高优先级 (5000)
+                        if (target == player) {
+                            if (target.hp <= -2) return (selected < 3 ? 5000 : 0);
+                            if (target.hp == -1) return (selected < 2 ? 5000 : 0);
+                            return (selected < 1 ? 5000 : 0);
+                        }
+                        // 2. 救死忠友军 (Att > 4)：能出几张出几张 (4000)
+                        if (att > 4) return (selected < 3 ? 4000 : 0);
+                        // 3. 救普通友军：仅 0 血时救活 (3000)
+                        if (target.hp == 0) return (selected < 1 ? 3000 : 0);
+                    }
+                    return 0; 
+                }
+
+                // 2. 四、方块进攻逻辑
+                if (suit == 'diamond') {
+                    if (evt.name == 'chooseToUse' || _status.currentPhase == player) {
+                        // 主动攻击 3 > 2 > 1
+                        return (selected < 3 ? 150 : 0);
+                    }
+                    // 响应仅1张
+                    return (selected < 1 ? 150 : 0);
+                }
+
+                // 3. 五、防御抑制 (不闪)
+                if (suit == 'club' || suit == 'spade') {
+                    if (player.countCards('h', {suit: 'heart'}) > 0 && !player.isDying()) return 0;
+                    return (selected < 3 ? 50 : 0);
+                }
+                return 0;
+            },
+
+            hiddenCard: function(player, name) {
+                if (name == "tao" && player.countCards("hes", { suit: "heart" }) > 0) return true;
+                if (name == "shan" && player.countCards("hes", { suit: "club" }) > 0) return true;
+                if (name == "wuxie" && player.countCards("hes", { suit: "spade" }) > 0) return true;
+                if (name == "sha" && player.countCards("hes", { suit: "diamond" }) > 0) return true;
+            },
+
             viewAs: function(cards, player) {
                 if (!cards.length) return null;
                 var name = false, nature = null;
