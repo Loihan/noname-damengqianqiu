@@ -48,7 +48,7 @@ export default {
                     target: function(card, player, target) {
                         if (get.tag(card, 'damage') || get.tag(card, 'losehp')) {
                             if (player == target || get.attitude(player, target) <= 0) {
-                                if (target.countCards('h', {suit: 'heart'}) > 0) return [0, 80];
+                                if (target.countCards('h', {suit: 'heart'}) > 0) return [1,3];
                             }
                         }
                     }
@@ -260,6 +260,8 @@ export default {
                 },
             },
             ai: {
+                directHit_ai: true, 
+                fireAttack: true, 
                 order: function(item, player) {
                     // 如果手里有方块，优先级直接拉到 100（全游戏最高级出牌）
                     if (player.countCards('hes', {suit: 'diamond'}) > 0) return 100;

@@ -94,6 +94,7 @@ export default {
                         if (x > 0) player.draw(x);
                         if (player.storage.sgz_qujian_addsha_count === undefined) player.storage.sgz_qujian_addsha_count = 0;
                         player.storage.sgz_qujian_addsha_count++;
+                        player.loseHp(1);
                     }
                 },
                 cleanup: {
@@ -127,6 +128,9 @@ export default {
             audio: "ext:大梦千秋/audio/sgz_luxun:2",
             forced: true,
             persevereSkill: true,
+            ai:{
+                noh: true, // 没有手牌时正收益
+            },
             group: ["sgz_lianying_draw", "sgz_lianying_hscap", "sgz_lianying_reset"],
             subSkill: {
                 draw: {
@@ -210,27 +214,92 @@ export default {
                             // 第三个参数设为 true，强制选择且不可取消
                             player.chooseTarget('韬晦：请选择1~3名其他角色横置', [1, 3], true, function(card, player, target){
                                 return target != player && !target.isLinked();
-                            }).set('ai', t => -get.attitude(player, t));
+                            }).set('ai', function(target) {
+                                var player = _status.event.player;
+                                var evt = _status.event;
+
+                                // === 核心优化：预计算名单 (双重排序算法) ===
+                                if (evt._dmqc_link_list === undefined) {
+                                    // 1. 获取所有：未连环 且 态度<=0 的角色
+                                    var enemies = game.filterPlayer(p => p != player && !p.isLinked() && get.attitude(player, p) <= 0);
+                                    
+                                    // 2. 双重排序逻辑
+                                    enemies.sort(function(a, b) {
+                                        var attA = get.attitude(player, a);
+                                        var attB = get.attitude(player, b);
+                                        
+                                        // 第一优先级：态度最低者（最敌对）排在前面
+                                        if (attA !== attB) {
+                                            return attA - attB;
+                                        }
+                                        // 第二优先级：态度相同时，威胁度最高（get.threaten）者排在前面
+                                        return get.threaten(b) - get.threaten(a);
+                                    });
+
+                                    // 3. 执行您的阶梯数量规则
+                                    var count = enemies.length;
+                                    var limit = 1;
+                                    if (count == 3) limit = 2;
+                                    else if (count > 3) limit = 3;
+                                    
+                                    // 4. 选出得分最高的 limit 个目标作为最终名单
+                                    evt._dmqc_link_list = enemies.slice(0, limit);
+                                    
+                                    // 打印记录确认逻辑 (正式版可删除)
+                                    // game.log('韬晦AI分析：敌方未连', count, '人，决定连环', limit, '人');
+                                }
+
+                                // === 5. 命中名单给高分，否则 0 分 ===
+                                if (evt._dmqc_link_list.contains(target)) {
+                                    // 给分公式：基础大分 + 威胁度补偿 - 态度干扰
+                                    return 100 + get.threaten(target) - get.attitude(player, target);
+                                }
+                                return 0;
+                            });
                         } else {
                             game.log('场上已无未横置的角色，效果中断');
                             event.finish();
                         }
                         break;
                     case 'diamond': 
+                        // 第二个参数改为 true，物理移除“取消”和“跳过”按钮
+                        player.chooseUseTarget({name: 'sha', nature: 'fire'}, true, '韬晦：必须选择一名其他角色使用【火杀】')
+                            .set('filterTarget', function(card, player, target){
+                                // 物理爆破距离限制：只要不是自己，头像全是亮的
+                                return target != player; 
+                            })
+                            .set('unlimited', true)     // 强制结算时无视距离
+                            .set('forceTarget', true)   // 强制锁定目标
+                            .set('addCount', false)     // 强制不计入出牌次数
+                            .set('ai', function(target){
+                                var player = _status.event.player;
+                                var value = -get.attitude(player,target);
+                                // 横置收益极高
+                                if (target.isLinked()) {
+                                    value += 4;
+                                }
+                                return value;
+                            });
+                        break;
                     case 'spade':
-                        var nature = (suit == 'diamond') ? 'fire' : 'thunder';
-                        var sha = {name: 'sha', nature: nature};
-                        // 杀逻辑优化：先检查是否有合法目标
-                        if (game.hasPlayer(p => p != player && player.canUse(sha, p))) {
-                            // 第二个参数设为 true，强制选择且不可取消
-                            player.chooseUseTarget(sha, true, '韬晦：请选择一名其他角色使用【' + get.translation(nature) + '杀】')
-                                .set('filterTarget', function(card, player, target){
-                                    return target != player && lib.filter.targetEnabled(card, player, target);
-                                });
-                        } else {
-                            game.log('场上已无合法的【杀】目标，效果中断');
-                            event.finish();
-                        }
+                        // 第二个参数改为 true，强制发动
+                        player.chooseUseTarget({name: 'sha', nature: 'thunder'}, true, '韬晦：必须选择一名其他角色使用【雷杀】')
+                            .set('filterTarget', function(card, player, target){
+                                // 物理爆破距离限制
+                                return target != player;
+                            })
+                            .set('unlimited', true)
+                            .set('forceTarget', true)
+                            .set('addCount', false)
+                            .set('ai', function(target){
+                                var player = _status.event.player;
+                                var value = -get.attitude(player,target);
+                                // 横置收益极高
+                                if (target.isLinked()) {
+                                    value += 4;
+                                }
+                                return value;
+                            });
                         break;
                 }
                 
@@ -289,6 +358,10 @@ export default {
             },
             filterTarget: function(card, player, target) {
                 return target != player;
+            },
+            ai:{
+                fireAttack: true, // 可造成火属性伤害
+                directHit_ai: true, // 可强中
             },
             selectTarget: [1, Infinity],
             multitarget: true,
@@ -423,6 +496,7 @@ export default {
             ai: {
                 // 提升使用优先级，出牌阶段一进来就用
                 order: 15,
+                fireAttack: true, // 可造成火属性伤害
                 result: { 
                     player: function(player) {
                         // 场上敌人越多，且有牌可抓，收益越高
@@ -433,10 +507,10 @@ export default {
         },
     },
     skillTranslate: {
-        sgz_qujian: "驱剑", sgz_qujian_info: "锁定技，连招技（杀+锦囊牌），出牌阶段限X次（X为你回合开始时的体力数），横置至多一名角色，然后摸场上已横置角色数张牌且本回合你使用【杀】的额定次数+1。",
+        sgz_qujian: "驱剑", sgz_qujian_info: "锁定技，连招技（杀+锦囊牌），出牌阶段限X次（X为你回合开始时的体力数），横置至多一名角色，摸场上已横置角色数张牌且本回合你使用【杀】的额定次数+1，然后你失去一点体力。",
         sgz_lianying: "连营", sgz_lianying_info: "锁定技，①摸牌阶段你多摸X张牌，你的手牌上限+X。②当你失去最后一张手牌时，你摸至X张牌。（X为场上人数）",
         sgz_taohui: "韬晦", sgz_taohui_info: "每轮限一次，当你进入濒死状态时，你可以增加1点体力上限并回复至1点体力，然后重复亮出牌堆顶的一张牌并根据其花色执行对应效果，直到不可被执行：<br>♥️：回复一点体力；<br>♦️/♠️：视为使用一张无距离限制的火/雷【杀】；<br>♣️：横置1~3名未横置角色。",
-        sgz_fenmie: "焚灭", sgz_fenmie_info: "出牌阶段限一次。你可以选择任意名其他角色并摸等量的牌，然后重复以下流程：<br>①被选中的所有角色同时展示一张手牌；<br>②你可以弃置任意张相同花色的牌并对其中展示对应花色牌的角色各造成1点火焰伤害;<br>③若这些对应花色的角色均受到了伤害，则重复此流程，否则技能结束。<br>此技能结算期间每当你失去牌时便摸等量的牌。",
+        sgz_fenmie: "焚灭", sgz_fenmie_info: "出牌阶段限一次。你可以选择任意名其他角色并摸等量的牌，然后重复以下流程：<br>①被选中的所有角色同时展示一张手牌；<br>②你可以弃置任意张牌或结束技能；<br>③对所有展示了与你所弃牌有相同花色的角色各造成1点火焰伤害，若存在角色防止了该伤害，则技能结束。<br>此技能结算期间每当你失去牌时便摸等量的牌。",
     },
     characterTaici: {
         "sgz_qujian": { order: 1, content: "何日试青锋，匣中长剑夜夜鸣。/江东山河甫定，正乃用武之时。" },

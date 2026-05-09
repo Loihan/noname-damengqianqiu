@@ -27,6 +27,19 @@ export default {
             persevereSkill: true,
             enable: ["chooseToUse"],
             mod: {
+                // === 核心 AI 修正：强迫走技能转化，不准直出手牌 ===
+                aiOrder: function(player, card, num) {
+                    // 如果是真实卡牌(非转化)且是杀或锦囊
+                    if (typeof card == 'object' && !card.isSkill 
+                        && (card.name == 'sha' || get.type(card) == 'trick' )
+                        ) {
+                        // 只要惊跃还能发动(有红或有黑且未用)，就给原牌打负分，逼 AI 点技能按钮
+                        if (player.hasCard(c => get.color(c) == 'red' || (get.color(c) == 'black' && !player.storage.shj_jingyue_thunder_used), 'hes')) {
+                            return num - 50; 
+                        }
+                    }
+                    return num;
+                },
                 targetInRange: function (card, player, target) {
                     if (_status.event.skill == 'shj_jingyue' && card.name == 'sha' && card.cards && card.cards.length > 0 && get.color(card.cards[0], player) == 'black') {
                         return true;
@@ -42,6 +55,20 @@ export default {
             },
             filterCard(card, player, event) {
                 var color = get.color(card);
+                //AI决策
+                var thisUsable = game.countPlayer(function(cur) {
+                    return cur != player && get.distance(player, cur) <= player.getAttackRange();
+                }) > 0;
+                if (!player.isUnderControl()&& thisUsable){
+                    //回合内优先出红
+                    if (player.countCards('hes', {color: 'red'}) && _status.currentPhase == player) {
+                        if (color == 'black') return false;
+                    }
+                    //回合外优先出黑
+                    if (player.countCards('hes', {color: 'black'}) && _status.currentPhase != player) {
+                        if (color == 'red') return false;
+                    }
+                }
                 if (color == 'red') return true;
                 if (color == 'black' && !player.storage.shj_jingyue_thunder_used) return true;
                 return false;
@@ -54,8 +81,6 @@ export default {
                 return false;
             },
             onuse(result, player) {
-
-                // 以下是您提供的、可以正常工作的 onuse 逻辑
                 player.draw();
                 if (typeof player.storage.shj_jingyue_range_count !== 'number') {
                     player.storage.shj_jingyue_range_count = 0;
@@ -68,9 +93,36 @@ export default {
                 }
             },
             ai: {
-                respondSha: true,
-                order: 4, 
-                result: { player: 1 },
+                directHit_ai: true,
+                fireAttack: true, // 可造成火属性伤害
+                jiuOther: true, // 可响应【酒】
+                thunderAttack: true, // 可造成雷属性伤害
+                // === 核心 AI 修正：动态优先级阶梯 ===
+                order: function(item, player) {
+                    // 有红牌：惊跃(35) > 裂影(21)
+                    if (player.hasCard(c => get.color(c) == 'red', 'hes')) return 35;
+                    // 没红牌：裂影(21) > 惊跃(20)
+                    if (!player.storage.shj_jingyue_thunder_used && player.hasCard(c => get.color(c) == 'black', 'hes')) return 20;
+                    return 1;
+                },
+                result: { 
+                    player: function(player) {
+                        if (player.hasCard(c => get.color(c) == 'red', 'hes')) return 10;
+                        if (!player.storage.shj_jingyue_thunder_used && player.hasCard(c => get.color(c) == 'black', 'hes')) return 5;
+                        return 0;
+                    }
+                },
+                // === 核心 AI 修正：选牌偏好 (红 > 黑) ===
+                check: function(card) {
+                    var player = _status.event.player;
+                    var color = get.color(card);
+                    // 逻辑：只要手里还有红牌，黑牌评分直接给 -100 (绝对不选)
+                    if (player.hasCard(c => get.color(c) == 'red', 'hes')) {
+                        return (color == 'red') ? (150 - get.value(card)) : -100;
+                    }
+                    // 没红牌了，黑牌才亮起
+                    return (color == 'black') ? (100 - get.value(card)) : 0;
+                }
             },
             // group 关联所有子技能
             group: ["shj_jingyue_unlimited", "shj_jingyue_damage", "shj_jingyue_reset", "shj_jingyue_directhit", "shj_jingyue_gain_mark"],
@@ -179,17 +231,29 @@ export default {
             persevereSkill: true,
             enable: "phaseUse",
             usable: 1,
+            // === 核心 AI 修正：只有没红牌且有黑牌可转时，才在 AI 视野里出现 ===
             filter: function(event, player) {
-                // 筛选条件：有“威”标记
+                var hasRed = player.hasCard(c => get.color(c) == 'red', 'hes');
+                // 玩家手动操作始终可见；AI 只有在红牌打光时才“看见”这个技能
+                if (!player.isUnderControl() && hasRed) return false;
                 return player.countMark('shj_jingyue') > 0;
             },
+            mod:{
+                aiOrder: function(player, card, num) {
+                    if(card.name == 'jiu'&& card.color == 'black' && player.countCards("h") > 1
+                        && !player.hasCard(c => get.color(c) == 'red') 
+                        && player.hasCard(c => get.color(c) == 'black')
+                        && !player.storage.shj_jingyue_thunder_used
+                ) return 9999;
+                }
+            },
             ai: {
-                order: 9, // 在出杀之前发动
+                // 优先级 21，精准卡在红(35)之后，黑(20)之前
+                order: 21,
                 result: {
                     player: function(player) {
-                        if (player.hasCard(card => card.name == 'sha', 'hs') && game.hasPlayer(target => player.canUse('sha', target) && get.effect(target, {name:'sha'}, player, player) > 0)) {
-                            return 1;
-                        }
+                        // 确保 AI 认为在出黑杀前开裂影是正收益
+                        if (!player.hasCard(c => get.color(c) == 'red', 'hes') && player.hasCard(c => get.color(c) == 'black', 'hes')) return 1;
                         return 0;
                     }
                 }

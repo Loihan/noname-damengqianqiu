@@ -42,25 +42,30 @@ export default {
                 var suit = get.suit(event.card); 
                 return ['heart', 'diamond', 'club', 'spade'].includes(suit); 
             },
+            ai:{
+                fireAttack: true, // 可造成火属性伤害
+            },
             // 这一部分请在 sgz_xuanhe 的 mod 块中更新
-        mod: {
-            ignoredHandcard: function (card, player) { 
-                if (card.hasGaintag('sgz_xuanhe_tag')) return true;
-            },
-            // === 核心修正：让 AI 极度厌恶使用梦闪响应 ===
-            aiUseful: function(player, card, num) {
-                if (card.hasGaintag('sgz_xuanhe_shan')) {
-                    // 返回一个负数或极小的数，AI 只有在快被打死且没别的闪时才可能考虑
-                    return -100; 
+            mod: {
+                ignoredHandcard: function (card, player) { 
+                    if (player.hp == 1 && card.hasGaintag('sgz_xuanhe_tag')) return true;
+                },
+                // === 核心修正：让 AI 极度厌恶使用梦闪响应 ===
+                aiUseful: function(player, card, num) {
+                    if (get.type(card) == 'trick') return 100;
+                    if (card.hasGaintag('sgz_xuanhe_shan')) {
+                        // 返回一个负数或极小的数，AI 只有在快被打死且没别的闪时才可能考虑
+                        return -100; 
+                    }
+                },
+                aiValue: function(player, card, num) {
+                    if (get.type(card) == 'trick') return 50;
+                    if (card.hasGaintag('sgz_xuanhe_shan')) {
+                        // 价值设为极高，防止被各种弃牌、重铸效果选中
+                        return 30;
+                    }
                 }
             },
-            aiValue: function(player, card, num) {
-                if (card.hasGaintag('sgz_xuanhe_shan')) {
-                    // 价值设为极高，防止被各种弃牌、重铸效果选中
-                    return 30;
-                }
-            }
-        },
             content: function () {
                 "step 0"; 
                 player.draw(); 
@@ -120,6 +125,9 @@ export default {
             forced: true, 
             persevereSkill: true,
             group: ["sgz_changming_prep", "sgz_changming_finish"], 
+            ai:{
+                guanxing: true, // 可观星
+            },
             mod: { 
                 ignoredHandcard: function (card, player) { if (card.hasGaintag('sgz_xuanhe_shan')) return true }, 
                 cardDiscardable: function (card, player, name) { if (name == 'phaseDiscard' && card.hasGaintag('sgz_xuanhe_shan')) return false },
@@ -182,6 +190,7 @@ export default {
         sgz_qimeng: {
             audio: "ext:大梦千秋/audio/sgz_huangyueying:4",
             persevereSkill: true,
+            forced: true,
             trigger: { player: "damageEnd" },
             filter: function(event, player) {
                 return player.countCards("hes") > 0;
@@ -190,9 +199,9 @@ export default {
                 maixie: true,
                 effect: {
                     target: function(card, player, target) {
-                        // AI 卖血倾向：血量 >= 3 时，认为受到伤害有极高收益 [0, 4]
+                        // AI 卖血倾向：血量 >= 3 时，认为受到伤害有极高收益 [0, 3]
                         // 血量 < 3 时，返回默认评估，AI 会尽量躲避伤害
-                        if (get.tag(card, 'damage') && target.hp >= 3) return [0, 3];
+                        if (get.tag(card, 'damage') && target.hp >= 3) return [1,3];
                     }
                 }
             },

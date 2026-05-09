@@ -38,6 +38,9 @@ export default {
             //  filter: function(event, player) {
             //      return event.player != player;
             //  },
+            ai:{
+                fireAttack: true, // 可造成火属性伤害
+            },
             content: function() {
                 'step 0'
 
@@ -136,6 +139,9 @@ export default {
             usable: 2,
             trigger: { global: "phaseZhunbeiBegin" },
             direct: true,
+            ai:{
+                guanxing: true, // 可观星
+            },
             content: function() {
                 'step 0'
                 player.chooseBool(get.prompt('sgz_zhuri'), `是否对 ${get.translation(trigger.player)} 发动【逐日】，观看牌堆顶七张牌？`).set('ai', () => Math.random() > 0.5);
@@ -211,6 +217,7 @@ export default {
             },
             ai: {
                 order: 10, // 出牌阶段非常靠前，先换牌，再根据换来的牌决定后续操作
+                viewHandcard: true, // 可看见其他角色的手牌
                 result: {
                     target: function(player, target) {
                         if (get.attitude(player, target) >= 0) return 0;

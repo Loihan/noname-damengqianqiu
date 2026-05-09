@@ -32,18 +32,32 @@ export default {
             selectTarget: 1,
             // === 核心 AI 注入：优先级与策略分配 ===
             ai: {
-                order: 50, // 全局最高优先级，确保先定叛再伐逆
+                // 【核心修改】：根据场上标记情况动态调整顺序
+                order: function(item, player) {
+                    // 1. 如果场上还有敌人没挂上标记，则定叛的优先级为最高 (100)
+                    if (game.hasPlayer(function(current){
+                        return current != player && get.attitude(player, current) < 4 && !current.hasSkill("sgz_dingpan_pan");
+                    })) {
+                        return 100; 
+                    }
+                    // 2. 如果全场敌人都已经挂了标记，定叛优先级降为最低 (1)，确保在出完杀后再补刀
+                    return 1;
+                },
                 result: {
-                    target: function(player, target) {
+                    player: function(player, target) {
                         if (player.maxHp <= 1) return 0;
+                        if (get.attitude(player, target)>=4)return 0;
+                        return 5; // 欺骗主公 AI，使其认为减上限收益很高
+                    },
+                    target: function(player, target) {
                         var att = get.attitude(player, target);
-                        // 1. 优先给态度 < 4（敌对或中立）且无标记的人挂标记
+                        // 目标 1：优先给没有标记的敌人挂标记
                         if (!target.hasSkill("sgz_dingpan_pan")) {
-                            if (att < 4) return -5; // 最高优先级分值
+                            if (att < 4) return -10; 
                         } 
-                        // 2. 其次对已经有标记且态度 < 0（敌对）的人使用
+                        // 目标 2：如果已经有标记了，收益评分稍微降低，让位给“挂标记”动作
                         else if (att < 0) {
-                            return -4; // 略低于挂标记，确保先铺场再压制
+                            return -5; 
                         }
                         return 0;
                     }
@@ -96,34 +110,50 @@ export default {
             mod: {
                 // A. 价值评估：锦囊牌和核心装备被视为顶级资源
                 aiValue: function(player, card, num) {
-                    if (card.name == 'zhuge') return 300;     // 连弩：神器
+                    if (card.name == 'zhuge') return 1000;     // 连弩：神器
                     if (card.name == 'qinglong') return num + 20; 
                     if (card.name == 'guanshi') return num + 10;
                     
                     // 只要是锦囊，赋予极高保留价值，防止被弃置
-                    if (get.type(card) == 'trick') return num + 80;
+                    if (get.type(card) == 'trick') return num + 100;
                 },
                 
                 // B. 使用意愿：消除 AI 的顾虑，实现“无脑用”
                 aiUseful: function(player, card, num) {
-                    if (card.name == 'zhuge') return 300;
+                    if (card.name == 'zhuge') return 1000;
                     // 锦囊牌即便在常规判定中收益为负（如五谷救了敌人），在这里也被视为绝对有用
-                    if (get.type(card) == 'trick') return num + 80;
+                    if (get.type(card) == 'trick') return 150;
+                    if (card.name == 'jiu') return 9;
                 },
                 
                 // C. 收益重写 (关键点)：强行让 AI 认为锦囊总是正收益
                 aiResult: function(player, card, num) {
                     // 对于所有锦囊（包含桃园、五谷、南蛮等），强行返回正数
                     // 这会让 AI 略过“是否对敌人有利”的精密计算，直接选择“发动”
-                    if (get.type(card) == 'trick') return 1;
+                    if (get.type(card) == 'trick') return 500;
+                    if (card.name == 'jiu') return 95;
+                },
+                // D. 【核心修复】：劫持底层效果评估，强行无视队友伤害
+                effect: function(card, player, target, current) {
+                    if (get.type(card) == 'trick') {
+                        // 逻辑：如果是我在使用锦囊，且目标是我珍视的人（主公/队友）
+                        if (get.attitude(player, target) > 0) {
+                            // 告诉 AI：只要是我开的锦囊，对队友就是 0 伤害 + 20 分纯收益
+                            // 这会彻底废掉 AI 的“伤害主公”预警
+                            return [0, 20]; 
+                        }
+                        return [1, 10];
+                    }
                 },
 
-                // D. 出牌优先级：锦囊必须排在最前面使用
+                // E. 出牌优先级：锦囊必须排在最前面使用
                 aiOrder: function(player, card, num) {
                     // 权重设为 15，确保在定叛(12)之后，但在普通杀(3)和普通顺手之前
-                    if (get.type(card) == 'trick') return 15;
+                    if (get.type(card) == 'trick') return 99;
                     // 核心装备的装配优先级也提高
-                    if (['zhuge', 'qinglong', 'guanshi'].contains(card.name)) return 16;
+                    if (['zhuge', 'qinglong', 'guanshi'].contains(card.name)) return 98;
+                    if (card.name == 'jiu') return 96;
+                    if (card.name == 'sha') return 95;
                 },
 
                 // 距离逻辑保留

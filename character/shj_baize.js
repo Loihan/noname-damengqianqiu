@@ -345,29 +345,29 @@ export default {
                 } else {
                     event.finish();
                 }
-        'step 2'; // 循环处理的开始
-        if (event.num < event.targets.length) {
-            var target = event.targets[event.num];
-            event.currentTarget = target; // 将当前目标存入event，以便后续步骤使用
+                'step 2'; // 循环处理的开始
+                if (event.num < event.targets.length) {
+                    var target = event.targets[event.num];
+                    event.currentTarget = target; // 将当前目标存入event，以便后续步骤使用
 
-            if(event.is_odd) {
-                target.damage('thunder');
-                event.goto(5); // 奇数效果只有一个动作，完成后直接跳到循环计数
-            } else {
-                // 偶数效果的第一个动作：横置
-                target.link(true);
+                    if(event.is_odd) {
+                        target.damage('thunder');
+                        event.goto(5); // 奇数效果只有一个动作，完成后直接跳到循环计数
+                    } else {
+                        // 偶数效果的第一个动作：横置
+                        target.link(true);
+                    }
+                } else {
+                    event.finish(); // 所有目标处理完毕，结束技能
+                }
+                'step 3'; // 偶数效果的第二个动作：翻面
+                event.currentTarget.turnOver(true);
+                'step 4'; // 偶数效果的第三个动作：弃牌
+                player.discardPlayerCard(event.currentTarget, 'he', true);
+                'step 5'; // 循环计数与跳转
+                event.num++;
+                event.goto(2); // 返回步骤2，处理下一个目标
             }
-        } else {
-            event.finish(); // 所有目标处理完毕，结束技能
-        }
-        'step 3'; // 偶数效果的第二个动作：翻面
-        event.currentTarget.turnOver(true);
-        'step 4'; // 偶数效果的第三个动作：弃牌
-        player.discardPlayerCard(event.currentTarget, 'he', true);
-        'step 5'; // 循环计数与跳转
-        event.num++;
-        event.goto(2); // 返回步骤2，处理下一个目标
-    }
         },
         shj_lingyou: {
             persevereSkill: true,

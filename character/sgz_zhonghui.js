@@ -36,14 +36,16 @@ export default {
             },
             ai: {
                 noh: true,
-                reverseEquip: true,
+                nogain: true,
+                freeSha: true,
+                freeShan: true,
                 maixie: true,
                 // === 【核心修改】：患标记少于2时，诱导AI主动受创 ===
                 effect: {
                     target: function(card, player, target) {
                         // 如果“患”标记少于 2，大幅提升受伤收益评分
                         if (target.countMark('sgz_quanji_huan') < 2) {
-                            if (get.tag(card, 'damage')) return [0, 3]; 
+                            if (get.tag(card, 'damage')) return [1, 80]; 
                         }
                     }
                 }
@@ -51,17 +53,60 @@ export default {
             // 音频路径适配
             audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:12", //开局一声获得4权
             mod: {
-                aiOrder(player, card, num) {
-                    if (num > 0) return num;
-                    if (card.name === "zhuge" && player.getCardUsable("sha", true) < 6) return 1;
+                // A. 价值评估：锦囊牌和核心装备被视为顶级资源
+                aiValue: function(player, card, num) {
+                    if (card.name == 'zhuge') return 1000;     // 连弩：神器
+                    if (card.name == 'guanshi') return 900; 
+                    if (card.name == 'qinglong') return 200;
+                    if (get.type(card) == 'equip') return 150;
+                    return num * 0.4;
                 },
-                aiValue(player, card, num) {
-                    if (get.tag(card, "damage") && card.name != "sha") return num * 4;
-                    if (player.hasUseTarget(card)) return num * 3;
-                    if (card.name === "zhuge") return 60 / (1 + player.getCardUsable("sha", true));
+                
+                // B. 使用意愿：消除 AI 的顾虑，实现“无脑用”
+                aiUseful: function(player, card, num) {
+                    if (card.name == 'zhuge') return 1000;
+                    // 锦囊牌即便在常规判定中收益为负（如五谷救了敌人），在这里也被视为绝对有用
+                    if (get.type(card) == 'trick') return 150;
+                    if (card.name == 'jiu') return 4;
+                    return num * 2;
                 },
-                aiUseful(player, card, num) {
-                    if (card.name === "zhuge") return 60 / (1 + player.getCardUsable("sha", true));
+                
+                // C. 收益重写 (关键点)：强行让 AI 认为锦囊总是正收益
+                aiResult: function(player, card, num) {
+                    // 对于所有锦囊（包含桃园、五谷、南蛮等），强行返回正数
+                    
+                    if (card.name == 'jiu') return 95;
+                },
+                // D. 【核心修复】：劫持底层效果评估，强行无视队友伤害
+                effect: function(card, player, target, current) {
+                    if (get.type(card) == 'trick') {
+                        // 逻辑：如果是我在使用锦囊，且目标是我珍视的人（主公/队友）
+                        if (get.attitude(player, target) > 0) {
+                            // 告诉 AI：只要是我开的锦囊，对队友就是 0 伤害 + 20 分纯收益
+                            // 这会彻底废掉 AI 的“伤害主公”预警
+                            return [0, 20]; 
+                        }
+                        return [1, 10];
+                    }
+                },
+
+                // E. 出牌优先级：锦囊必须排在最前面使用
+                aiOrder: function(player, card, num) {
+                    if (num > 0) {return num; }
+                    if (card.name === "zhuge" && player.getCardUsable("sha", true) < 6) {
+                        return 1;
+                    }
+                    if (card.name === "guanshi" && player.getCardUsable("sha", true) < 6) {
+                        return 2;
+                    }
+                    if (card.name === "qinglong" && player.getCardUsable("sha", true) < 6) {
+                        return 3;
+                    }
+                },
+
+                // 距离逻辑保留
+                targetInRange: function(card, player, target) {
+                    if (card.name == "sha") return true;
                 },
             },
             content() {
@@ -148,10 +193,7 @@ export default {
                 return name == "wuxie";
             },
             ai: {
-                order: 15,
-                result: {
-                    player: 9,
-                },
+                order: 1,
             },
             chooseButton: {
                 dialog(event, player) {
@@ -213,6 +255,7 @@ export default {
             },
             ai: {
                 order: 0.5,
+                save:true,
                 result: {
                     player: function(player) {
                         // 自己受伤或有患标记时，对自己使用是有收益的
@@ -313,8 +356,23 @@ export default {
                 const { result } = await player.chooseTarget(
                     '兴伐：请选择一名角色对其造成1点伤害并即时调整其体力上限',
                     true
-                ).set('ai', target => {
-                    return get.damageEffect(target, player, player);
+                ).set('ai', function(target) {
+                    // 1. 基本态度判断（只打敌人）
+                    var att = get.attitude(player, target);
+                    if (att > 0) return 0;
+                    
+                    var score = 1;
+                    // 2. 核心逻辑：已损失体力值多者优先
+                    var lostHp = target.maxHp - target.hp;
+                    score += lostHp * 10;
+                    
+                    // 3. 逻辑：若已损失相同，则当前体力低者优先
+                    score += (10 - target.hp) * 2;
+                    
+                    score -= att;
+                    
+                    
+                    return score;
                 });
 
                 if (result.bool && result.targets) {

@@ -249,7 +249,6 @@ export default {
                 },
             },
         },
-
         // === 3. 天殇 (动态上限修正) ===
         sgz_tianshang: {
             audio: "ext:大梦千秋/audio/sgz_guojia/skill:3",
@@ -294,12 +293,12 @@ export default {
                 effect: {
                     // 当火攻或其他伤害来源指向梦郭嘉时
                     target: function(card, player, target) {
-                        // 如果梦郭嘉还没发动过极慧，且受到的是火焰伤害
-                        if (get.tag(card, 'fireDamage') && target.maxHp < 10 && !target.hasHistory('damage')) {
+                        // 如果梦郭嘉还没发动过极慧，且受到伤害
+                        if (get.tag(card, 'damage') && target.maxHp < 10 && !target.hasHistory('damage')) {
                             // 返回 [系数, 增加值]
                             // 0: 抵消伤害带来的负面评估
                             // 2: 赋予 4 点正向价值评估
-                            return [0, 4]; 
+                            return [0, 5]; 
                         }
                     }
                 },
@@ -349,7 +348,7 @@ export default {
         sgz_guanxu: "观虚",
         sgz_guanxu_info: "牌堆顶的X张牌始终对你可见（X为你的体力上限）。你的回合内/外，你可以如手牌般使用或打出其中的锦囊牌/基本牌。",
         sgz_jihui: "极慧",
-        sgz_jihui_info: "出牌阶段限一次或当你每回合首次受到伤害后，若你的体力上限<10，你可重复执行以下流程：{①进行一次判定；②若出现过相同花色或你的体力上限≥10则跳出大括号里的内容；③增加一点体力上限}，你获得所有以此法产生的判定牌。",
+        sgz_jihui_info: "出牌阶段限一次或当你每回合首次受到伤害后，若你的体力上限<10，你可进行判定，若未出现相同花色的判定牌且你的体力上限<10，则你增加一点体力上限并重复此流程。你获得所有以此法产生的判定牌。",
         sgz_tianshang: "天殇",
         sgz_tianshang_info: "锁定技，每名角色的回合结束时，若你已受伤，你将额外的体力上限转化为护甲。",
     },
