@@ -1,17 +1,18 @@
 export default {
     character: {
         // 梦黄月英：神势力，4/6分布。技能组：集巧、璇和、长明、绮梦
-        sgz_huangyueying: [
-            "female", 
-            "shen", 
-            "4/6", 
-            ["sgz_jiqiao", "sgz_xuanhe", "sgz_changming", "sgz_qimeng"], 
-            [
-                "des:黄氏月英，沔阳名士承彦之女也。幼而敏慧，通奇门，晓机巧，常居草庐，潜心造化之术。<br>建安之末，月英于静夜忽生一梦，见将星陨于五丈原，蜀汉气数将尽，满朝志士皆成焦土。觉后惊悸，乃誓以一身机巧之学，逆转乾坤。其集天下之精金，运璇玑之妙理，制连弩、木牛，变幻无端，神鬼莫测。<br>月英更于隆中点燃一盏不灭之灯，以此火为引，导汉军于幽暗。自此，蜀师所至，铁甲森森，机关轰鸣，破秦岭天险如等闲。当孔明北伐之际，月英随军策应，魏人见其攻城军械，皆以为天工降世，无不望风而溃。及至大汉复兴，洛阳城内万灯齐耀，正如当年梦中之长明。其以一女子之智，开万世太平之基，史称“奇才国母”。",
-                "ext:大梦千秋/image/sgz_huangyueying.jpg",
-                "die:ext:大梦千秋/audio/sgz_huangyueying/die.mp3"
-            ]
-        ],
+        sgz_huangyueying: {
+            sex:"female", 
+            group:"shen", 
+            hp:4,
+            maxHp:6, 
+            skills:["sgz_jiqiao", "sgz_xuanhe", "sgz_changming", "sgz_qimeng"], 
+            img:"extension/大梦千秋/image/sgz_huangyueying.jpg",
+            dieAudios:["ext:大梦千秋/audio/sgz_huangyueying/die.mp3"],
+            names:"黄|月英",
+            groupInGuozhan:"shu",
+            4:["des:黄氏月英，沔阳名士承彦之女也。幼而敏慧，通奇门，晓机巧，常居草庐，潜心造化之术。<br>建安之末，月英于静夜忽生一梦，见将星陨于五丈原，蜀汉气数将尽，满朝志士皆成焦土。觉后惊悸，乃誓以一身机巧之学，逆转乾坤。其集天下之精金，运璇玑之妙理，制连弩、木牛，变幻无端，神鬼莫测。<br>月英更于隆中点燃一盏不灭之灯，以此火为引，导汉军于幽暗。自此，蜀师所至，铁甲森森，机关轰鸣，破秦岭天险如等闲。当孔明北伐之际，月英随军策应，魏人见其攻城军械，皆以为天工降世，无不望风而溃。及至大汉复兴，洛阳城内万灯齐耀，正如当年梦中之长明。其以一女子之智，开万世太平之基，史称“奇才国母”。",]
+        },
     },
     characterName: 'sgz_huangyueying',
     characterTitle: {sgz_huangyueying: "明良千古",},

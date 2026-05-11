@@ -1,19 +1,21 @@
 export default {
     character: {
-        sgz_machao: [
-            "male", 
-            "shen", 
-            4, 
-            ["sgz_shouli","sgz_leiji","sgz_mingzong"], 
-            [
-                "des:西凉锦马超，统领万众铁骑。当他踏入战场之时，甲胄与兵刃皆化为尘土，唯有万马奔腾的轰鸣响彻星域。",
-                "ext:大梦千秋/image/sgz_machao.jpg",
-                "die:ext:大梦千秋/audio/sgz_machao/die.mp3"
-            ]
-        ],
+        sgz_machao: {
+            sex:"male", 
+            group:"shen", 
+            hp:4, 
+            skills:["sgz_shouli","sgz_leiji","sgz_mingzong"], 
+            img:"extension/大梦千秋/image/sgz_machao.jpg",
+            dieAudios:["ext:大梦千秋/audio/sgz_machao/die.mp3"],
+            names:"马|超",
+            groupInGuozhan:"qun",
+            4:["des:西凉锦马超，统领万众铁骑。当他踏入战场之时，甲胄与兵刃皆化为尘土，唯有万马奔腾的轰鸣响彻星域。"] 
+        },
     },
     characterName: 'sgz_machao',
-    characterTranslate: {sgz_machao: "马超",},
+    characterTranslate: {
+        sgz_machao: "马超",
+    },
     skills: {
         // === 技能1：【狩骊】 ===
         sgz_shouli: {
@@ -154,7 +156,7 @@ export default {
                         
                         // === 【核心新增】：唯一马种保护逻辑 ===
                         // 满足：1.敌人多于1名；2.没有鸣踪；3.目标是全场唯一的-1马拥有者
-                        if (enemyCount > 1  && horseOwners.length === 1 && horseOwners.contains(target)) {
+                        if (enemyCount > 1  && !canMingzong && horseOwners.length === 1 && horseOwners.contains(target)) {
                             // 如果目标血量处于危险线（濒死或1血），AI 为了留着这匹马以后用，强制放弃击杀
                             // 返回 0 分，意味着 AI 宁愿不发动雷殛去杀这个残血敌人
                             if (target.hp <= 2 || target.isDying()) return -6000;
@@ -404,7 +406,7 @@ export default {
         sgz_mingzong_info:"每回合限一次，当有装备牌被弃置时，你可以将其中一张置入一名角色装备区，然后获得其所有手牌。",
     },
     characterTaici: {
-        "sgz_shouli": { order: 1, content: "赶缚苍龙擒猛虎，一枪纵横定天山！/马踏祁连山河动，兵起玄黄奈何天！/此身独傲，天下无不可敌之人，无不可去之地！/神威天降，世间无不可驭之雷，无不可降之马！" },
+        "sgz_shouli": { order: 1, content: "敢缚苍龙擒猛虎，一枪纵横定天山！/马踏祁连山河动，兵起玄黄奈何天！/此身独傲，天下无不可敌之人，无不可去之地！/神威天降，世间无不可驭之雷，无不可降之马！" },
         "sgz_leiji": { order: 2, content: "横枪立马，独啸秋风！/世皆彳亍，唯我纵横！/赤骊骋疆，巡狩八荒！/长缨在手，百骥可降！" },
         "sgz_mingzong": { order: 3, content: "雷部显圣，引赤电为翼，铸霹雳成枪！/一骑破霄汉，饮马星河，醉卧广寒！/饲骊胡肉，饮骥虏血，一骑可定万里江山！/折兵为弭，纫甲为服，此箭可狩在野之龙！" },
         "die": { content: "七情难掩，六欲难消，何谓之神？" }

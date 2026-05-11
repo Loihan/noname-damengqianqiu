@@ -1,17 +1,18 @@
 export default {
     character: {
         // === 修改点: 更新体力、上限和技能 ===
-        shj_nvwa: [
-            "female", 
-            "shen", 
-            "180/365", 
-            ["shj_lianshi", "shj_xirang", "shj_shenen", "shj_guiyuan", "shj_tianhen",  "shj_butian"], 
-            [
-                "des:女娲，中国上古神话中的创世女神。传说她抟土造人，并化生万物，使天地不再沉寂。后四极废，九州裂，天不兼覆，地不周载，于是她炼五色石以补苍天，断鳌足以立四极，从此万物复苏，天下安泰。", 
-                "ext:大梦千秋/image/shj_nvwa.jpg",
-                "die:ext:大梦千秋/audio/shj_nvwa/die.mp3"
-            ]
-            ],
+        shj_nvwa: {
+            sex:"female", 
+            group:"shen", 
+            hp:180,
+            maxHp:365, 
+            skills:["shj_lianshi", "shj_xirang", "shj_shenen", "shj_guiyuan", "shj_tianhen",  "shj_butian"], 
+            img:"extension/大梦千秋/image/shj_nvwa.jpg",
+            dieAudios:["ext:大梦千秋/audio/shj_nvwa/die.mp3"],
+            names:"女娲|null",
+            groupInGuozhan:"ye",
+            4:["des:女娲，中国上古神话中的创世女神。传说她抟土造人，并化生万物，使天地不再沉寂。后四极废，九州裂，天不兼覆，地不周载，于是她炼五色石以补苍天，断鳌足以立四极，从此万物复苏，天下安泰。", ]
+        },
     },
     characterName: 'shj_nvwa',
     characterTranslate: {shj_nvwa: "女娲",},

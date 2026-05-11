@@ -193,7 +193,10 @@ export default function () {
         package: {
             character: {
                 character: Object.assign({}, ...allCharacters.map(char => char.character || {})),
-                translate: Object.assign({}, ...allCharacters.map(char => char.characterTranslate || {})),
+                translate: Object.assign({}, ...allCharacters.map(char => {
+                    let trans = char.characterTranslate || {};
+                    return trans;
+                })),
                 // === 核心：分包设置 ===
                 characterSort: {
                     "大梦千秋": {
@@ -202,7 +205,12 @@ export default function () {
                         "魔法时代": mfsdCharacters.map(char => char.characterName),
                         "万古仙道": wgxdCharacters.map(char => char.characterName),
                     }
-                }
+                },
+                characterFilter: function(mode) {
+                // 返回 true 表示该模式可用
+                    return true; 
+                // 或者像你教程里写的： return mode == "guozhan";
+            },
             },
             skill: {
                 skill: Object.assign({}, ...allCharacters.map(char => char.skills || {})),
@@ -210,7 +218,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包",
             author: "Loihan",
-            version: "5.0.2",
+            version: "6.0",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };

@@ -1,15 +1,16 @@
 export default {
     character: {
-        wgxd_yinianshenmo: [
-            "male", 
-            "shen", 
-            6, 
-            ["wgxd_renling", "wgxd_fenjie", "wgxd_tianze"], [
-                "des:一念成神，慈悯众生；一念成魔，覆灭万物。此为星域之端的至高法相，于生死轮转间定夺因果。", 
-                "ext:大梦千秋/image/wgxd_yinianshenmo.jpg",
-                "die:ext:大梦千秋/audio/wgxd_yinianshenmo/die/die.mp3"
-            ],
-        ]
+        wgxd_yinianshenmo: {
+            sex: "male", 
+            group: "shen", 
+            hp: 6, 
+            skills:["wgxd_renling", "wgxd_fenjie", "wgxd_tianze"], 
+            img:"extension/大梦千秋/image/wgxd_yinianshenmo.jpg",
+            dieAudios:["ext:大梦千秋/audio/wgxd_yinianshenmo/die/die.mp3"],
+            names:"李|信",
+            groupInGuozhan:"ye",
+            4:["des:一念成神，慈悯众生；一念成魔，覆灭万物。此为星域之端的至高法相，于生死轮转间定夺因果。", ],
+        }
     },
     characterName: 'wgxd_yinianshenmo',
     characterTranslate: {wgxd_yinianshenmo: "一念神魔",},

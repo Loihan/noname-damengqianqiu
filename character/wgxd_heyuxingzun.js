@@ -1,16 +1,16 @@
 export default {
     character: {
-        wgxd_heyuxingzun: [
-            'male', 
-            'shen', 
-            7, 
-            ['wgxd_jianzhen', 'wgxd_qixia', 'wgxd_jianyun','wgxd_heyuxingzun_texiao'], 
-            [
-                "des:三界御剑第一尊。",
-                "ext:大梦千秋/image/wgxd_heyuxingzun.jpg",
-                "die:ext:大梦千秋/audio/wgxd_heyuxingzun/die.mp3"
-            ]
-        ],
+        wgxd_heyuxingzun: {
+            sex: "male", 
+            group: "shen", 
+            hp: 7, 
+            skills:['wgxd_jianzhen', 'wgxd_qixia', 'wgxd_jianyun','wgxd_heyuxingzun_texiao'], 
+            img:"extension/大梦千秋/image/wgxd_heyuxingzun.jpg",
+            dieAudios:["ext:大梦千秋/audio/wgxd_heyuxingzun/die.mp3"],
+            names:"诸葛|亮",
+            groupInGuozhan:"ye",
+            4:["des:三界御剑第一尊。",]
+        },
     },
     characterName: 'wgxd_heyuxingzun',
     characterTranslate: {wgxd_heyuxingzun: '鹤羽星尊',},

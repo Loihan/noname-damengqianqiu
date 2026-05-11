@@ -1,17 +1,18 @@
 export default {
     character: {
         // 梦钟会：势力神，体力1，上限按原版逻辑由技能维持
-        sgz_zhonghui: [
-            "male", 
-            "shen",
-            1, 
-            ["sgz_quanji", "sgz_fensi", "sgz_jitian", "sgz_zhuyue", "sgz_xingfa","sgz_audio_effect", "sgz_zhonghui_texiao"], 
-            [
-                "des:钟会字士季，颖川之杰也。少负绝代之才，精于权略，时人比之子房。<br>景元四年，会统大军入蜀，剑指成都。及蜀汉既平，会功冠诸军，然其心高傲，不甘久居司马氏之下。彼深忿邓艾先入之功，遂假权谋之策，诬艾谋逆，籍没其军，由是独擅益州，威震西南。<br>会有揽月逐影之志，自谓才足冠世，何必为人臣之列？见洛阳篡臣当道，汉鼎迁移，遂萌觊觎神器之心。会乃称帝于成都，布告天下，正式自立。司马昭闻变震怒，起倾国之兵远征。会仗剑立于剑阁，激赏士卒，反兴义师而北伐。是役也，会奇计百出，诱敌深入于巴蜀险峻之间，终使中原大军折戟山谷。<br>自此，会据秦岭之险，分天下之半，三足鼎立之势复兴。后世论之，谓其志虽肆，其才实奇，终能于乱世孤影之中，强自逐月，开一朝之基命，成不世之枭雄。",
-                "ext:大梦千秋/image/sgz_zhonghui.jpg",
-                "die:ext:大梦千秋/audio/sgz_zhonghui/die/die.mp3"
-            ]
-        ],
+        sgz_zhonghui: {
+            sex:"male", 
+            group:"shen",
+            hp:1,
+            maxHp:1, 
+            skills:["sgz_quanji", "sgz_fensi", "sgz_jitian", "sgz_zhuyue", "sgz_xingfa","sgz_audio_effect", "sgz_zhonghui_texiao"], 
+            img:"extension/大梦千秋/image/sgz_zhonghui.jpg",
+            dieAudios:["ext:大梦千秋/audio/sgz_zhonghui/die/die.mp3"],
+            names:"钟|会",
+            groupInGuozhan:"qun",
+            4:["des:钟会字士季，颖川之杰也。少负绝代之才，精于权略，时人比之子房。<br>景元四年，会统大军入蜀，剑指成都。及蜀汉既平，会功冠诸军，然其心高傲，不甘久居司马氏之下。彼深忿邓艾先入之功，遂假权谋之策，诬艾谋逆，籍没其军，由是独擅益州，威震西南。<br>会有揽月逐影之志，自谓才足冠世，何必为人臣之列？见洛阳篡臣当道，汉鼎迁移，遂萌觊觎神器之心。会乃称帝于成都，布告天下，正式自立。司马昭闻变震怒，起倾国之兵远征。会仗剑立于剑阁，激赏士卒，反兴义师而北伐。是役也，会奇计百出，诱敌深入于巴蜀险峻之间，终使中原大军折戟山谷。<br>自此，会据秦岭之险，分天下之半，三足鼎立之势复兴。后世论之，谓其志虽肆，其才实奇，终能于乱世孤影之中，强自逐月，开一朝之基命，成不世之枭雄。",] 
+        },
     },
     characterName: 'sgz_zhonghui',
     characterTranslate: {sgz_zhonghui: "钟会",},
@@ -45,7 +46,7 @@ export default {
                     target: function(card, player, target) {
                         // 如果“患”标记少于 2，大幅提升受伤收益评分
                         if (target.countMark('sgz_quanji_huan') < 2) {
-                            if (get.tag(card, 'damage')) return [1, 80]; 
+                            if (get.tag(card, 'damage')) return [1, 2]; 
                         }
                     }
                 }
@@ -202,7 +203,9 @@ export default {
                         if (get.type(name) != "trick") continue;
                         if (event.filterCard(get.autoViewAs({ name: name }, "unsure"), player, event)) list.push([get.translation(get.type(name)), "", name]);
                     }
-                    return ui.create.dialog("忿肆", [list, "vcard"]);
+                    const dialog = ui.create.dialog("忿肆");
+                    dialog.add([list, "vcard"]);
+                    return dialog;
                 },
                 filter(button, player) {
                     return _status.event.getParent().filterCard({ name: button.link[2] }, player, _status.event.getParent());

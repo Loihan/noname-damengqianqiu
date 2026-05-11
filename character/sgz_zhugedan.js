@@ -1,18 +1,20 @@
 export default {
     character: {
-        sgz_zhugedan: [
-            "male", 
-            "shen", 
-            "6/9", 
-            ["sgz_dingpan", "sgz_fani", "sgz_fenyu", "sgz_kunzhu", "sgz_gujue"], 
-            [
-                "des:诸葛诞字公休，魏之勋旧，宿望淮南。<br>甘露三年，司马氏权倾宇内，弑君凌下，魏室江山名存实亡。诞内怀忧愤，望洛阳而泣血，遂斥司马为国贼，传檄天下，兴复曹氏之威。司马昭亲率六军，蚁聚寿春，重围如铁。城中粮匮援绝，外无救应，部属离散，境遇危殆。<br>诞慨然有玉碎之志，不欲受辱于篡臣。乃命残兵自焚行营，伪作弃城而走，诱敌贪功深入。及贼众陷于死地，诞仗剑而起，亲率死士五百人陷阵冲杀。烈焰冲天，乱军之中，诞手刃元凶，逆党遂崩。是役也，司马覆灭，皇权复归。然诞麾下精锐尽皆尽忠，及至捷报传至洛阳，公虽克敌生还，唯孤影对斜阳。大梦初醒，百战余生，世人皆赞其忠烈，虽处孤绝而终不改其节，遂成魏室之中兴名臣。", 
-                "ext:大梦千秋/image/sgz_zhugedan.png",
-                "die:ext:大梦千秋/audio/sgz_zhugedan/die.mp3"
-            ], 
-        ],
+        sgz_zhugedan: {
+            sex:"male", 
+            group:"shen", 
+            hp:6, 
+            maxHp:9,
+            skills:["sgz_dingpan", "sgz_fani", "sgz_fenyu", "sgz_kunzhu", "sgz_gujue"], 
+            img:"extension/大梦千秋/image/sgz_zhugedan.png", 
+            dieAudios:["ext:大梦千秋/audio/sgz_zhugedan/die.mp3"],
+            names:"诸葛|诞",
+            groupInGuozhan:"wei",
+            4:["des:诸葛诞字公休，魏之勋旧，宿望淮南。<br>甘露三年，司马氏权倾宇内，弑君凌下，魏室江山名存实亡。诞内怀忧愤，望洛阳而泣血，遂斥司马为国贼，传檄天下，兴复曹氏之威。司马昭亲率六军，蚁聚寿春，重围如铁。城中粮匮援绝，外无救应，部属离散，境遇危殆。<br>诞慨然有玉碎之志，不欲受辱于篡臣。乃命残兵自焚行营，伪作弃城而走，诱敌贪功深入。及贼众陷于死地，诞仗剑而起，亲率死士五百人陷阵冲杀。烈焰冲天，乱军之中，诞手刃元凶，逆党遂崩。是役也，司马覆灭，皇权复归。然诞麾下精锐尽皆尽忠，及至捷报传至洛阳，公虽克敌生还，唯孤影对斜阳。大梦初醒，百战余生，世人皆赞其忠烈，虽处孤绝而终不改其节，遂成魏室之中兴名臣。", ]
+        },
     },
     characterName: 'sgz_zhugedan',
+    characterPrefix:"梦",
     characterTranslate: {sgz_zhugedan: "诸葛诞"},
     characterTitle: {sgz_zhugedan: "寿春举义",},
     skills: {
@@ -76,6 +78,7 @@ export default {
                     target.loseMaxHp();
                 } else {
                     target.loseMaxHp();
+                    target.changeGroup("dingpan_pan");
                     target.addSkill("sgz_dingpan_pan");
                 }
             },
@@ -138,6 +141,11 @@ export default {
                     if (get.type(card) == 'trick') {
                         // 逻辑：如果是我在使用锦囊，且目标是我珍视的人（主公/队友）
                         if (get.attitude(player, target) > 0) {
+                            // 告诉 AI：只要是我开的锦囊，对队友就是 0 伤害 + 20 分纯收益
+                            // 这会彻底废掉 AI 的“伤害主公”预警
+                            return [0, 20]; 
+                        }
+                        if (get.attitude(player, target) < 0) {
                             // 告诉 AI：只要是我开的锦囊，对队友就是 0 伤害 + 20 分纯收益
                             // 这会彻底废掉 AI 的“伤害主公”预警
                             return [0, 20]; 
@@ -282,6 +290,9 @@ export default {
             persevereSkill: true,
             forced: true,
             trigger: { player: "phaseJieshuBegin" },
+            ai:{
+                halfneg:true,
+            },
             filter: function(event, player) {
                 // 排除第一轮
                 //if (game.roundNumber <= 1) return false;
@@ -303,7 +314,7 @@ export default {
     },
     skillTranslate: {
         sgz_dingpan: "定叛",
-        sgz_dingpan_info: "出牌阶段每名角色限一次，你可以减少1点体力上限并令一名其他角色减少一点体力上限，然后若其没有“叛”标记，其获得一个“叛”标记。",
+        sgz_dingpan_info: "出牌阶段每名角色限一次，你可以减少1点体力上限并令一名其他角色减少一点体力上限，然后若其没有“叛”标记，其修改其势力为“叛”并获得一个“叛”标记。",
         sgz_fani: "伐逆",
         sgz_fani_info: "锁定技，①你的【杀】无距离限制。②当你使用【杀】时，若场上存在有“叛”标记的角色，则将目标改为所有拥有“叛”标记的角色。③你每对一名拥有“叛”标记的角色使用牌时便摸一张牌。④你对拥有“叛”标记的角色即将造成的伤害改为令其减少等量的体力上限。",
         sgz_fenyu: "焚玉",

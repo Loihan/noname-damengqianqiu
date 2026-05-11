@@ -1,17 +1,17 @@
  export default {
     character: {
         // === 修改点: 在最后一个数组中加入 "des:" 简介 ===
-        shj_xiangliu: [
-            "male", 
-            "shen", 
-            9, 
-            ["shj_huiyan", "shj_mingzhai", "shj_qishou", "shj_jiumo"], 
-            [
-                "des:相柳，又称相繇，上古水神共工之臣，蛇身九首，食人无数，所到之处，尽成泽国。其血腥臭，沾染土地则五谷不生，触及河川则人畜皆亡，乃不折不扣之上古凶神。",
-                "ext:大梦千秋/image/shj_xiangliu.jpg",
-                "die:ext:大梦千秋/audio/shj_xiangliu/die.mp3"
-            ]
-        ],
+        shj_xiangliu: {
+            sex:"male", 
+            group:"shen", 
+            hp:9, 
+            skills:["shj_huiyan", "shj_mingzhai", "shj_qishou", "shj_jiumo"],
+            img:"extension/大梦千秋/image/shj_xiangliu.jpg",
+            dieAudios:["ext:大梦千秋/audio/shj_xiangliu/die.mp3"], 
+            names:"九山|相柳",
+            groupInGuozhan:"ye",
+            4:["des:相柳，又称相繇，上古水神共工之臣，蛇身九首，食人无数，所到之处，尽成泽国。其血腥臭，沾染土地则五谷不生，触及河川则人畜皆亡，乃不折不扣之上古凶神。",]
+        },
     },
     characterName: 'shj_xiangliu',
     characterTranslate: {shj_xiangliu: "相柳",},

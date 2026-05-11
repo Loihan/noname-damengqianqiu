@@ -1,16 +1,16 @@
 export default {
     character: {
-        shj_baize: [
-            "male", 
-            "shen", 
-            5, 
-            ["shj_zhaorui", "shj_tuna", "shj_baizhao","shj_pixie", "shj_lingyou", "shj_dongxu"], 
-            [
-                "des:【列传诗】<br>&nbsp&nbsp&nbsp&nbsp周游山海录万妖，图成一部镇九霄。<br>&nbsp&nbsp&nbsp&nbsp福瑞昭彰魑魅散，洞虚一念定尘嚣。<br>【武将传记】<br>&nbsp&nbsp&nbsp&nbsp传闻昆仑之上有神兽，其名白泽。生而言语，身负圣德，能通万物之情状，能晓天下之鬼神。黄帝治世，东巡狩于海滨，得此神兽。帝问之，白泽遂将天地间精怪奇物之事，凡一万一千五百二十种，尽皆言明。帝大悦，命人图写其形，昭示天下，是为《白泽图》。自此，世人皆以白泽为祥瑞之兆，其出则圣王在位，天下安宁。<br>&nbsp&nbsp&nbsp&nbsp白泽的行迹，便是一部流动的山海经。它的脚步不为征伐，不为权谋，只为穷尽天地间的未知，将所见所闻悉数纳于图中。世间每一次风云变幻，每一次英雄与枭雄的碰撞，于它而言，皆是丰富图卷的笔墨。当它将知识化为力量，凡是被其洞悉之物，便再也无法遵循常理对其造成束缚。<br>&nbsp&nbsp&nbsp&nbsp祥瑞之气随其行而聚，当时机成熟，便可化为诛邪的雷霆，或是平息纷争的秩序。待到《白泽图》终告完满，天地万物再无隐秘可言，它便能勘破虚妄，以万物之名，行使镇压灾厄的最终权能，令一切魑魅魍魉，皆归于虚无。<br>【技能契合】<br>&nbsp&nbsp&nbsp&nbsp昭瑞: 此乃白泽作为瑞兽的本源神性。它的存在本身（准备阶段）或与世界的任何交互（造成或受到伤害），都会自然而然地推动其“书神鬼之事”的使命（明策），并积累福泽（祥瑞标记）。而百邪不侵的天性，使其能预知并规避灾祸（免疫延时锦囊）。<br>&nbsp&nbsp&nbsp&nbsp图纳: 象征着白泽为补完《白泽图》而进行的主动寻访与收录。它会放弃寻常的机遇（摸牌阶段），转而有目标地探索未知领域（指定并获得未记录的牌）。每一次成功的收录，都让它的认知更加完整，自身也因此变得更为强大（增加体力上限并回复体力）。<br>&nbsp&nbsp&nbsp&nbsp白沼: 体现了知识即是力量的法则。一旦某事物被记录于《白泽图》中，白泽便洞悉了其全部本质，故能超脱凡俗规则（无次数与距离限制）来运用它。同理，任何以其已知方式发起的挑战，都无法伤及它分毫，反而会成为它成长的资粮（成为目标时回复体力或增加体力上限）。<br>&nbsp&nbsp&nbsp&nbsp辟邪: 这是白泽履行其“驱邪除祟”职责的直接体现。它将积累的祥瑞之气，根据阴阳之理（标记数的奇偶）转化为两种截然不同的神力：或以阳刚的煌煌天威（雷电伤害）直接诛灭妖邪，或以阴柔的法则之力（翻面并弃牌）将其镇压，使其回归沉寂。<br>&nbsp&nbsp&nbsp&nbsp灵佑: 当祥瑞汇聚至巅峰时，白泽可将其化为对天地的巨大恩泽。这象征着一场功德圆满后的甘霖普降，将积攒的福报一次性释放，为自身带来无穷的可能性与新生（移除标记并摸大量牌）。<br>&nbsp&nbsp&nbsp&nbsp洞虚/镇厄: 这是白泽完成使命、功德圆满的最终形态。当《白泽图》完成，洞悉万物之后，它便迎来了觉醒。求知阶段的“明策”升华为功成后的“律成”，象征着它从寻求知识变为知识的化身。同时，它获得了最终的权能【镇厄】，能够以绝对的法则，将它所认定的“灾厄”从世间彻底抹除（立即死亡），实现“百厄除尽，万象更新”的至高理想。",
-                "ext:大梦千秋/image/shj_baize.jpg",
-                "die:ext:大梦千秋/audio/shj_baize/die.mp3"
-            ]
-        ],
+        shj_baize: {
+            sex:"male", 
+            group:"shen", 
+            hp:5, 
+            skills:["shj_zhaorui", "shj_tuna", "shj_baizhao","shj_pixie", "shj_lingyou", "shj_dongxu","shj_baize_ui"], 
+            img:"extension/大梦千秋/image/shj_baize.jpg",
+            dieAudios:["ext:大梦千秋/audio/shj_baize/die.mp3"],
+            names:"天机|白泽",
+            groupInGuozhan:"ye",
+            4:["des:【列传诗】<br>&nbsp&nbsp&nbsp&nbsp周游山海录万妖，图成一部镇九霄。<br>&nbsp&nbsp&nbsp&nbsp福瑞昭彰魑魅散，洞虚一念定尘嚣。<br>【武将传记】<br>&nbsp&nbsp&nbsp&nbsp传闻昆仑之上有神兽，其名白泽。生而言语，身负圣德，能通万物之情状，能晓天下之鬼神。黄帝治世，东巡狩于海滨，得此神兽。帝问之，白泽遂将天地间精怪奇物之事，凡一万一千五百二十种，尽皆言明。帝大悦，命人图写其形，昭示天下，是为《白泽图》。自此，世人皆以白泽为祥瑞之兆，其出则圣王在位，天下安宁。<br>&nbsp&nbsp&nbsp&nbsp白泽的行迹，便是一部流动的山海经。它的脚步不为征伐，不为权谋，只为穷尽天地间的未知，将所见所闻悉数纳于图中。世间每一次风云变幻，每一次英雄与枭雄的碰撞，于它而言，皆是丰富图卷的笔墨。当它将知识化为力量，凡是被其洞悉之物，便再也无法遵循常理对其造成束缚。<br>&nbsp&nbsp&nbsp&nbsp祥瑞之气随其行而聚，当时机成熟，便可化为诛邪的雷霆，或是平息纷争的秩序。待到《白泽图》终告完满，天地万物再无隐秘可言，它便能勘破虚妄，以万物之名，行使镇压灾厄的最终权能，令一切魑魅魍魉，皆归于虚无。<br>【技能契合】<br>&nbsp&nbsp&nbsp&nbsp昭瑞: 此乃白泽作为瑞兽的本源神性。它的存在本身（准备阶段）或与世界的任何交互（造成或受到伤害），都会自然而然地推动其“书神鬼之事”的使命（明策），并积累福泽（祥瑞标记）。而百邪不侵的天性，使其能预知并规避灾祸（免疫延时锦囊）。<br>&nbsp&nbsp&nbsp&nbsp图纳: 象征着白泽为补完《白泽图》而进行的主动寻访与收录。它会放弃寻常的机遇（摸牌阶段），转而有目标地探索未知领域（指定并获得未记录的牌）。每一次成功的收录，都让它的认知更加完整，自身也因此变得更为强大（增加体力上限并回复体力）。<br>&nbsp&nbsp&nbsp&nbsp白沼: 体现了知识即是力量的法则。一旦某事物被记录于《白泽图》中，白泽便洞悉了其全部本质，故能超脱凡俗规则（无次数与距离限制）来运用它。同理，任何以其已知方式发起的挑战，都无法伤及它分毫，反而会成为它成长的资粮（成为目标时回复体力或增加体力上限）。<br>&nbsp&nbsp&nbsp&nbsp辟邪: 这是白泽履行其“驱邪除祟”职责的直接体现。它将积累的祥瑞之气，根据阴阳之理（标记数的奇偶）转化为两种截然不同的神力：或以阳刚的煌煌天威（雷电伤害）直接诛灭妖邪，或以阴柔的法则之力（翻面并弃牌）将其镇压，使其回归沉寂。<br>&nbsp&nbsp&nbsp&nbsp灵佑: 当祥瑞汇聚至巅峰时，白泽可将其化为对天地的巨大恩泽。这象征着一场功德圆满后的甘霖普降，将积攒的福报一次性释放，为自身带来无穷的可能性与新生（移除标记并摸大量牌）。<br>&nbsp&nbsp&nbsp&nbsp洞虚/镇厄: 这是白泽完成使命、功德圆满的最终形态。当《白泽图》完成，洞悉万物之后，它便迎来了觉醒。求知阶段的“明策”升华为功成后的“律成”，象征着它从寻求知识变为知识的化身。同时，它获得了最终的权能【镇厄】，能够以绝对的法则，将它所认定的“灾厄”从世间彻底抹除（立即死亡），实现“百厄除尽，万象更新”的至高理想。",]
+        },
     },
     characterName: 'shj_baize',
     characterTranslate: {shj_baize: "白泽",},
@@ -426,7 +426,6 @@ export default {
                         player.awakenSkill('shj_dongxu');
                         player.node.avatar.setBackgroundImage('extension/大梦千秋/image/shj_baize2.jpg');
                         player.addSkill('shj_zhen_e');
-                        player.removeSkill('shj_tuna');
                     }
                 }
             }
@@ -460,6 +459,187 @@ export default {
                 }
             },
         },
+        shj_baize_ui: {
+            charlotte: true,
+            trigger: { 
+                player: ["enterGame", "gainAfter", "awaken"],
+                global: ["gameStart", "phaseBeginStart"] 
+            },
+            forced: true,
+            silent: true,
+            priority: -10,
+            init: function(player) {
+                if (!document.getElementById('baize_artifact_style')) {
+                    var style = document.createElement('style');
+                    style.id = 'baize_artifact_style';
+                    style.innerHTML = `
+                        /* 容器：挂载在武将牌节点上，绝对定位到右侧 */
+                        .baize-artifact-wrap {
+                            position: absolute; 
+                            left: 100%; /* 起始位置在武将牌右边缘 */
+                            bottom: 0%; 
+                            margin-left: 5px; /* 您要求的 3px 缝隙 */
+                            width: 25px; 
+                            height: 100%; /* 相对于武将牌高度 */
+                            z-index: 50;
+                            display: flex; flex-direction: column; align-items: center;
+                            transition: all 0.5s ease;
+                            pointer-events: none;
+                        }
+
+                        /* 律柱外框：棱角几何 */
+                        .baize-artifact-frame {
+                            width: 10px; height: 100%;
+                            background: rgba(5, 10, 15, 0.9);
+                            border: 1px solid rgba(127, 219, 255, 0.5);
+                            clip-path: polygon(50% 0%, 100% 3%, 100% 97%, 50% 100%, 0% 97%, 0% 3%);
+                            position: relative;
+                            box-shadow: inset 0 0 6px rgba(0,0,0,1);
+                            z-index: 2;
+                        }
+
+                        /* 能量填充 */
+                        /* 基础状态：冰蓝能量流 */
+                        .baize-artifact-fill {
+                            width: 100%; height: 0%;
+                            /* 核心：将底色、反光、流动层合并（从上到下叠加） */
+                            background: 
+                                /* 第一层：流动的气泡线 */
+                                repeating-linear-gradient(0deg, transparent, rgba(255,255,255,0.3) 20px, transparent 40px),
+                                /* 第二层：中心纵向高光（增加立体感） */
+                                linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%),
+                                /* 第三层：冰蓝色底色 */
+                                linear-gradient(90deg, #0a1a2a 0%, #7fdbff 50%, #0a1a2a 100%);
+                            
+                            background-size: 100% 80px, 100% 100%, 100% 100%; /* 气泡层高度设为80px */
+                            box-shadow: 0 0 10px rgba(127, 219, 255, 0.8);
+                            transition: height 1.2s cubic-bezier(0.33, 1, 0.68, 1);
+                            position: absolute; bottom: 0; left: 0;
+                            border-top: 1px solid #fff;
+                            animation: baize-energy-rise 3s infinite linear; /* 应用向上流动动画 */
+                        }
+                        /* 贴边狂雷系统 */
+                        .baize-lightning-system {
+                            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                            z-index: 3;
+                        }
+                        .bolt {
+                            position: absolute; width: 3px; height: 40px;
+                            background: #fff; opacity: 0;
+                            filter: blur(0.5px) drop-shadow(0 0 6px #a0d8ff);
+                        }
+                        .bolt-1 { left: -1px; top: 15%; clip-path: polygon(100% 0, 0 30%, 100% 50%, 0 100%, 30% 50%, 0 20%); animation: bolt-flash 0.5s infinite; }
+                        .bolt-2 { right: -1px; top: 25%; clip-path: polygon(0 0, 100% 20%, 0 50%, 100% 80%, 0 100%, 50% 50%); animation: bolt-flash 0.4s infinite 0.3s; }
+                        .bolt-3 { left: -2px; bottom: 25%; clip-path: polygon(50% 0, 100% 40%, 20% 50%, 100% 100%, 0 60%, 40% 30%); animation: bolt-flash 0.6s infinite 0.6s; }
+                        .bolt-4 { right: -2px; bottom: 10%; clip-path: polygon(0 20%, 100% 0, 40% 50%, 100% 100%, 20% 60%, 50% 20%); animation: bolt-flash 0.5s infinite 0.9s; }
+
+                        @keyframes bolt-flash {
+                            0%, 70%, 100% { opacity: 0; }
+                            72% { opacity: 1; transform: scale(1.1); }
+                            74% { opacity: 0; }
+                            76% { opacity: 0.8; }
+                            78% { opacity: 0; }
+                        }
+
+                        /* 觉醒：暗金变色 */
+                        .baize-artifact-wrap.awakened .baize-artifact-frame {
+                            background: rgba(25, 15, 5, 0.95) !important;
+                            border: 1px solid #b8860b !important;
+                            box-shadow: 0 0 10px rgba(184, 134, 11, 0.5), inset 0 0 8px rgba(0,0,0,1) !important;
+                        }
+                        /* 觉醒状态：暗金琥珀流 */
+                        .baize-artifact-wrap.awakened .baize-artifact-fill {
+                            background: 
+                                /* 第一层：金流气泡 */
+                                repeating-linear-gradient(0deg, transparent, rgba(255,215,0,0.4) 15px, transparent 30px),
+                                /* 第二层：金色中心反光 */
+                                linear-gradient(90deg, rgba(255,215,0,0) 0%, rgba(255,215,0,0.5) 50%, rgba(255,215,0,0) 100%),
+                                /* 第三层：暗金底色 */
+                                linear-gradient(90deg, #2d1b00 0%, #ffbb00 50%, #2d1b00 100%) !important;
+                                
+                            background-size: 100% 60px, 100% 100%, 100% 100% !important;
+                            box-shadow: 0 0 15px rgba(255, 187, 0, 0.9) !important;
+                            border-top: 1px solid #ffeebf !important;
+                        }
+                        .baize-artifact-wrap.awakened .bolt {
+                            filter: blur(0.5px) drop-shadow(0 0 8px #ffbb00) !important;
+                        }
+
+                        /* 文字：缩小适配 */
+                        .baize-artifact-text {
+                            font-family: yuanli; font-size: 9px;
+                            color: #a0d8ff; text-shadow: 0 0 3px #000;
+                            writing-mode: vertical-rl; margin-bottom: 2px;
+                            letter-spacing: 0px; white-space: nowrap;
+                        }
+                        .baize-artifact-wrap.awakened .baize-artifact-text {
+                            color: #ffbb00 !important;
+                        }
+                        /* 灵气升腾动画 */
+                        @keyframes baize-energy-rise {
+                            0% { background-position: 0 0, 0 0, 0 0; }
+                            100% { background-position: 0 -80px, 0 0, 0 0; } /* 只有第一层气泡在移动 */
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+
+                // 核心改动：只在技能拥有者（白泽）的节点上创建 UI
+                if (!player.baizeArtifact) {
+                    var wrap = document.createElement('div');
+                    wrap.className = 'baize-artifact-wrap';
+                    
+                    var text = document.createElement('div');
+                    text.className = 'baize-artifact-text';
+                    
+                    var frame = document.createElement('div');
+                    frame.className = 'baize-artifact-frame';
+                    var fill = document.createElement('div');
+                    fill.className = 'baize-artifact-fill';
+                    frame.appendChild(fill);
+
+                    var lightning = document.createElement('div');
+                    lightning.className = 'baize-lightning-system';
+                    for(var i=1; i<=4; i++) {
+                        var bolt = document.createElement('div');
+                        bolt.className = 'bolt bolt-' + i;
+                        lightning.appendChild(bolt);
+                    }
+
+                    wrap.appendChild(text);
+                    wrap.appendChild(frame);
+                    wrap.appendChild(lightning);
+                    
+                    // 【关键】：挂载到 player 节点而不是 ui.arena
+                    player.appendChild(wrap);
+                    player.baizeArtifact = { wrap: wrap, fill: fill, text: text };
+                }
+            },
+            content: function() {
+                var art = player.baizeArtifact;
+                if (!art) return;
+
+                var recorded = (player.storage.shj_dongxu || []).length;
+                var all_non_equip = lib.inpile.filter(name => get.type(name) != 'equip').unique();
+                var total = all_non_equip.length || 1;
+                var percent = Math.min(100, Math.floor((recorded / total) * 100));
+
+                art.fill.style.height = percent + '%';
+                
+                if (player.storage.shj_dongxu_awaken || player.hasSkill('shj_zhen_e')) {
+                    art.text.innerHTML = "洞虚·完满";
+                    if (!art.wrap.classList.contains('awakened')) art.wrap.classList.add('awakened');
+                } else {
+                    art.text.innerHTML = "万象图谱 " + recorded + "/" + total;
+                }
+            },
+            onremove: function(player) {
+                if (player.baizeArtifact) {
+                    player.baizeArtifact.wrap.remove();
+                    delete player.baizeArtifact;
+                }
+            }
+        },
     },
     skillTranslate: {
         shj_zhaorui: "昭瑞",
@@ -473,7 +653,7 @@ export default {
         shj_lingyou: "灵佑",
         shj_lingyou_info: "出牌阶段，你可以移除5个“祥瑞”标记并摸5张牌。",
         shj_dongxu: "洞虚",
-        shj_dongxu_info: "觉醒技，当你获得未记录的非装备牌后，白泽图记录其牌名。当你已记录所有非装备牌名时，你修改【昭瑞】，失去【图纳】，获得【镇厄】。",
+        shj_dongxu_info: "觉醒技，当你获得未记录的非装备牌后，白泽图记录其牌名。当你已记录所有非装备牌名时，你修改【昭瑞】，获得【镇厄】。",
         shj_zhen_e: "镇厄",
         shj_zhen_e_info: "出牌阶段限一次，你可以指定一名其他角色，令其立即死亡，然后你获得其区域内所有牌。"
     },

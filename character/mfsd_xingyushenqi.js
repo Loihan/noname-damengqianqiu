@@ -1,16 +1,16 @@
 export default {
     character: {
-        mfsd_xingyushenqi: [
-            "male",
-            "shen",
-            4,
-            ["mfsd_shisu", "mfsd_yueqian", "mfsd_huanyu" ], 
-            [
-                "des:星域的守护者，神启的化身。",
-                "ext:大梦千秋/image/mfsd_xingyushenqi.png",
-                "die:ext:大梦千秋/audio/mfsd_xingyushenqi/die.mp3"
-            ]
-        ],
+        mfsd_xingyushenqi: {
+            sex:"male",
+            group:"shen",
+            hp:4,
+            skills:["mfsd_shisu", "mfsd_yueqian", "mfsd_huanyu" ], 
+            img:"extension/大梦千秋/image/mfsd_xingyushenqi.png",
+            dieAudios:["ext:大梦千秋/audio/mfsd_xingyushenqi/die.mp3"],
+            names:"诸葛|亮",
+            groupInGuozhan:"ye",
+            4:["des:星域的守护者，神启的化身。"]
+        },
     },
     characterName: 'mfsd_xingyushenqi',
     characterTranslate: {mfsd_xingyushenqi: "星域神启",},
@@ -82,12 +82,26 @@ export default {
                             }
                         }
                     }
-                    return ui.create.dialog("时溯：选择要消耗的记录", [list, 'vcard']);
+                    const dialog = ui.create.dialog("时溯：选择要消耗的记录");
+                    dialog.add([list, "vcard"]);
+                    return dialog;
                 },
                 check: function(button) {
-                    var player = get.player();
-                    if (_status.event.type == 'phase') return player.getUseValue({ name: button.link[2] });
-                    return 1;
+                    var player = _status.event.player;
+                    var cardName = button.link[2];
+
+                    // 救人逻辑：只救队友
+                    var dying = _status.event.dying || (_status.event.getParent() && _status.event.getParent().dying);
+                    if (dying && get.attitude(player, dying) <= 0) return 0;
+
+                    
+                    // 修正：使用 get.useful 代替 player.getUseful
+                    var val = get.useful({ name: cardName });
+                    if (val <= 0) return 0;
+
+                    // 手牌优先：如果手里有，镜子里的权重设为和手牌一致或略低
+                    if (player.hasCard(cardName, 'h')) return val;
+                    return val + 10; // 白嫖加成
                 },
                 backup: function(links) {
                     return {
@@ -126,8 +140,35 @@ export default {
                     if (name && storage[name] > 0) return true;
                     return false;
                 },
-                order: 1,
-                result: { player: 1 }
+                // === AI核心逻辑2：动态优先级控制 ===
+                order: function(item, player) {
+                    player = player || _status.event.player;
+                    if (!player || !player.storage || !player.storage.mfsd_shisu) return 0;
+                    
+                    var storage = player.storage.mfsd_shisu;
+                    var maxOrder = 0;
+                    for (var i in storage) {
+                        if (storage[i] > 0) {
+                            var vcard = { name: i };
+                            // 修正：使用 get.useful(vcard)
+                            if (get.useful(vcard) > 0) {
+                                var ord = get.order(vcard, player);
+                                if (ord > maxOrder) maxOrder = ord;
+                            }
+                        }
+                    }
+                    return maxOrder > 0 ? maxOrder - 0.01 : 0;
+                },
+                result: { 
+                    player: function(player) {
+                        // 只有当时溯里有“当前有使用价值”的牌时，AI才会有发动欲望
+                        var storage = player.storage.mfsd_shisu;
+                        for (var i in storage) {
+                            if (storage[i] > 0 && player.getUseValue({ name: i }) > 0) return 1;
+                        }
+                        return 0;
+                    }
+                }
             },
             group: ["mfsd_shisu_record"],
             subSkill: {
@@ -186,6 +227,7 @@ export default {
                             
                             // 1. 记入历史黑名单（确保不会重复发，也不会因为技能用掉而补发）
                             player.storage.mfsd_huanyu_history.push(skill);
+                            lib.skill.mfsd_huanyu.updateUI(player); 
                             
                             // 2. 赋予技能并奖励
                             player.addSkill(skill);
@@ -213,12 +255,182 @@ export default {
             derivation: ['mfsd_chuangjie', 'mfsd_dunjie', 'mfsd_xingjie', 'mfsd_qiongjie', 'mfsd_panjie', 'mfsd_nuojie', 'mfsd_juejie', 'mfsd_bengjie', 'mfsd_huangjie'],
             intro: {
                 name: "寰宇",
-                content: "当前标记：$ <br>已解锁世界技能数：#"
+                content: function(storage, player) {
+                    // storage 实际上就是 player.storage.mfsd_huanyu 的数值（记录的牌数/能量）
+                    var energy = storage || 0;
+                    
+                    // 获取已解锁的世界技能数量
+                    var skillNum = 0;
+                    if (player.storage.mfsd_huanyu_history) {
+                        skillNum = player.storage.mfsd_huanyu_history.length;
+                    }
+                    
+                    return "当前能量点：" + energy + "<br>已解锁世界技能数：" + skillNum;
+                }
             },
             // 使用 countMark('mfsd_huanyu_history') 来动态显示已获得的技能数
             init: function(player) {
+                // 动态插入星星样式（仅全局一次）
+                if (!document.getElementById('mfsd_huanyu_star_style')) {
+                    var style = document.createElement('style');
+                    style.id = 'mfsd_huanyu_star_style';
+                    style.innerHTML = `
+                    .mfsd-star-wrap{
+                        position:absolute; left:100%; top:5%;
+                        margin-left:6px; width:50px; height:90%;
+                        z-index:60; pointer-events:none;
+                    }
+                    /* 连接线容器 */
+                    .mfsd-star-lines{
+                        position:absolute; top:0; left:0; width:100%; height:100%;
+                        pointer-events:none;
+                    }
+                    .mfsd-star{
+                        position:absolute;
+                        width:14px; height:14px;
+                        transform:translate(-50%,-50%) scale(0.7);
+                        opacity:0.55; /* 这里控制整体透明度 */
+                        transition:all 0.4s;
+                    }
+                    .mfsd-star::before{
+                        content:""; position:absolute; inset:0;
+                        clip-path:polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+                        background:#2a3f66; /* 星星本体颜色 */
+                        box-shadow:inset 0 0 4px rgba(0,0,0,0.8);
+                    }
+                    .mfsd-star.active{
+                        opacity:1; transform:translate(-50%,-50%) scale(1);
+                    }
+                    .mfsd-star.active::before{
+                        background:radial-gradient(circle,#fff,#7fdcff,#3a7bd5);
+                        box-shadow:0 0 10px rgba(120,200,255,1);
+                        animation:starTwinkle 2s infinite ease-in-out;
+                    }
+                    .mfsd-star.current::before{
+                        box-shadow:0 0 16px rgba(255,255,255,1);
+                    }
+                    @keyframes starTwinkle{
+                        0%{filter:brightness(1);}
+                        50%{filter:brightness(1.6);}
+                        100%{filter:brightness(1);}
+                    }
+                    `;
+                    document.head.appendChild(style);
+                }
+
+                // 创建每个玩家的星星 UI（只一次）
+                if (!player.mfsdStarUI) {
+                    var wrap = document.createElement('div');
+                    wrap.className = 'mfsd-star-wrap';
+
+                    // 线条层（SVG）
+                    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    svg.setAttribute("class", "mfsd-star-lines");
+                    svg.style.position = "absolute";
+                    svg.style.top = "0";
+                    svg.style.left = "0";
+                    svg.style.width = "100%";
+                    svg.style.height = "100%";
+                    wrap.appendChild(svg);
+
+                    // 9颗星星的不规则坐标（百分比，相对wrap容器）
+                    var starPositions = [
+                        { left: 40, top: 0 },
+                        { left: 10, top: 12 },
+                        { left: 5, top: 25 },
+                        { left: 50, top: 37 },
+                        { left: 45, top: 50 },
+                        { left: 20, top: 62 },
+                        { left: 10, top: 75 },
+                        { left: 10, top: 87 },
+                        { left: 25, top: 100 }
+                    ];
+
+                    var stars = [];
+                    for (var i = 0; i < 9; i++) {
+                        var star = document.createElement('div');
+                        star.className = 'mfsd-star';
+                        star.style.left = starPositions[i].left + '%';
+                        star.style.top = starPositions[i].top + '%';
+                        // 保存坐标方便画线
+                        star.dataset.cx = starPositions[i].left;
+                        star.dataset.cy = starPositions[i].top;
+                        wrap.appendChild(star);
+                        stars.push(star);
+                    }
+
+                    // 挂载到角色元素上（如果报错请尝试 player.node.appendChild(wrap)）
+                    player.appendChild(wrap);
+
+                    player.mfsdStarUI = {
+                        wrap: wrap,
+                        svg: svg,
+                        stars: stars,
+                        positions: starPositions
+                    };
+
+                    // 根据当前记录立即刷新
+                    lib.skill.mfsd_huanyu.updateUI(player);
+                }
+
                 player.markSkill('mfsd_huanyu');
-            }
+            },
+            updateUI: function(player) {
+                var ui = player.mfsdStarUI;
+                if (!ui) return;
+
+                var list = player.storage.mfsd_huanyu_history || [];
+                var count = list.length;
+
+                // 更新星星亮暗
+                for (var i = 0; i < ui.stars.length; i++) {
+                    ui.stars[i].classList.remove('active', 'current');
+                    if (i < count) {
+                        ui.stars[i].classList.add('active');
+                        if (i == count - 1) {
+                            ui.stars[i].classList.add('current');
+                        }
+                    }
+                }
+
+                // 画线：连接所有已点亮的相邻星星
+                var svg = ui.svg;
+                // 清空原有线条
+                while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+                if (count < 2) return; // 少于两颗不用连线
+
+                var positions = ui.positions;
+                var wrapWidth = ui.wrap.offsetWidth;
+                var wrapHeight = ui.wrap.offsetHeight;
+
+                // 确保容器尺寸获取到（可能首次渲染为0，延时或使用固定策略）
+                if (wrapWidth === 0) wrapWidth = 50; // 给个默认宽度，防止线条不显示
+                if (wrapHeight === 0) wrapHeight = 180;
+
+                for (var i = 0; i < count - 1; i++) {
+                    var p1 = positions[i];
+                    var p2 = positions[i+1];
+
+                    // 将百分比坐标转为像素坐标
+                    var x1 = (p1.left / 100) * wrapWidth;
+                    var y1 = (p1.top / 100) * wrapHeight;
+                    var x2 = (p2.left / 100) * wrapWidth;
+                    var y2 = (p2.top / 100) * wrapHeight;
+
+                    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", x1);
+                    line.setAttribute("y1", y1);
+                    line.setAttribute("x2", x2);
+                    line.setAttribute("y2", y2);
+                    line.setAttribute("stroke", "rgba(120,200,255,0.8)");
+                    line.setAttribute("stroke-width", "2");
+                    line.setAttribute("stroke-linecap", "round");
+                    // 添加一点发光效果
+                    line.style.filter = "drop-shadow(0 0 4px rgba(120,200,255,0.8))";
+                    svg.appendChild(line);
+                }
+            },
         },
         // === 技能3: 【跃迁】 ===
         mfsd_yueqian: {
@@ -250,6 +462,10 @@ export default {
                 player.awakenSkill('mfsd_chuangjie');
                 player.insertPhase();
             },
+            ai: {
+                order: 12, // 高优先级（低于崩界13）
+                result: { player: 1 }
+            },
             intro: { content: 'limited' }
         },
         // --- 2. 盾界 ---
@@ -264,6 +480,18 @@ export default {
             content: function() {
                 player.awakenSkill('mfsd_dunjie');
                 player.addTempSkill('mfsd_dunjie_effect', {player:'phaseBegin'});
+            },
+            ai: {
+                order: 10,
+                result: {
+                    player: function(player) {
+                        // 逻辑：如果本回合发过创/穹/绝，就不发动
+                        if (player.hasHistory('useSkill', function(evt){
+                            return ['mfsd_chuangjie', 'mfsd_qiongjie', 'mfsd_juejie'].contains(evt.skill);
+                        })) return 0;
+                        return 1;
+                    }
+                }
             },
             intro: { content: 'limited' },
             subSkill: {
@@ -309,12 +537,16 @@ export default {
                         var type = get.type(name);
                         return type != 'equip' && type != 'delay';
                     });
-                    // 弹出选择框，让玩家选择5次
-                    player.chooseButton(
-                        ['星界：请选择五张牌', [card_list, 'vcard']],
-                        5, // 必须选择5次
-                        true
-                    ).set('ai', button => Math.random());
+                    var dialog = ui.create.dialog("星界：请选择五张牌");
+                    dialog.add([card_list, 'vcard']);
+                    // 调用选择函数，传入已创建好的 dialog
+                    player.chooseButton(dialog, 5, true).set('ai', function(button) {
+                        // 【AI强化】：计算该牌名对当前玩家的使用价值，自动挑选前五名
+                        var cardName = button.link[2];
+                        return player.getUseValue({
+                            name: cardName
+                        });
+                    });
                 } else {
                     event.finish();
                 }
@@ -343,6 +575,18 @@ export default {
             content: function() {
                 player.awakenSkill('mfsd_qiongjie');
                 player.addTempSkill('mfsd_qiongjie_effect', {player:'phaseBegin'});
+            },
+            ai: {
+                order: 9,
+                result: {
+                    player: function(player) {
+                        // 逻辑：如果本回合发过创/盾/绝，就不发动
+                        if (player.hasHistory('useSkill', function(evt){
+                            return ['mfsd_chuangjie', 'mfsd_dunjie', 'mfsd_juejie'].contains(evt.skill);
+                        })) return 0;
+                        return 1;
+                    }
+                }
             },
             intro: { content: 'limited' },
             subSkill: {
@@ -384,7 +628,11 @@ export default {
             content: function() {
                 'step 0'
                 var target = trigger.source;
-                player.chooseBool(get.prompt('mfsd_panjie', target), '是否发动【叛界】？').set('ai', () => get.attitude(player, target) < 0);
+                player.chooseBool(get.prompt('mfsd_panjie', target), '是否发动【叛界】？').set('ai', function(){
+                    if (get.attitude(player, target) >= 0) return false;
+                    if (target.countCards('e') > 2 || target.countCards('h') > 3) return true;
+                    return false;
+                });
                 'step 1'
                 if (result.bool) {
                     player.logSkill('mfsd_panjie', trigger.source);
@@ -422,6 +670,16 @@ export default {
                 // c. 【核心】为自己添加一个临时的“清理扳机”，有效期到下个回合开始
                 player.addTempSkill('mfsd_nuojie_cleanup', {player:'phaseBegin'});
                 player.addTempSkill('mfsd_nuojie_buff', {player:'phaseBegin'});
+            },
+            ai: {
+                order: 13, // 最高优先级
+                result: {
+                    player: function(player) {
+                        // 逻辑：只有同时拥有诺、谎才发动
+                        if (player.hasSkill('mfsd_nuojie') && player.hasSkill('mfsd_huangjie')) return 1;
+                        return 0;
+                    }
+                }
             },
             intro: { name: "制裁", content: "诺界：阻止其他角色的回复" }
         },
@@ -501,6 +759,16 @@ export default {
                 event.num++;
                 event.goto(1);
             },
+            ai: {
+                order: 11, // 优先级低于创界12
+                result: {
+                    target: function(player, target) {
+                        // 逻辑：对敌人使用
+                        if (get.attitude(player, target) <= 0) return -1;
+                        return 0;
+                    }
+                }
+            },
             intro: { content: 'limited' }
         },
         // --- 8. 崩界 ---
@@ -518,9 +786,13 @@ export default {
                 target.die();
             },
             ai: {
-                order: 10,
+                order: 14, // 高于创界12
                 result: {
-                    target: -10, // 对敌人的收益极高
+                    target: function(player, target) {
+                        if (get.attitude(player, target) > 0) return 0;
+                        // 逻辑：对威胁度最高的敌人（通过增加权重实现）
+                        return -20 - (get.threaten(target) || 1);
+                    }
                 }
             },
             intro: { content: 'limited' }
@@ -542,6 +814,16 @@ export default {
                 game.addGlobalSkill('mfsd_huangjie_global_effect');
                 // c. 为自己添加“回合结束时清理”的扳机，它也会自动消失
                 player.addTempSkill('mfsd_huangjie_cleanup', 'phaseAfter');
+            },
+            ai: {
+                order: 13, // 同诺界最高
+                result: {
+                    player: function(player) {
+                        // 逻辑：只有同时拥有诺、谎才发动
+                        if (player.hasSkill('mfsd_nuojie') && player.hasSkill('mfsd_huangjie')) return 1;
+                        return 0;
+                    }
+                }
             },
             intro: { content: 'limited' }
         },
@@ -597,7 +879,7 @@ export default {
     },
     skillTranslate: {
         mfsd_shisu: "时溯",
-        mfsd_shisu_info: "锁定技，①每当有牌被使用或弃置时，你在“时空镜”中记录其牌名数量+1。<br>②当你需要使用或打出牌时，若“时空镜”中有对应的记录，你可以消耗对应的记录，视为使用或打出此牌。",
+        mfsd_shisu_info: "锁定技，①每当有牌被使用或弃置时，你在“时空镜”中记录其牌名数量+1。<br>②当你需要使用或打出牌时，若“时空镜”中有对应的记录，你可以消耗对应的记录，视为使用或打出此牌（依此法使用的牌不触发①中效果）。",
         mfsd_huanyu: "寰宇",
         mfsd_huanyu_info: "锁定技，①每当“时空镜”增加时你获得等量个“寰宇”标记。<br>②每当“寰宇”的数量大于一个新的7的倍数时，若还有你未获得的“世界”技能，你增加1点体力上限并回复1点体力，然后你从“世界”技能池中随机获得1个未拥有的技能。<br>世界技能池：<br>【创界】，【盾界】，【星界】，【穹界】，【叛界】，【诺界】，【绝界】，【崩界】，【谎界】。",
         mfsd_yueqian: "跃迁",
