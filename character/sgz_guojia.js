@@ -52,7 +52,7 @@ export default {
                     if (count >= player.maxHp && player.maxHp <= 7) return 0;
                     // 诱导 AI 选火攻（为了刷极慧）
                     if (!player.hasHistory('damage') && cardName == 'huogong') {
-                        if (player.hp > 1) return 20; 
+                        if (player.hp > 1 && player.maxHp < 10) return 20; 
                     }
                     // 回复优先级
                     if (player.hp < Math.min(player.maxHp, 7) && cardName == 'taoyuan') return 15;
@@ -300,7 +300,7 @@ export default {
                             // 返回 [系数, 增加值]
                             // 0: 抵消伤害带来的负面评估
                             // 2: 赋予 4 点正向价值评估
-                            return [0, 5]; 
+                            return [1, 5]; 
                         }
                     }
                 },

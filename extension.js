@@ -166,26 +166,55 @@ export default function () {
                 return _originPlayAudio.apply(this, arguments);
             };
 
+            // 劫持使用卡牌
             const _originUseCard = lib.element.player.useCard;
             lib.element.player.useCard = function() {
                 const next = _originUseCard.apply(this, arguments);
-                const cardName = get.name(arguments[0]);
-                if (getDreamAudioPath(this, cardName)) {
-                    next.audio = -1; next.nospeak = true; next.onuseAudio = false; next._noAudio = true;
+                
+                // --- 修复点 1: 安全性检查 ---
+                // 必须确保 arguments[0] 存在，且 next 是一个有效的事件对象
+                if (!arguments[0] || !next) return next;
+
+                try {
+                    const cardName = get.name(arguments[0]);
+                    if (cardName && getDreamAudioPath(this, cardName)) {
+                        // 屏蔽系统原声，标记为已处理音频
+                        next.audio = -1; 
+                        next.nospeak = true; 
+                        next.onuseAudio = false; 
+                        next._noAudio = true;
+                    }
+                } catch (e) {
+                    console.warn("大梦千秋音频劫持(useCard)跳过错误:", e);
                 }
+                
                 return next;
             };
 
+            // 劫持响应卡牌
             const _originRespond = lib.element.player.respond;
             lib.element.player.respond = function() {
                 const next = _originRespond.apply(this, arguments);
-                const cardName = get.name(arguments[0]);
-                if (getDreamAudioPath(this, cardName)) {
-                    next.audio = -1; next.nospeak = true; next.respondAudio = false; next._noAudio = true;
+
+                // --- 修复点 2: 安全性检查 ---
+                if (!arguments[0] || !next) return next;
+
+                try {
+                    const cardName = get.name(arguments[0]);
+                    if (cardName && getDreamAudioPath(this, cardName)) {
+                        next.audio = -1; 
+                        next.nospeak = true; 
+                        next.respondAudio = false; 
+                        next._noAudio = true;
+                    }
+                } catch (e) {
+                    console.warn("大梦千秋音频劫持(respond)跳过错误:", e);
                 }
+                
                 return next;
             };
             //----------------------↑↑↑↑↑↑↑↑↑出牌语音↑↑↑↑↑↑↑↑↑↑------------------------//
+        
         },
 
         config: {},
@@ -218,7 +247,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包",
             author: "Loihan",
-            version: "6.0",
+            version: "6.1",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };

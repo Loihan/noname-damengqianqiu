@@ -265,7 +265,7 @@ export default {
                         break;
                     case 'diamond': 
                         // 第二个参数改为 true，物理移除“取消”和“跳过”按钮
-                        player.chooseUseTarget({name: 'sha', nature: 'fire'}, true, '韬晦：必须选择一名其他角色使用【火杀】')
+                        player.chooseUseTarget({name: 'sha', nature: 'fire'}, true, '韬晦：选择一名其他角色使用【火杀】')
                             .set('filterTarget', function(card, player, target){
                                 // 物理爆破距离限制：只要不是自己，头像全是亮的
                                 return target != player; 
@@ -285,7 +285,7 @@ export default {
                         break;
                     case 'spade':
                         // 第二个参数改为 true，强制发动
-                        player.chooseUseTarget({name: 'sha', nature: 'thunder'}, true, '韬晦：必须选择一名其他角色使用【雷杀】')
+                        player.chooseUseTarget({name: 'sha', nature: 'thunder'}, true, '韬晦：选择一名其他角色使用【雷杀】')
                             .set('filterTarget', function(card, player, target){
                                 // 物理爆破距离限制
                                 return target != player;

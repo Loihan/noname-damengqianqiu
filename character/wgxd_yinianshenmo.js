@@ -29,6 +29,10 @@ export default {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo/ren:2",
             persevereSkill: true,
             forced: true,
+            ai: {
+                maixie: true,
+                maixue_hp: true,
+            },
             mark: true,
             marktext: "灵",
             intro: { name: "灵", content: "mark" },
@@ -52,6 +56,18 @@ export default {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo/ren:3",
             persevereSkill: true,
             enable: "phaseUse",
+            ai: {
+                // 标记小于8时最优先使用(20)，满标记后降为普通锦囊级别
+                order: function(item, player) {
+                    return player.countMark('wgxd_renling') < 8 ? 20 : 12;
+                },
+                result: {
+                    player: function(player) {
+                        if (player.countMark('wgxd_renling') < 8) return 1.5;
+                        return 1;
+                    }
+                }
+            },
             filterCard: (card) => ['red', 'black'].includes(get.color(card)),
             position: "h",
             viewAs: function(cards) {
@@ -74,6 +90,20 @@ export default {
             // 衍生的技能列表（包含神、魔、觉醒）
             derivation: [ "wgxd_yinian", "wgxd_hengyu", "wgxd_shenluo",  "wgxd_xusheng", "wgxd_fenze", "wgxd_huamo","wgxd_mosha","wgxd_xuanbi", "wgxd_xinyuan", "wgxd_liuxing", "wgxd_rongshen"],
             filter: (event, player) => !player.storage.wgxd_tianze && player.countMark('wgxd_renling') >= 3,
+            ai: {
+                // 逻辑：8个立即用(30)，5-7个最后用(0.1)，小于5不产生发动欲望
+                order: function(item, player) {
+                    var m = player.countMark('wgxd_renling');
+                    if (m >= 8) return 30;
+                    if (m >= 5) return 0.1;
+                    return 0;
+                },
+                result: {
+                    player: function(player) {
+                        return player.countMark('wgxd_renling') >= 5 ? 1 : 0;
+                    }
+                }
+            },
             content: function() {
                 'step 0'
                 player.awakenSkill('wgxd_tianze');
@@ -82,7 +112,11 @@ export default {
                 event.num = num;
                 player.removeMark('wgxd_renling', num);
                 'step 1'
-                player.chooseControl('神', '魔').set('prompt', '一念神魔：请选择进化的形态');
+                player.chooseControl('神', '魔')
+                    .set('prompt', '一念神魔：请选择进化的形态')
+                    .set('ai', function() {
+                        return player.hp < 4 ? '魔' : '神';
+                });
                 'step 2'
                 var choice = result.control;
                 event.choice = choice;
@@ -94,6 +128,14 @@ export default {
                 player.removeSkill(['wgxd_renling', 'wgxd_fenjie']);
                 // === 核心注入：无论选神还是魔，都获得觉醒技“一念”和追踪器 ===
                 player.addSkill(['wgxd_yinian', 'wgxd_event_tracker']);
+
+                // --- 全场分发标记逻辑 ---
+                game.countPlayer(function(current){
+                    // 如果该角色在进化前还没达成过条件，则打上标记
+                    if (!current.storage.wgxd_ever_dealt_damage && !current.storage.wgxd_ever_dying) {
+                        current.addSkill('wgxd_causal_mark');
+                    }
+                });
 
                 if (event.choice == '神') {
                     player.node.avatar.setBackgroundImage('extension/大梦千秋/image/wgxd_yinianshenmo_shen.jpg');
@@ -122,11 +164,9 @@ export default {
             filter: function(event, player) {
                 if (player.storage.wgxd_yinian_awakened) return false;
                 
-                // 判定全场存活角色
-                var alivePlayers = game.filterPlayer(p => p.isAlive());
-                return alivePlayers.every(p => {
-                    // 满足“造成过伤害” OR “进入过濒死”
-                    return p.storage.wgxd_ever_dealt_damage === true || p.storage.wgxd_ever_dying === true;
+                // 核心判定：如果场上已经没有任何人拥有“因果标记”，说明全部达成了
+                return !game.hasPlayer(function(current){
+                    return current.hasSkill('wgxd_causal_mark');
                 });
             },
             content: function() {
@@ -151,26 +191,36 @@ export default {
                 player.update();
             }
         },
+        // === 因果标记：仅用于视觉显示达成进度 ===
+        wgxd_causal_mark: {
+            charlotte: true, // 属于隐藏技能，仅显示标记
+            mark: true,
+            marktext: "因果",
+            intro: {
+                name: "因果未了",
+                content: "该角色尚未达成【一念】要求的因果（造成伤害或进入过濒死）。"
+            }
+        },
         // === 因果追踪器：记录全场伤害与濒死状态 ===
         wgxd_event_tracker: {
             charlotte: true,
-            trigger: { 
-                global: ["dyingBegin", "damageAfter"] // 监听全场濒死与伤害造成
-            },
-            forced: true,
-            silent: true,
+            trigger: { global: ["dyingBegin", "damageAfter"] },
+            forced: true, silent: true,
             content: function() {
-                if (trigger.name == 'dying') {
-                    // 记录进入濒死
-                    trigger.player.storage.wgxd_ever_dying = true;
-                    game.log(trigger.player, '于生死边缘徘徊...');
-                } else if (trigger.source) {
-                    // 记录造成伤害 (trigger.player 在 damageSource 时机是伤害来源)
-                    trigger.source.storage.wgxd_ever_dealt_damage = true;
-                    game.log(trigger.source, '已沾染因果之血...');
+                var target = (trigger.name == 'dying') ? trigger.player : trigger.source;
+                if (!target) return;
+
+                if (trigger.name == 'dying') target.storage.wgxd_ever_dying = true;
+                else target.storage.wgxd_ever_dealt_damage = true;
+
+                // --- 达成条件即移除标记 ---
+                if (target.hasSkill('wgxd_causal_mark')) {
+                    target.removeSkill('wgxd_causal_mark');
+                    game.log(target, '已了结因果，因果标记消失');
                 }
-            }
+            },
         },
+
         //====================================
         //             神形态                     
         //====================================
@@ -178,6 +228,17 @@ export default {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo/shen:4",
             persevereSkill: true,
             forced: true,
+            ai: {
+                // 诱导AI多出伤害牌
+                fireAttack: true,
+                result: {
+                    player: 1,
+                    // 杀的目标逻辑：态度<=0且按威胁度/状态排序（系统自动处理多目标最差的几个）
+                    target: function(player, target) {
+                        if (get.attitude(player, target) <= 0) return -1.5;
+                    }
+                }
+            },
             mod: {
                 // 核心修正：在使用卡牌前增加至多两个额外目标
                 selectTarget: function(card, player, range) {
@@ -258,7 +319,7 @@ export default {
             wgxd_shenluo_tag: {
                 charlotte: true,
                 mark: true,
-                marktext: "神络",
+                marktext: "♨️",
                 intro: {
                     name: "神络",
                     content: "一念神魔对其使用牌无距离和次数限制。"
@@ -279,6 +340,16 @@ export default {
             filterTarget: (card, player, target) => target != player,
             selectTarget: [1, Infinity],
             multitarget: true,
+            ai: {
+                order: 21, // 出牌阶段最高优先级
+                result: {
+                    target: function(player, target) {
+                        // 对所有敌人发动
+                        if (get.attitude(player, target) <= 0) return -1.5;
+                        return 0;
+                    }
+                }
+            },
             content: function() {
                 'step 0'
                 event.targets = targets.sortBySeat();
@@ -323,6 +394,18 @@ export default {
                 player.addSkill(['wgxd_xuanbi', 'wgxd_xinyuan', 'wgxd_liuxing', 'wgxd_rongshen', 'wgxd_mosha']);
                 player.update();
                 player.addTempSkill('wgxd_transformed_lock', 'phaseAfter');
+            },
+            ai: {
+                order: 1, // 最低优先级
+                result: {
+                    player: function(player) {
+                        // 出牌阶段快结束（没有更多能用的牌）时才考虑
+                        if (player.countCards('h', function(card) {
+                            return player.getUseValue(card) > 0;
+                        }) <= 1) return 1;
+                        return 0;
+                    }
+                }
             }
         },
         //====================================
@@ -340,27 +423,19 @@ export default {
                 const { result } = await player.judge(function(card) {
                     var suit = get.suit(card);
                     var num = get.number(card);
-                    if (suit == "spade"||suit=="club") {
-                        if (num == 1 || num > 10) return 1;
-                        return 2;
-                    }
-                    if (suit == "heart"||suit=="diamond") {
-                        if (num == 1 || num > 10) return 3;
-                        return 4;
-                    }
+                    if (suit == "spade"||suit=="club") return (num == 1 || num > 10) ? 1 : 2;
+                    if (suit == "heart"||suit=="diamond") return (num == 1 || num > 10) ? 3 : 4;
                 });
                 
-                // 雷击效果由判定成功触发 (result.bool)
-                if (result.judge == 1) {
-                    const { result: targetRes } = await player.chooseTarget("魔杀：选择一名角色受到3点雷电伤害", true).set('ai', t => get.damageEffect(t, player, player, "thunder"));
+                // 核心：若为黑色，优先选择态度最差（态度分最小）的角色
+                if (result.judge == 1 || result.judge == 2) {
+                    var dmg = result.judge == 1 ? 3 : 2;
+                    const { result: targetRes } = await player.chooseTarget("魔杀：选择一名角色受到" + dmg + "点雷电伤害", true)
+                        .set('ai', function(target) {
+                            return -get.attitude(player, target); // 纯粹仇恨导向
+                        });
                     if (targetRes.bool) {
-                        await targetRes.targets[0].damage(3, "thunder");
-                    }
-                }
-                if(result.judge == 2) {
-                    const { result: targetRes } = await player.chooseTarget("魔杀：选择一名角色受到2点雷电伤害", true).set('ai', t => get.damageEffect(t, player, player, "thunder"));
-                    if (targetRes.bool) {
-                        await targetRes.targets[0].damage(2, "thunder");
+                        await targetRes.targets[0].damage(dmg, "thunder");
                     }
                 }
                 if(result.judge == 3) {
@@ -374,7 +449,7 @@ export default {
                 useShan: true,
                 effect: {
                     target_use(card, player, target) {
-                        if (get.tag(card, "respondShan") || get.name(card) == "shandian") return [1, 1];
+                        if (get.tag(card, "respondShan") || get.name(card) == "shandian") return [1, 2];
                     }
                 }
             }
@@ -401,7 +476,16 @@ export default {
             mod: { maxHandcard: (player, num) => num + (2 * player.getCards('h', c => get.suit(c, false) == 'none').length) },
             trigger: { player: "damageBegin3" },
             filter: (event, player) => event.source && event.source.getAttackRange() !== 1,
-            content: () => { trigger.num-- }
+            content: () => { trigger.num-- },
+            ai: {
+                // 核心：无花色牌留牌价值翻倍(防止弃置)，但使用价值减半(不爱用)
+                value: function(card, player) {
+                    if (get.suit(card, player) == 'none') return get.value(card, player) * 2;
+                },
+                useful: function(card, player) {
+                    if (get.suit(card, player) == 'none') return get.useful(card, player) * 0.5;
+                }
+            }
         },
         wgxd_liuxing: {
             persevereSkill: true,
@@ -434,6 +518,10 @@ export default {
                 player.addSkill(['wgxd_hengyu', 'wgxd_xusheng', 'wgxd_fenze', 'wgxd_huamo', 'wgxd_shenluo']);
                 player.update();
                 player.addTempSkill('wgxd_transformed_lock', 'phaseAfter');
+            },
+            ai: {
+                order: 25, // 最高优先级，有就变身
+                result: { player: 1 }
             }
         },
         //======== 回合转换形态限一次 =========

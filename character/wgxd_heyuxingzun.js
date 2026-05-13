@@ -76,7 +76,10 @@ export default {
             },
             forced: true,
             async content(event, trigger, player) {
-                const { result } = await player.chooseCard('h', true, `###启匣###将一张手牌加入“剑匣”`);
+                const { result } = await player.chooseCard('h', true, `###启匣###将一张手牌加入“剑匣”`).set('ai', card => {
+                    if (get.tag(card, 'damage')) return 10 - get.value(card);
+                    return 5 - get.value(card);
+                });
                 if (result.cards && result.cards.length) {
                     player.addGaintag(result.cards, 'wgxd_qixia_jian');
                     player.addMark('wgxd_qixia', 1);
@@ -84,8 +87,37 @@ export default {
             },
             mod: {
                 cardUsable(card) {
-                    if (card.cards && card.cards.some(i => i.hasGaintag('wgxd_qixia_jian'))) return Infinity;
+                    // 修复点：使用底层 gaintag.contains 判断
+                    if (card.cards && card.cards.some(i => i.gaintag && i.gaintag.contains('wgxd_qixia_jian'))) return Infinity;
                 },
+                // === AI核心逻辑：带标记的牌优先级极高且保留价值极低 ===
+                aiOrder: function(player, card, num) {
+                    // 修复点：增加安全性检查，防止对非对象或非实体牌操作
+                    if (typeof card == 'object' && card.gaintag && card.gaintag.contains('wgxd_qixia_jian')) {
+                        return num + 50;
+                    }
+                },
+                aiValue: function(player, card, num) {
+                    // 修复点：使用底层包含判断
+                    if (typeof card == 'object' && card.gaintag && card.gaintag.contains('wgxd_qixia_jian')) {
+                        return 0.1;
+                    }
+                },
+            },
+            // === AI核心逻辑：卖血收益认知 ===
+            ai: {
+                maixie: true,
+                effect: {
+                    target: function(card, player, target) {
+                        // 如果“剑”还没满，受到伤害是有收益的（换取标记和摸牌）
+                        if (get.tag(card, 'damage') && target.countCards('h', i => i.hasGaintag('wgxd_qixia_jian')) < 3) {
+                            return [1, 3]; 
+                        }
+                        if (get.tag(card, 'damage') && target.countCards('h', i => i.hasGaintag('wgxd_qixia_jian')) == 3) {
+                            return [1, 1]; 
+                        }
+                    }
+                }
             },
             group: ['wgxd_qixia_lose', 'wgxd_qixia_damage'],
             subSkill: {
