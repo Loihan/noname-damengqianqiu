@@ -68,6 +68,11 @@ export default function () {
                 audio: 'extension/大梦千秋/audio/',
                 skininfo: {}
             });
+
+            // 3. 诸葛诞的“叛”势力
+            game.addGroup('dingpan_pan', '叛', '叛', {
+                color: 'wood'   // 使用“吴”势力的绿色描边
+            });
         },
     
         precontent: function () { 
@@ -134,7 +139,7 @@ export default function () {
             lib.translate["万古仙道"] = "<span style=\"color:#3333ff; font-family: yuanli; line-height:1.5;\">万古仙道</span>";
             //lib.translate["大梦千秋_character_config"] = "大梦千秋";
 
-            // 【核心配置】：卡牌音效劫持逻辑（保持原封不动）
+            // 【核心配置】：卡牌音效劫持逻辑
             //-------------------↓↓↓↓↓↓↓↓↓↓出牌语音↓↓↓↓↓↓↓↓↓↓↓----------------//
             const dreamAudioConfigs = {
                 'sgz_zhonghui': {
@@ -214,7 +219,6 @@ export default function () {
                 return next;
             };
             //----------------------↑↑↑↑↑↑↑↑↑出牌语音↑↑↑↑↑↑↑↑↑↑------------------------//
-        
         },
 
         config: {},
@@ -247,7 +251,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包",
             author: "Loihan",
-            version: "6.1",
+            version: "6.2",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };

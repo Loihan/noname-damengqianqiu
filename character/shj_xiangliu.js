@@ -23,7 +23,7 @@
             direct: true,
             content: function() {
                 'step 0'
-                var num_targets = Math.min(player.hp, game.countPlayer());
+                var num_targets = Math.min(player.maxHp, game.countPlayer());
                 player.chooseTarget(
                     get.prompt('shj_huiyan'),
                     `请选择至多${num_targets}名角色，令他们各获得一个“秽债”标记。`,
@@ -39,7 +39,7 @@
                     }
                 }
             },
-            group: ["shj_huiyan_damage"],
+            group: ["shj_huiyan_damage", "shj_huizhai_losehp"],
             subSkill: {
                 damage: {
                     trigger: { global: "damageEnd" },
@@ -51,9 +51,20 @@
                     content: function() {
                         var target = trigger.player;
                         player.logSkill('shj_huiyan', target);
-                        player.gainPlayerCard(target, 'h', true);
+                        player.gainPlayerCard(target, 'hes', true);
                     }
                 },
+                losehp: {
+                    trigger: { global: "phaseBegin" },
+                    forced: true,
+                    filter(event, player) {
+                        // === 修改点: 增加 event.player != player 条件 ===
+                        return event.player.hasSkill('shj_huizhai_mark') && event.player != player;
+                    },
+                    content: function() {
+                        event.player.loseHp(1);
+                    }
+                }
             }
         },
         shj_huizhai_mark: {
@@ -277,9 +288,9 @@
     },
     skillTranslate: {
         shj_huiyan: "秽宴",
-        shj_huiyan_info: "你的准备阶段，你令至多等同于你体力值的角色各获得一个“秽债”标记。当有“秽债”标记的其他角色受到伤害时，你获得其一张手牌。",
+        shj_huiyan_info: "你的准备阶段，你令至多等同于你体力上限的角色各获得一个“秽债”标记。当有“秽债”标记的其他角色受到伤害时/回合开始时，你获得其一张牌/其失去一点体力。",
         shj_mingzhai: "溟债",
-        shj_mingzhai_info: "结束阶段，你获得所有有“秽债”标记的其他角色的一张牌；其他角色对你造成伤害时，其获得等量“秽债”标记；有“秽债”标记的其他角色的手牌上限-X，你的手牌上限+Y（X为其“秽债”标记数的一半，向上取整，Y为你的“秽债”标记数）。",
+        shj_mingzhai_info: "①结束阶段，你获得所有有“秽债”标记的其他角色的一张牌。②其他角色对你造成伤害时，其获得等量“秽债”标记。③有“秽债”标记的其他角色的手牌上限-X，你的手牌上限+Y（X为其“秽债”标记数的一半，向上取整，Y为你的“秽债”标记数）。",
         shj_qishou: "契狩",
         shj_qishou_info: "当你对有“秽债”标记的角色造成伤害时，你可以移除其一个“秽债”标记，令此伤害+1；当有“秽债”标记的角色失去最后一张手牌时，你可以移除其所有“秽债”标记，并对其造成等量点伤害。",
         shj_jiumo: "九殁",

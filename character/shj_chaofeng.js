@@ -316,7 +316,7 @@ export default {
                 }
             }
         },
-        // === 技能4: 【临虚】===
+        // === 技能4: 【睥睨】===
         shj_pini: {
             audio: "ext:大梦千秋/audio/shj_chaofeng:5",
             trigger: { target: "useCardToTargeted" },
@@ -590,7 +590,7 @@ export default {
         shj_lieying: "裂影",
         shj_lieying_info: "出牌阶段限一次，你可以消耗任意枚“威”标记，令你的下一张【杀】可以额外指定等量的目标。",
         shj_pini: "睥睨",
-        shj_pini_info: "锁定技，当你于回合外成为某效果的目标时，你摸一张牌并获得一个“威”标记。",
+        shj_pini_info: "锁定技，当你于回合外成为牌的目标时，你摸一张牌并获得一个“威”标记。",
         shj_weilin: "威临",
         shj_weilin_info: "觉醒技，当你造成伤害后，若“威”标记数≥5，你获得技能【临虚】、【敕令】。",
         // --- 衍生技能 ---

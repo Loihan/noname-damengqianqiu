@@ -70,7 +70,12 @@ export default {
                 if (!player.storage.sgz_dingpan_targets) player.storage.sgz_dingpan_targets = [];
                 player.storage.sgz_dingpan_targets.push(target);
                 
+                var extra = 1 ;//消耗了体力
+                if(player.maxHp > player.hp) extra = 0;
+                
                 player.loseMaxHp();
+                player.changeHujia( 1 + extra ); 
+                player.draw(extra);
                 game.playAudio('../extension/大梦千秋/audio/sgz_zhugedan/sgz_dingpan.mp3');
                 "step 1"
                 // 检测子技能注入的标记名
@@ -108,7 +113,6 @@ export default {
             audio: "ext:大梦千秋/audio/sgz_zhugedan:6",
             forced: true,
             persevereSkill: true,
-
             // === 核心 AI 劫持：改变 AI 对锦囊和装备的世界观 ===
             mod: {
                 // A. 价值评估：锦囊牌和核心装备被视为顶级资源
@@ -169,7 +173,6 @@ export default {
                     if (card.name == "sha") return true;
                 },
             },
-
             group: ["sgz_fani_range", "sgz_fani_target", "sgz_fani_draw", "sgz_fani_damage"],
             subSkill: {
                 range: {
@@ -283,6 +286,21 @@ export default {
                 player.logSkill("sgz_kunzhu");
                 game.playAudio('../extension/大梦千秋/audio/sgz_zhugedan/sgz_kunzhu.mp3');
             },
+            group: ["sgz_kunzhu_draw"],
+            subSkill: {
+                draw: {
+                    sub: true,
+                    audio: "ext:大梦千秋/audio/sgz_zhugedan:4",
+                    trigger: { target: "useCardToTargeted" },
+                    forced: true,
+                    filter: function(event, player) {
+                        return event.player.hasSkill("sgz_dingpan_pan");
+                    },
+                    content: function() {
+                        player.draw();
+                    },
+                },
+            }
         },
         // === 5. 孤绝  ===
         sgz_gujue: {
@@ -314,14 +332,13 @@ export default {
     },
     skillTranslate: {
         sgz_dingpan: "定叛",
-        sgz_dingpan_info: "出牌阶段每名角色限一次，你可以减少1点体力上限并令一名其他角色减少一点体力上限，然后若其没有“叛”标记，其修改其势力为“叛”并获得一个“叛”标记。",
+        sgz_dingpan_info: "出牌阶段每名角色限一次，你可以减少1点体力上限并获得1点护甲（若你因此减少了体力，你额外获得1点护甲并摸1张牌），令一名其他角色减少1点体力上限，然后若其没有“叛”标记，其修改其势力为“叛”并获得一个“叛”标记。",
         sgz_fani: "伐逆",
         sgz_fani_info: "锁定技，①你的【杀】无距离限制。②当你使用【杀】时，若场上存在有“叛”标记的角色，则将目标改为所有拥有“叛”标记的角色。③你每对一名拥有“叛”标记的角色使用牌时便摸一张牌。④你对拥有“叛”标记的角色即将造成的伤害改为令其减少等量的体力上限。",
         sgz_fenyu: "焚玉",
         sgz_fenyu_info: "锁定技。当一名拥有“叛”标记的角色死亡时，你摸两张牌并增加3点体力上限。然后你于当前回合结束后获得一个额外的回合（此效果可累加）。",
-        sgz_fenyu_mark: "梦回",
         sgz_kunzhu: "困诛",
-        sgz_kunzhu_info: "锁定技。若场上拥有“叛”标记的角色数大于你的体力上限，你使用的牌不可被响应。",
+        sgz_kunzhu_info: "锁定技。①若场上拥有“叛”标记的角色数大于你的体力上限，你使用的牌不可被响应。②当你成为“叛”标记的角色使用牌的目标时摸一张牌。",
         sgz_gujue: "孤绝",
         sgz_gujue_info: "锁定技，你的结束阶段开始时，你减少X点体力上限（除第一轮外），然后获得X点护甲并摸X张牌（X为场上拥有“叛”标记的角色数）。",
     },

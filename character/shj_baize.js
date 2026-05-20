@@ -241,7 +241,7 @@ export default {
                 result: {
                     player: function(player) {
                     var marks = player.countMark('shj_zhaorui');
-                    var value = 0;
+                    var value = 1;
                     // ===== 偶数收益 =====
                     if (marks % 2 == 0) {
                         game.countPlayer(function(current){

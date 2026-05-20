@@ -320,7 +320,7 @@ export default {
                             return (selected < 1 ? 5000 : 0);
                         }
                         // 2. 救死忠友军 (Att > 4)：能出几张出几张 (4000)
-                        if (att > 4) return (selected < 3 ? 4000 : 0);
+                        if (att > 2) return (selected < 3 ? 4000 : 0);
                         // 3. 救普通友军：仅 0 血时救活 (3000)
                         if (target.hp == 0) return (selected < 1 ? 3000 : 0);
                     }
@@ -453,12 +453,14 @@ export default {
                         var target = trigger.player;
                         var count = trigger.card._sgz_count;
                         if (count == 3) {
+                            target.gainMaxHp(2);
                             var missingHp = target.maxHp - target.hp;
                             if (missingHp > trigger.num) {
                                 trigger.num = missingHp;
                                 game.log(target, '因三连红桃【龙魂】回复至体力上限');
                             }
                         } else if (count == 2) {
+                            target.gainMaxHp(1);
                             trigger.num++;
                             game.log(target, '因双红桃【龙魂】回复量增加');
                         }
@@ -490,7 +492,7 @@ export default {
                             var curr = _status.currentPhase;
                             if (curr && curr != player && curr.isAlive()) {
                                 player.line(curr, 'black');
-                                player.discardPlayerCard(curr, 'he', true);
+                                player.gainPlayerCard(curr, 'he', true); 
                             }
                             event.finish();
                         } else {
@@ -598,7 +600,7 @@ export default {
         sgz_juejing: "绝境",
         sgz_juejing_info: "锁定技，①你的手牌上限+X（X为你的体力上限）；②当你进入或脱离濒死状态时摸一张牌。③回合外你的手牌数始终不小于2。④你的体力值始终不大于1，体力上限始终不大于7。⑤你单次受到的伤害不大于你的体力上限与当前游戏轮数。",
         sgz_longhun: "龙魂",
-        sgz_longhun_info: "你可以将1至3张花色相同的牌当做对应牌使用或打出并根据其数量与花色执行对应效果：<br>♥️当【桃】；两张：回复量+1；三张：回满体力。<br>♦️当火【杀】（无距离次数限制且不可被响应）；两张：伤害+1；三张：伤害改为等同于目标的体力与护甲之和且至少为3。<br>♠️当【无懈可击】：两张：弃置当前回合角色一张牌；三张：不可被响应且摸两张牌。<br>♣️当【闪】：两张：弃置当前回合角色一张牌；三张：弃置一名角色所有牌。<br>若你依此法使用或打出了2或3张牌，你增加一点体力上限。",
+        sgz_longhun_info: "你可以将1至3张花色相同的牌当做对应牌使用或打出并根据其数量与花色执行对应效果：<br>♥️当【桃】；两张：回复量+1且目标增加一点体力上限；三张：回满体力且目标增加一点体力上限。<br>♦️当火【杀】（无距离次数限制且不可被响应）；两张：伤害+1；三张：伤害改为等同于目标的体力与护甲之和且至少为3。<br>♠️当【无懈可击】：两张：获得当前回合角色一张牌；三张：不可被响应且摸两张牌。<br>♣️当【闪】：两张：获得当前回合角色一张牌；三张：弃置一名角色所有牌。<br>若你依此法使用或打出了2或3张牌，你增加一点体力上限。",
         sgz_jiuzhu: "救主",
         sgz_jiuzhu_info: "蓄力技(0/7)，每名角色准备阶段开始时或你进入濒死状态时，你获得1点蓄力点。<br>当你发动“龙魂时，你可以消耗1点蓄力点并执行相应效果：若在你的回合内/外，你获得一名其他角色/当前回合角色的一张牌。",
     },
