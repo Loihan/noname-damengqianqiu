@@ -29,37 +29,26 @@ export default {
             intro: {
                 name: "九伐",
                 content: "mark",
-                onunmark: function(storage, player) {
-                    player.removeSkill(["sgz_xinran", "sgz_zhuri", "sgz_juejin", "sgz_guju", "sgz_youming"]);
-                },
             },
             derivation: ["sgz_xinran", "sgz_zhuri", "sgz_juejin", "sgz_guju", "sgz_youming","sgz_fuming"],
             trigger: { global: "phaseBegin" },
-            //  filter: function(event, player) {
-            //      return event.player != player;
-            //  },
             ai:{
-                fireAttack: true, // 可造成火属性伤害
+                fireAttack: true, 
             },
             content: function() {
                 'step 0'
-
-                var draw_target = Math.min(9, player.maxHp);
-
-                if (player.countCards('h') < draw_target) {
-                    player.drawTo(draw_target);
-                } else {
-                    player.draw();
-                }
-
+                //摸牌
+                if(player.countCards('h') < player.maxHp) player.drawTo(player.maxHp);
+                //判断拼点及其后续效果是否失效
                 if (player.countMark('sgz_jiufa') >= 9 && !player.hasSkill('sgz_youming_die')) {
                     event.finish();
                 }
                 'step 1'
+                //判断是否有可以拼点的目标
                 var can_compare_target_exists = game.hasPlayer(function(current) {
                     return player.canCompare(current) && current != player;
                 });
-
+                //选择拼点目标
                 if (can_compare_target_exists) {
                     player.chooseTarget('九伐：请选择一名其他角色进行拼点', true, function(card, player, target){
                         return target != player && player.canCompare(target);
@@ -75,7 +64,6 @@ export default {
                     var target = result.targets[0];
                     event.target = target;
 
-                    // 【核心】在这里，在发起拼点前，唯一一次地播放音频和记录日志
                     player.logSkill('sgz_jiufa', target);
 
                     player.chooseToCompare(target);
@@ -83,24 +71,32 @@ export default {
                     event.finish();
                 }
                 'step 3'
-                if (result.bool) { 
+                //拼点赢结果
+                if (result.bool) {
+                    //拼点差值
                     event.diff = result.num1 - result.num2;
+                    //若发动幽明，拼点差值+4
                     if(player.hasSkill('sgz_youming_die'))event.diff+=4;
+                    //获得标记，最多9个
                     player.addMark('sgz_jiufa', Math.min(event.diff, 9-player.countMark('sgz_jiufa')));
+                    //刷新特效UI
                     if (player.hasSkill('sgz_jiangwei_ui')) {
                         lib.skill.sgz_jiangwei_ui.updateUI(player);
                     }
-                    player.draw();
-                    player.gainMaxHp();
+                    //若没有发动幽明，增加体力上限
+                    if(!player.hasSkill('sgz_youming_die'))player.gainMaxHp(event.diff);
                     player.addSkill('sgz_jiufa_sha');
                 } else {
                     event.finish();
                 }
                 'step 4'
+                //循环杀
                 if (player.hasSkill('sgz_jiufa_sha') && event.diff > 0 && event.target.isAlive()) {
+                    //若没有发动幽明，使用火杀
                     if (!player.hasSkill('sgz_youming_die')) {
                         player.useCard({ name: "sha", nature: "fire" }, event.target, false, 'sgz_jiufa_sha');
                     }else{
+                        //若发动幽明，使用神杀
                         player.useCard({ name: "sha", nature: "kami" }, event.target, false, 'sgz_jiufa_sha');
                     }
                     event.diff--;
@@ -113,7 +109,7 @@ export default {
                 'step 5'
                 var num = player.countMark('sgz_jiufa');
                 var skills_to_add = [];
-                //若没有发动幽明，才添加其他技能
+                //若没有发动幽明，添加其他技能
                 if (!player.hasSkill('sgz_youming_die')) {
                     if (num >= 1 && !player.hasSkill('sgz_xinran')) skills_to_add.push('sgz_xinran');  
                     if (num >= 3 && !player.hasSkill('sgz_zhuri')) skills_to_add.push('sgz_zhuri');
@@ -140,7 +136,7 @@ export default {
             persevereSkill: true,
             forced: true,
             trigger: { player: "dying" },
-            // 优先级高于【幽明】
+            // 优先级低于【幽明】
             priority: 5, 
             content: function() {
                 if(player.maxHp != 1) {
@@ -168,6 +164,7 @@ export default {
                     return true;
                 });
                 'step 1'
+                //观星效果
                 if (result.bool) {
                     player.logSkill('sgz_zhuri', trigger.player);
                     player.loseHp();
@@ -177,16 +174,16 @@ export default {
                     event.finish();
                 }
                 'step 2'
+                //选择选项
                 if (event.activated) {
-                    // 使用标准的选项写法，result.control 会返回选项字符串
                     player.chooseControl('选项一', '选项二').set('choiceList', [
                         '摸三张牌', 
                         '将所有手牌交给一名角色，然后失去一点体力'
                     ]).set('ai', function() {
                         if (
-                            ((player.maxHp > 9 )||(player.maxHp > 7 && player.maxHp < 9 && player.hp > 1)||(player.maxHp <= 7 && player.hp > 2) )
+                            ((player.maxHp > 9 )||(player.maxHp > 7 && player.maxHp < 9 && player.hp >= 2)||(player.maxHp <= 7 && player.hp >= 3) )
                             && game.hasPlayer(p => get.attitude(player, p) > 0 && p != player)
-                            && !player.hasSkill('sgz_youming')
+                            && !player.hasSkill('sgz_youming_die')
                         ) return '选项二';
                         return '选项一';
                     });
@@ -199,7 +196,7 @@ export default {
                         player.draw(3);
                         event.finish();
                     } else {
-                        // 选择目标给牌
+                        // 选项二：选择给牌目标
                         player.chooseTarget('将手牌交给一名其他角色，然后失去一点体力',true, (card, player, target) => {
                             return target != player;
                         }).set('ai', (target) => {
@@ -210,6 +207,7 @@ export default {
                     event.finish();
                 }
                 'step 4'
+                // 给牌、失去体力
                 if (result.bool && result.targets && result.targets.length) {
                     var target = result.targets[0];
                     var cards = player.getCards('h');
@@ -234,7 +232,6 @@ export default {
                 result: {
                     target: function(player, target) {
                         if (get.attitude(player, target) >= 0) return 0;
-                        // 优先打击威胁值最高的目标
                         return -get.threaten(target) - 2;
                     },
                     player: function(player) {
@@ -384,7 +381,7 @@ export default {
                 });
                 'step 1'
                 if (result.bool) {
-                    // 再选择目标
+                    // 选择“仇雠”目标角色
                     player.chooseTarget('请选择一名角色获得“仇雠”标记', true, function(card, player, target){
                         return target != player;
                     }).set('ai', function(target){
@@ -399,35 +396,16 @@ export default {
                     var target = result.targets[0];
                     player.awakenSkill('sgz_youming');
                     trigger.cancel(); // 取消濒死
-
-                    // 1. 插入新回合
-                    //player.insertPhase();
-
-                    // 2. 中断当前回合
-                    var evt = _status.event;
-                    for (var i = 0; i < 10; i++) {
-                        if (evt && evt.name == 'phase') {
-                            evt.skipped = true;
-                            break;
-                        }
-                        if (evt && evt.getParent) evt = evt.getParent();
-                        else break;
-                    }
                     
-                    // 3. 记录目标并添加核心效果
+                    // 摸牌并记录目标
                     player.draw(player.maxHp);
                     player.storage.sgz_youming_target = target;
-                    // 添加临时效果，有效期直到 phaseAfter (确保全流程覆盖)
+                    // 添加效果
                     player.addSkill('sgz_fuming');
-                    player.addTempSkill('sgz_youming_counter', {player:'phaseAfter'});
-                    player.addTempSkill('sgz_youming_die', {player:'phaseAfter'});
-                    
+                    player.addSkill(['sgz_youming_counter', 'sgz_youming_die','sgz_chouchou_jiangwei_clear']);         
                     target.addSkill('sgz_chouchou');
-                    player.addSkill('sgz_chouchou_jiangwei_clear');
-                    player.removeSkill('sgz_xinran');
-                    player.removeSkill('sgz_zhuri');
-                    player.removeSkill('sgz_juejin');
-                    player.removeSkill('sgz_guju');
+     
+                    player.removeSkill(['sgz_xinran','sgz_zhuri','sgz_juejin','sgz_guju']);
             
                     game.playAudio(`../extension/大梦千秋/audio/sgz_jiangwei/sgz_youming${[1,2,3].randomGet()}.mp3`);
                 }
@@ -437,11 +415,6 @@ export default {
             sgz_fuming: {
                 persevereSkill: true,
                 audio: "ext:大梦千秋/audio/sgz_jiangwei:4",
-                //onremove: function(player) { 
-                //    delete player.storage.sgz_youming_target; 
-                //    delete player.storage.sgz_youming_count;
-                //    player.removeSkill('sgz_youming_counter');
-                //},
                 mod: {
                     playerEnabled: function(card, player, target) {
                         var youming_target = player.storage.sgz_youming_target;
@@ -480,7 +453,6 @@ export default {
                         event.goto(1); // 直接跳到交牌死步骤
                     } else {
                         // 普通出牌计数逻辑
-                        //game.playAudio(`../extension/大梦千秋/audio/sgz_jiangwei/sgz_fuming${[1,2,3,4].randomGet()}.mp3`);
                         if (typeof player.storage.sgz_youming_count !== 'number') player.storage.sgz_youming_count = 0;
                         player.storage.sgz_youming_count++;
                         player.markSkill('sgz_youming_counter');
@@ -488,30 +460,17 @@ export default {
                         player.update();
                         event.finish();
                     }
+                    //标记达到8时进入再用牌，进入step步骤，
                     "step 1"
+                    //复明9的显示补丁
                     if(player.storage.sgz_youming_count >=8) {
                         player.storage.sgz_youming_count++;
                         player.markSkill('sgz_youming_counter');
                         player.storage.sgz_youming_counter = player.storage.sgz_youming_count;
                         player.update();
                     }
-                    // === 最终谢幕步骤 1：先交牌 ===
-                    if (player.countCards('h') > 0) {
-                        player.chooseTarget('幽明：请将所有牌交给一名其他角色', function(card, player, target){
-                        return target != player;
-                    })
-                        .set('ai', target => get.attitude(player, target));
-                    } else {
-                        event.goto(3);
-                    }
                     "step 2"
-                    if (result.bool && result.targets) {
-                        player.give(player.getCards('hes'), result.targets[0]);
-                        result.targets[0].gainMaxHp();
-                        result.targets[0].recover(9);
-                    }
-                    "step 3"
-                    // === 最终谢幕步骤 2：仇敌立即死亡 (仅限完成9张牌时) ===
+                    //仇雠立即死亡
                     if (player.storage.sgz_youming_count >=8) {
                         var target = player.storage.sgz_youming_target;
                         if (target && target.isAlive()) {
@@ -519,61 +478,76 @@ export default {
                             target.die();
                         }
                     }
+                    "step 3"
+                    //选择交牌角色
+                    if (player.countCards('h') > 0) {
+                        player.chooseTarget('幽明：请将所有牌交给一名其他角色', function(card, player, target){
+                        return target != player;
+                    }).set('ai', target => get.attitude(player, target));
+                    } else {
+                        event.goto(5);
+                    }
                     "step 4"
-                    // === 最终谢幕步骤 3：姜维回复至上限后立即死亡 ===
-                    // 这是修复死亡特效循环的关键：先重置体力和状态
-                    player.removeSkill('sgz_fuming'); 
-                    player.recover(player.maxHp - player.hp); // 强行回满
+                    //交牌
+                    if (result.bool && result.targets) {
+                        player.give(player.getCards('hes'), result.targets[0]);
+                        result.targets[0].gainMaxHp();
+                        result.targets[0].recover(9);
+                    }
                     "step 5"
+                    //最终：姜维回复至上限后立即死亡（为了修复死亡特效循环的关键：先重置体力和状态）
+                    player.removeSkill('sgz_fuming'); 
+                    player.recover(player.maxHp - player.hp); 
+                    "step 6"
                     player.die(); // 满血死亡，系统会正确处理此事件并清除所有濒死监听
                 }
             },
-            sgz_youming_counter: {
-                charlotte: true,
-                mark: true,
-                marktext: "复明",
-                intro: {
-                    name: "幽明",
-                    content: function(storage) {
-                        var count = storage || 0;
-                        return '已对目标使用 ' + count + '/9 张牌';
+                sgz_youming_counter: {
+                    charlotte: true,
+                    mark: true,
+                    marktext: "复明",
+                    intro: {
+                        name: "幽明",
+                        content: function(storage) {
+                            var count = storage || 0;
+                            return '已对目标使用 ' + count + '/9 张牌';
+                        }
+                    },
+
+                },
+                sgz_youming_die: {
+                    charlotte: true,
+                    mark: true,
+                    forced:true,
+                    trigger:{player:["phaseUseAfter","phaseDiscardBegin","phaseEnd"]},
+                    marktext: "死亡",
+                    intro: {
+                        name: "死亡",
+                        content: "出牌阶段结束时你死亡",
+                    },
+                    content: function() {
+                        player.die();
                     }
                 },
-
-            },
-            sgz_youming_die: {
-                charlotte: true,
-                mark: true,
-                forced:true,
-                trigger:{player:["phaseUseAfter","phaseDiscardBegin","phaseEnd"]},
-                marktext: "☠️",
-                intro: {
-                    name: "死亡",
-                    content: "出牌阶段结束时你死亡",
+                sgz_chouchou: {
+                    charlotte: true,
+                    mark: true,
+                    marktext: "仇雠",
+                    intro: { content: "姜维对你使用第9张牌时，你立即死亡" },
                 },
-                content: function() {
-                    player.die();
-                }
-            },
-            sgz_chouchou: {
-                charlotte: true,
-                mark: true,
-                marktext: "仇雠",
-                intro: { content: "姜维对你使用第9张牌时，你立即死亡" },
-            },
-            sgz_chouchou_jiangwei_clear: {
-                charlotte: true,
-                trigger: { player: "dieBegin" },
-                forced: true,
-                silent: true,
-                filter: function(event, player) {
-                    return player.storage.sgz_youming_target && player.storage.sgz_youming_target.isAlive();
+                sgz_chouchou_jiangwei_clear: {
+                    charlotte: true,
+                    trigger: { player: "dieBegin" },
+                    forced: true,
+                    silent: true,
+                    filter: function(event, player) {
+                        return player.storage.sgz_youming_target && player.storage.sgz_youming_target.isAlive();
+                    },
+                    content: function() {
+                        var target = player.storage.sgz_youming_target;
+                        if (target) target.removeSkill('sgz_chouchou');
+                    },
                 },
-                content: function() {
-                    var target = player.storage.sgz_youming_target;
-                    if (target) target.removeSkill('sgz_chouchou');
-                },
-            },
         // === 姜维专属：【九伐天痕】UI ===
         sgz_jiangwei_ui: {
             charlotte: true,
@@ -1165,10 +1139,10 @@ export default {
     },
     skillTranslate: {
         sgz_jiufa: "九伐",
-        sgz_jiufa_info: "锁定技，①每名角色回合开始时，若你的手牌数小于X，你将手牌摸至X（X为你的体力上限且至多为9）；否则，你摸一张牌。然后你选择一名其他角色拼点：若你赢，你摸1张牌、增加1点体力上限获得Y个“伐”标记并视为对其使用Y张火【杀】（Y为本次拼点牌的点数差，“伐”标记数至多为9）。<br>②根据你的“伐”标记数量，你视为拥有以下技能：<br>1：【薪燃】 3：【逐日】 5：【绝烬】 7：【孤炬】 9：【幽明】<br>③当“伐”标记达到9时此技能失去拼点效果。",
+        sgz_jiufa_info: "<span style='color:#FF4500;font-weight:bold;'>1级</span>：锁定技，①每名角色回合开始时，你将手牌摸至体力上限，然后若你的“伐”标记数<9，你选择一名其他角色拼点：若你赢，你增加X点体力上限、获得X个“伐”标记并视为对其使用X张火【杀】（X为本次拼点牌的点数差，“伐”标记数至多为9）。②根据你的“伐”标记数量，你视为拥有以下技能：1：【薪燃】 3：【逐日】 5：【绝烬】 7：【孤炬】 9：【幽明】。<br><span style='color:#FF4500;font-weight:bold;'>2级</span>：每名角色回合开始时，你将手牌摸至体力上限并选择一名其他角色拼点：若你赢，视为对其使用X张神【杀】（X为本次拼点牌的点数差+4）。",
         //衍生技能
         sgz_xinran: "薪燃",//传子龙将军之力
-        sgz_xinran_info: "锁定技。当你进入濒死状态时，若你的体力上限不为1则你减少1点体力上限，然后若你的体力上限>9，你摸1张牌并将体力回复至1点；否则，你摸2张牌并将体力回复至2点。",
+        sgz_xinran_info: "锁定技。当你进入濒死状态时，若你的体力上限不为1，则你减少1点体力上限，若此时你的体力上限大于/不大于9，你摸一/两张牌并将体力回复至一/两点。",
         sgz_zhuri: "逐日",//继孔明武侯之智
         sgz_zhuri_info: "①其他角色的手牌对你可见。②一名角色的准备阶段时，你可以失去1点体力卜算7，然后你选择一项：1.摸三张牌；2.将手牌交给一名其他角色然后失去一点体力。",
         sgz_juejin: "绝烬",//效友若死国之烈
@@ -1176,9 +1150,9 @@ export default {
         sgz_guju: "孤炬",//承玄德先帝之仁
         sgz_guju_info: "出牌阶段限一次。你可以选择一名其他角色，令其将手牌摸至其体力上限。然后，你观看其手牌，并可以用任意张你的手牌交换其等量的手牌。",
         sgz_youming: "幽明",//复伯约匡汉之明
-        sgz_youming_info: "限定技，当你进入濒死状态时，你可以令一名其他角色获得“仇雠”标记并取消你的濒死结算，然后你摸体力上限数张牌，失去技能【薪燃】、【逐日】、【绝烬】、【孤炬】。【九伐】删除②和③效果并恢复拼点效果，修改拼点成功结果为“你摸1张牌、增加1点体力上限并视为对其使用Y张神【杀】（Y为本次拼点牌的点数差+4）。",
+        sgz_youming_info: "限定技，当你进入濒死状态时，你可以令一名其他角色获得“仇雠”标记并取消你的濒死结算，然后你摸体力上限数张牌，失去技能【薪燃】、【逐日】、【绝烬】、【孤炬】，升级技能【九伐】，获得技能【复明】。",
         sgz_fuming: "复明",
-        sgz_fuming_info: "锁定技，①取消你的所有濒死结算；②你使用手牌只能指定自己和拥有“仇雠”标记的角色且无次数距离限制，每当你对其使用一张牌时，你获得一个“复明”标记；③当“复明”标记达到9时，你将所有牌交给一名其他角色，令其增加1点体力上限并回复9点体力，然后有“仇雠”标记的角色和你立即死亡；④你的出牌阶段结束时你立即死亡。",
+        sgz_fuming_info: "使命技，①取消你的所有濒死结算。你使用手牌只能指定自己和“仇雠”角色且无次数距离限制。<br>②成功：当你对“仇雠”角色累计使用9张牌时，其立即死亡，你将所有牌交给一名其他角色（其增加1点体力上限并回复9点体力），然后你立即死亡。<br>③失败：你的出牌阶段结束时，你立即死亡。",
     },
     characterTaici:{
         "sgz_jiufa":{order: 1,content:"汉贼岂能两相立，长驱河洛王业安！/雄关高岭壮英姿，一腔热血谱汉风!/残兵盘据雄关险，独梁力支大厦倾！/谋伐布划方寸内，驰马试剑天地间！/从丞相之重托，剑指雍凉!/尊先主之遗志，举兵北伐!"},

@@ -28,7 +28,7 @@
                     get.prompt('shj_huiyan'),
                     `请选择至多${num_targets}名角色，令他们各获得一个“秽债”标记。`,
                     [1, num_targets]
-                ).set('ai', target => -get.attitude(_status.event.player, target));
+                ).set('ai', target => {if(target==player) return 1; return 1-get.attitude(_status.event.player, target);});
                 'step 1'
                 if(result.bool && result.targets) {
                     player.logSkill('shj_huiyan', result.targets);
@@ -39,7 +39,7 @@
                     }
                 }
             },
-            group: ["shj_huiyan_damage", "shj_huizhai_losehp"],
+            group: ["shj_huiyan_damage", "shj_huiyan_losehp"],
             subSkill: {
                 damage: {
                     trigger: { global: "damageEnd" },
@@ -62,7 +62,7 @@
                         return event.player.hasSkill('shj_huizhai_mark') && event.player != player;
                     },
                     content: function() {
-                        event.player.loseHp(1);
+                        trigger.player.loseMaxHp(1);
                     }
                 }
             }
@@ -106,6 +106,14 @@
                         return num + bonus;
                     }
                     return num;
+                }
+            },
+            ai: {
+                maixie: true, // 标记为卖血技
+                effect: {
+                    target: function(card, player, target) {
+                            if (get.attitude(player, target) <= 0) return [1,1];
+                    }
                 }
             },
             group: ["shj_mingzhai_end", "shj_mingzhai_damaged"],
@@ -154,11 +162,16 @@
                     trigger: { source: "damageBegin1" },
                     direct: true,
                     filter(event, player) {
-                        return event.player.hasSkill('shj_huizhai_mark');
+                        return event.player.hasSkill('shj_huizhai_mark') && event.player != player;
                     },
                     async content(event, trigger, player) {
                         var target = trigger.player;
-                        const {result} = await player.chooseBool(get.prompt('shj_qishou', target), `是否发动【契狩】，移除其一个“秽债”标记，令此伤害+1？`).set('ai', () => get.attitude(_status.event.player, target) < 0);
+                        const {result} = await player.chooseBool(get.prompt('shj_qishou', target), `是否发动【契狩】，移除其一个“秽债”标记，令此伤害+1？`)
+                            .set('ai', () => {
+                                if( get.attitude(_status.event.player, target) >= 0 ) return false; 
+                                if( target.hp <= 2 || target.countMark('shj_huizhai_mark') > 1) return true;
+                                return false;
+                            });
                         
                         if(result.bool) {
                             player.logSkill('shj_qishou', target);
@@ -175,7 +188,8 @@
                     direct: true,
                     filter(event, player) {
                         var target = event.player;
-                        if (!target.hasSkill('shj_huizhai_mark')) return false;
+                        if (!target.hasSkill('shj_huizhai_mark') || target == player) return false;
+                        if(!target.isAlive()) return false;
                         if (target.countCards('h')) return false;
                         for (var i = 0; i < event.cards.length; i++) {
                             if (event.cards[i].original == "h") return true;
@@ -184,7 +198,11 @@
                     },
                     async content(event, trigger, player) {
                         var target = trigger.player;
-                        const {result} = await player.chooseBool(get.prompt('shj_qishou', target), `是否发动【契狩】，移除其所有“秽债”标记，并对其造成等量伤害？`).set('ai', () => true);
+                        const {result} = await player.chooseBool(get.prompt('shj_qishou', target), `是否发动【契狩】，移除其所有“秽债”标记，并对其造成等量伤害？`)
+                            .set('ai', () => {
+                                // AI发动条件：目标是敌人 且 秽债标记数 >= 目标当前体力值
+                                return get.attitude(player, target) < 0 && target.countMark('shj_huizhai_mark') >= target.hp;
+                            });
                         
                         if(result.bool) {
                             player.logSkill('shj_qishou', target);
@@ -228,12 +246,12 @@
                         var recover_num = event.x - player.hp;
                         if(recover_num > 0) player.recover(recover_num);
                         'step 3';
-                        var num_targets = Math.min(event.x, game.countPlayer(p => p.hasSkill('shj_huizhai_mark')));
+                        var num_targets = Math.min(event.x, game.countPlayer(p => p.hasSkill('shj_huizhai_mark') && p!=player));
                         if(num_targets > 0) {
                             player.chooseTarget(
                                 `九殁：请选择至多${num_targets}名有“秽债”标记的角色`,
                                 [1, num_targets],
-                                (card, player, target) => target.hasSkill('shj_huizhai_mark'),
+                                (card, player, target) => target.hasSkill('shj_huizhai_mark') && target!=player,
                                 true
                             ).set('ai', target => -get.attitude(_status.event.player, target));
                         } else { event.finish(); }
@@ -247,19 +265,24 @@
                         if(target) {
                             event.target = target;
                             var choiceList = [];
-                            if(target.maxHp > 1) choiceList.push('减少一点体力上限');
-                            if(target.hp != 1) choiceList.push('调整体力为1');
+                            //if(target.maxHp > 1) choiceList.push('减少一点体力上限');
+                            if(target.hp > 1) choiceList.push('调整体力为1');
                             if(target.countCards('h') >= 3) choiceList.push('弃置所有手牌');
                             
                             if(choiceList.length > 0) {
                                 target.chooseControl(choiceList).set('prompt', `九殁：请选择一项`).set('ai', () => choiceList[0]);
-                            } else { event.goto(7); }
+                            } else { 
+                                // === 核心修改点: 当两个选项都不满足时，立即造成致命伤害 ===
+                                target.die(player);
+                                event.goto(7); 
+                            }
                         } else { event.finish(); }
                         'step 6';
                         var choice = result.control;
                         var target = event.target;
-                        if (choice == '减少一点体力上限') target.loseMaxHp();
-                        else if (choice == '调整体力为1') target.loseHp(target.hp - 1);
+                        //if (choice == '减少一点体力上限') target.loseMaxHp();
+                        //else 
+                            if (choice == '调整体力为1') target.loseHp(target.hp - 1);
                         else if (choice == '弃置所有手牌') target.discard(target.getCards('h'));
                         'step 7';
                         event.num++;
@@ -288,13 +311,13 @@
     },
     skillTranslate: {
         shj_huiyan: "秽宴",
-        shj_huiyan_info: "你的准备阶段，你令至多等同于你体力上限的角色各获得一个“秽债”标记。当有“秽债”标记的其他角色受到伤害时/回合开始时，你获得其一张牌/其失去一点体力。",
+        shj_huiyan_info: "你的准备阶段，你令至多等同于你体力上限的角色各获得一个“秽债”标记。当有“秽债”标记的其他角色受到伤害时/回合开始时，你获得其一张牌/其减少一点体力上限。",
         shj_mingzhai: "溟债",
         shj_mingzhai_info: "①结束阶段，你获得所有有“秽债”标记的其他角色的一张牌。②其他角色对你造成伤害时，其获得等量“秽债”标记。③有“秽债”标记的其他角色的手牌上限-X，你的手牌上限+Y（X为其“秽债”标记数的一半，向上取整，Y为你的“秽债”标记数）。",
         shj_qishou: "契狩",
-        shj_qishou_info: "当你对有“秽债”标记的角色造成伤害时，你可以移除其一个“秽债”标记，令此伤害+1；当有“秽债”标记的角色失去最后一张手牌时，你可以移除其所有“秽债”标记，并对其造成等量点伤害。",
+        shj_qishou_info: "当你对有“秽债”标记的角色造成伤害时，你可以移除其一个“秽债”标记，令此伤害+1；当有“秽债”标记的其他角色失去最后一张手牌时，你可以移除其所有“秽债”标记，并对其造成等量点伤害。",
         shj_jiumo: "九殁",
-        shj_jiumo_info: "①当你于回合外失去手牌时，你摸一张牌；<br>②当你进入濒死状态时，若你的体力上限大于1，你弃置等同于体力上限张牌（不足则全弃），并记录弃牌量为X，然后减少一点体力上限，回复体力至X。然后，你可以选择至多X名有“秽债”标记的角色，令其选择一项（需满足括号内的条件才能选择对应选项，若都不满足则无需选择）：<br>1.减少一点体力上限（体力上限不为1）；<br>2.调整体力为1（体力值不为1）；<br>3.弃置所有手牌（手牌数≥3）。",
+        shj_jiumo_info: "①当你于回合外失去手牌时，你摸一张牌；<br>②当你进入濒死状态时，若你的体力上限大于1，你弃置等同于体力上限张牌（不足则全弃），并记录弃牌量为X，然后减少一点体力上限，回复体力至X。然后，你可以令至多X名有“秽债”标记的其他角色选择一项（需满足括号内条件才可以选择对应选项）：1.调整体力为1（体力>1）；2.弃置所有手牌（手牌数≥3）；若都不能选择则其立即死亡",
     }, 
     characterTaici:{
         "shj_huiyan":{ order:1 ,content:"蛇不喜欢太听话的猎物，明白吗？/无趣，不如来场捉迷藏吧？/无需压抑自我，此为天赋，绝非诅咒。"},

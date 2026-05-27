@@ -46,7 +46,7 @@ export default {
                     target: function(card, player, target) {
                         // 如果“患”标记少于 2，大幅提升受伤收益评分
                         if (target.countMark('sgz_quanji_huan') < 2) {
-                            if (get.tag(card, 'damage')) return [1, 2]; 
+                            if (get.tag(card, 'damage')) return [1, 1]; 
                         }
                     }
                 }
@@ -141,7 +141,7 @@ export default {
                     },
                     marktext: "患",
                     trigger: {
-                        player: ["damageBegin", "loseHpBegin"],
+                        player: ["damageBegin", "loseHpBegin", "loseMaxHpBegin"],
                     },
                     forced: true,
                     filter(event, player) {
@@ -260,11 +260,6 @@ export default {
                 order: 0.5,
                 save:true,
                 result: {
-                    player: function(player) {
-                        // 自己受伤或有患标记时，对自己使用是有收益的
-                        if (player.countMark("sgz_quanji_huan") > 1 || player.hp < player.maxHp) return 1;
-                        return 0;
-                    },
                     target: function(player, target) {
                         // 情况 1：目标是自己，始终支持
                         if (player == target) return 1;
@@ -444,7 +439,7 @@ export default {
     },
     skillTranslate: {
         sgz_quanji: "权计",
-        sgz_quanji_info: "锁定技，①游戏开始时，你获得4枚“权”标记，你的手牌数始终为X（X为“权”的数量)。②当你不因此技能受到伤害或失去体力时防止之，改为获得等量的“患”标记。③出牌阶段结束时，你受到X点无来源伤害（X为“患”的数量)。",
+        sgz_quanji_info: "锁定技，①游戏开始时，你获得4枚“权”标记，你的手牌数始终为X（X为“权”的数量)。②当你不因此技能受到伤害、失去体力或减少体力上限时防止之，改为获得等量的“患”标记。③出牌阶段结束时，你受到X点无来源伤害（X为“患”的数量)。",
         sgz_fensi: "忿肆",
         sgz_fensi_info: "回合内限两次，当你需要使用一张非延时性锦囊牌，你可以移除一枚“患”并弃置至少零张手牌，视为使用之。",
         sgz_jitian: "觊天",

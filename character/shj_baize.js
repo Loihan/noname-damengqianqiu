@@ -443,7 +443,7 @@ export default {
                 var target = event.targets[0];
                 game.log(player, '对', target, '发动了【镇厄】');
                 var cards = target.getCards('hej');
-                target.die();
+                target.die(player);
                 if(cards.length > 0) {
                    player.gain(cards, target, 'gain2');
                 }

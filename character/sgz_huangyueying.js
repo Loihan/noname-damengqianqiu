@@ -44,7 +44,7 @@ export default {
                 return ['heart', 'diamond', 'club', 'spade'].includes(suit); 
             },
             ai:{
-                fireAttack: true, // 可造成火属性伤害
+                fireAttack: true, 
             },
             // 这一部分请在 sgz_xuanhe 的 mod 块中更新
             mod: {
@@ -68,8 +68,10 @@ export default {
                 }
             },
             content: function () {
+                //摸一张牌
                 "step 0"; 
                 player.draw(); 
+                //添加“不计上限”标记
                 "step 1"; 
                 if (result && result.length) {
                     var card_drawn = result[0];
@@ -81,7 +83,7 @@ export default {
                 switch (suit) {
                     case 'heart': 
                         if (player.isDamaged()) player.recover(); 
-                        else player.changeHujia(1); 
+                        else player.changeHujia(); 
                         break; 
                     case 'diamond': 
                         player.chooseTarget('璇和：请选择一名角色，视为对其使用一张火【杀】', true).set('ai', function (target) { 
@@ -213,7 +215,6 @@ export default {
                 player.chooseToUse({
                     viewAs: { name: "wuzhong" },
                     _backupevent: `sgz_qimeng_backup`,
-                    prompt: '绮梦：是否将一张牌当作【无中生有】使用？',
                     openskilldialog: '将一张牌当作【无中生有】使用',
                     norestore: true, 
                     addCount: false,
@@ -258,7 +259,7 @@ export default {
         sgz_jiqiao: "集巧", 
         sgz_jiqiao_info: "锁定技，你的回合开始时，若你手牌中没有锦囊牌，你从牌堆中随机获得一张锦囊牌。",
         sgz_xuanhe: "璇和", 
-        sgz_xuanhe_info: "锁定技，当你使用锦囊牌时摸一张牌，此牌不计入手牌上限。然后在锦囊牌生效前你按照所使用的锦囊牌花色执行对应效果:<br>♦️：视为对其使用一张无次数距离限制的火【杀】；<br>♥️：若你已受伤则回复一点体力，否则获得一点护甲；<br>♠️：选择一名其他角色获得其一张牌；<br>♣️：本回合出【杀】次数+1（不可叠加），获得一张无色【闪】，标记为“梦闪”，不计入手牌上限。",
+        sgz_xuanhe_info: "锁定技，当你使用锦囊牌时摸一张牌，此牌不计入手牌上限。然后在锦囊牌生效前你按照所使用的锦囊牌花色执行对应效果:<br>♦️：视为对一名角色使用一张无次数距离限制的火【杀】；<br>♥️：若你已受伤则回复一点体力，否则获得一点护甲；<br>♠️：获得一名其他角色的一张牌；<br>♣️：本回合出【杀】次数+1（不可叠加），获得一张无色【闪】，标记为“梦闪”，不计入手牌上限。",
         sgz_changming: "长明", 
         sgz_changming_info: "锁定技，准备阶段和结束阶段，你卜算2X+Y（X为“梦闪”数，Y为存活人数，至多卜算7）。",
         sgz_qimeng: "绮梦",

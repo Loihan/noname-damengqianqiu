@@ -618,7 +618,7 @@ export default {
             persevereSkill: true,
             trigger: { player: "damageEnd" },
             limited: true,
-        mark: false,
+            mark: false,
             skillAnimation: true,
             animationColor: 'soil',
             direct: true,
@@ -637,7 +637,7 @@ export default {
                 if (result.bool) {
                     player.logSkill('mfsd_panjie', trigger.source);
                     player.awakenSkill('mfsd_panjie');
-                    var cards = trigger.source.getCards('hej');
+                    var cards = trigger.source.getCards('h');
                     if (cards.length) {
                         game.cardsGotoSpecial(cards);
                         game.log(trigger.source, '的', cards, '被移出了游戏');
@@ -890,7 +890,7 @@ export default {
         mfsd_dunjie: "盾界", mfsd_dunjie_info: "限定技，出牌阶段，你可以令直到你的下个回合开始之前，你受到的伤害若大于1则改为1，若不大于1则改为0。",
         mfsd_xingjie: "星界", mfsd_xingjie_info: "限定技，摸牌阶段，你可改为从游戏外获得指定的任意五张不同的牌（无花色点数）。",
         mfsd_qiongjie: "穹界", mfsd_qiongjie_info: "限定技，出牌阶段，你可以令你直到下个回合开始之前，不能成为牌的目标。",
-        mfsd_panjie: "叛界", mfsd_panjie_info: "限定技，当你受到伤害后，若伤害来源有牌，你可以令此伤害结算后，伤害来源区域内的所有牌移出游戏，然后你回复等同于此次伤害点数的体力。",
+        mfsd_panjie: "叛界", mfsd_panjie_info: "限定技，当你受到伤害后，若伤害来源有手牌，你可以令此伤害结算后，伤害来源区域内的所有手牌移出游戏，然后你回复等同于此次伤害点数的体力。",
         mfsd_nuojie: "诺界", mfsd_nuojie_info: "限定技，出牌阶段，你可以令直到你的下个回合开始之前，所有角色的回复体力效果无效。",
         mfsd_juejie: "绝界", mfsd_juejie_info: "限定技，出牌阶段，你可以令任意名角色翻面，然后若其手牌数大于体力值，其须将手牌弃置至与体力值相等。",
         mfsd_bengjie: "崩界", mfsd_bengjie_info: "限定技，出牌阶段，你可以指定一名角色，其立即死亡。",
