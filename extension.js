@@ -10,6 +10,7 @@ import sgzGuojia from './character/sgz_guojia.js';
 import sgzLuxun from './character/sgz_luxun.js';
 import sgzMachao from './character/sgz_machao.js';
 import sgzCaomao from './character/sgz_caomao.js';
+import sgzSimazhao from './character/sgz_simazhao.js';
 
 // === 山海经武将 ===
 import shjBaize from './character/shj_baize.js'; 
@@ -26,7 +27,7 @@ import wgxdHeyuxingzun from './character/wgxd_heyuxingzun.js';
 import wgxdYinianshenmo from './character/wgxd_yinianshenmo.js';
 
 // 分类数组定义
-const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia, sgzLuxun, sgzMachao, sgzCaomao];
+const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia, sgzLuxun, sgzMachao, sgzCaomao, sgzSimazhao];
 const shjCharacters = [shjBaize, shjXiangliu, shjChaofeng, shjNvwa];
 const mfsdCharacters = [mfsdAnyuanmofa, mfsdXingyushenqi]; 
 const wgxdCharacters = [wgxdHeyuxingzun, wgxdYinianshenmo];
@@ -252,7 +253,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包",
             author: "Loihan",
-            version: "6.2",
+            version: "7.0",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };
