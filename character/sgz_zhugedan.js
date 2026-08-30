@@ -23,6 +23,7 @@ export default {
             audio: "ext:大梦千秋/audio/sgz_zhugedan:5",
             persevereSkill: true,
             enable: "phaseUse",
+            ai: {expose: 1,},
             filter: function(event, player) {
                 return game.hasPlayer(target => target != player);
             },
@@ -256,8 +257,8 @@ export default {
             mark: true,
             marktext: "焚玉",
             intro: {
-                name: "焚玉",
-                content: "mark", // 自动显示标记数量
+                name: "额外回合",
+                content: "因焚玉获得#个额外回合", // 自动显示标记数量
             },
             // 逻辑：每当任何回合（包括额外回合）开始时，消耗一个标记
             trigger: { player: "phaseBeginStart" },

@@ -203,6 +203,7 @@ export default {
             audio: "ext:大梦千秋/audio/shj_baize:3",
             persevereSkill: true,
             enable: "phaseUse",
+            ai: {expose: 1,},
             usable: 1,
             filter(event, player) {
                 return player.countMark('shj_zhaorui') > 0;
@@ -437,6 +438,7 @@ export default {
             usable: 1,
             skillAnimation: true,
             animationColor: "gold",
+            ai: {expose: 1,},
             filterTarget: (card, player, target) => target != player,
             content: function() {
                 'step 0'

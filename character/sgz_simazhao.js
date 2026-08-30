@@ -38,10 +38,10 @@ export default {
                     filterCard: function(card, player) {
                         return card.name == 'binglinchengxiax';
                     },
-                    viewAs: function(cards, player) {
-                        if (cards.length !== 1) return null;
-                        return { name: "sha" };
+                    viewAs:{
+                        name: "sha" ,
                     },
+                    position:"hs",
                     // 核心4：让系统在没闪没杀时也能弹出此技能
                     filter: function(event, player) {
                         return player.countCards('hs', 'binglinchengxiax') > 0;
@@ -49,6 +49,7 @@ export default {
                     prompt: "将一张【兵临城下】当做【杀】使用或打出",
                     check: function(card) { return 1; },
                     content: function() {
+                        var player = _status.event.player; 
                         if(!player.hasSkill('sgz_tunyue'))game.playAudio(`../extension/大梦千秋/audio/sgz_simazhao/sgz_wowei${[1,2].randomGet()}.mp3`);
                         else game.playAudio(`../extension/大梦千秋/audio/sgz_simazhao/sgz_wowei${[3,4].randomGet()}.mp3`);
                     },
@@ -69,7 +70,8 @@ export default {
                     forced: true,
                     content: function() {
                         "step 0"
-                        var num = game.countPlayer();
+                        var num = 8;
+                        //var num = game.countPlayer();
                         var cards = [];
                         for (var i = 0; i < num; i++) {
                             cards.push(game.createCard('binglinchengxiax'));
@@ -337,8 +339,8 @@ export default {
                 mark: true,
                 marktext: "回合",
                 intro: {
-                    name: "埋曜",
-                    content: "mark", // 自动显示标记数量
+                    name: "额外回合",
+                    content: "因埋曜获得#个额外回合", // 自动显示标记数量
                 },
                 // 逻辑：每当任何回合（包括额外回合）开始时，消耗一个标记
                 trigger: { player: "phaseBeginStart" },
@@ -397,7 +399,7 @@ export default {
                         var marked = game.filterPlayer(p => p.hasSkill('sgz_xietian_mark')).sortBySeat();
                         for (let target of marked) {
                             player.logSkill('sgz_xietian', target);
-                            await target.damage();
+                            await target.damage("nosource", "nocard");
                             if (target.countCards('he')) {
                                 await player.gainPlayerCard(target, 'he', true);
                             }
@@ -538,6 +540,7 @@ export default {
                 source: "damageBegin1",
                 global: ["dieAfter"]          // 刷新触发点
             },
+            priority:10,
             forced: true,
             filter: function(event, player) {
                 // 逻辑1：对标记目标出杀 (强中判定)
@@ -586,9 +589,9 @@ export default {
     },
     skillTranslate: {
         sgz_wowei: "斡维",
-        sgz_wowei_info:"①游戏开始时，你将等量于全场人数张【兵临城下】加入游戏，你在手牌区开辟一个“<span style='color:#CC00FF;'>斡旋</span>”区域，该区域内的牌不计入手牌数与手牌上限，无法被查看、获得、弃置、展示和选中。②当一名其他角色使用【兵临城下】时，你可以令此牌无效并将一张手牌加入“<span style='color:#CC00FF;'>斡旋</span>”。③你使用【兵临城下】后摸3张牌。④你可以将一张【兵临城下】当【杀】使用或打出。",
+        sgz_wowei_info:"①游戏开始时，你将8张【兵临城下】加入游戏，你在手牌区开辟一个“<span style='color:#CC00FF;'>斡旋</span>”区域，该区域内的牌不计入手牌数与手牌上限，无法被查看、获得、弃置、展示和选中。②当一名其他角色使用【兵临城下】时，你可以令此牌无效并将一张手牌加入“<span style='color:#CC00FF;'>斡旋</span>”。③你使用【兵临城下】后摸3张牌。④你可以将一张【兵临城下】当【杀】使用或打出。",
         sgz_maiyao: "埋曜",
-        sgz_maiyao_info:"每回合每个技能限一次，当其他角色使用技能时，你获得其一张牌，然后若：<br>①牌堆或弃牌堆中有【兵临城下】:你从牌堆和弃牌堆中获得一张【兵临城下】加入“<span style='color:#CC00FF;'>斡旋</span>”；<br>②牌堆或弃牌堆中没有【兵临城下】且场上没有“覆焘”标记：你获得一个额外的回合。",
+        sgz_maiyao_info:"每回合每个技能限一次，当其他角色使用技能时，你获得其1张牌并回复2点体力，然后若：<br>①牌堆或弃牌堆中有【兵临城下】:你从牌堆和弃牌堆中获得一张【兵临城下】加入“<span style='color:#CC00FF;'>斡旋</span>”；<br>②牌堆或弃牌堆中没有【兵临城下】且场上没有“覆焘”标记：你获得一个额外的回合。",
         sgz_xietian:"挟天",
         sgz_xietian_info:"锁定技，①当你受到伤害时，你令一名没有“挟天”标记的其他角色获得一个挟天标记，然后所有有“挟天”标记的角色依次受到你造成的1点伤害并令你获得其1张牌，所有执行结束后你选择一张手牌加入“<span style='color:#CC00FF;'>斡旋</span>”。②出牌阶段开始时，若你的手牌数大于体力值，你须弃置多余的手牌。",
         sgz_wowei_tag: "斡旋",
@@ -597,7 +600,7 @@ export default {
         sgz_futao: "覆焘",
         sgz_futao_info:"限定技，锁定技，准备阶段，若牌堆和弃牌堆中没有【兵临城下】，你废除判定区，选择一名其他角色获得“覆焘”标记，并获得技能“吞月”。",
         sgz_tunyue:"吞月",
-        sgz_tunyue_info:"锁定技，你对有“覆焘”标记的角色使用【杀】伤害+1且不可被响应。当“覆焘”角色死亡时，“覆焘”和“压昼”视为未发动过。",
+        sgz_tunyue_info:"锁定技，你对“覆焘”角色使用的【杀】伤害+1且不可被响应。当“覆焘”角色死亡时，“覆焘”和“压昼”视为未发动过。",
     },
     characterTaici:{
         sgz_wowei:{order:1,content:"吾心忠明，陛下尽可放心。/吾之心意？自是辅国庇朝。/陛下一国之君，不可使以小性。/讲经宴筵，实非治国之道也。/汝等仍存异心，可见心存魏阙。/城破之日，定诛此逆贼三族！/吾今大权独揽，何可再予他人！/未想逆贼区区，竟然好物甚巨。/徒生逆心，未有其力，破之易如反掌！/哼！斩首示众，以儆效尤！/哼，求存者多，未见求死者也！/司马氏江山，自不容怀异之徒！/上者慑敌以威，灭敌以势！"},

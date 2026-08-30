@@ -21,6 +21,7 @@
             persevereSkill: true,
             trigger: { player: "phaseZhunbeiBegin" },
             direct: true,
+            ai: {expose: 1,},
             content: function() {
                 'step 0'
                 var num_targets = Math.min(player.maxHp, game.countPlayer());
@@ -157,6 +158,7 @@
             persevereSkill: true,
             audio: "ext:大梦千秋/audio/shj_xiangliu:5",
             group: ["shj_qishou_damage", "shj_qishou_lastcard"],
+            ai: {expose: 1,},
             subSkill: {
                 damage: {
                     trigger: { source: "damageBegin1" },

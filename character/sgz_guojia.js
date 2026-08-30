@@ -18,48 +18,65 @@ export default {
         sgz_guojia: "郭嘉",
     },
     skills: {
-        // === 1. 窥天 (AI 强效引导版) ===
+// === 1. 窥天 (AI 逻辑补导 + 响应补全版) ===
         sgz_kuitian: {
             audio: "ext:大梦千秋/audio/sgz_guojia/skill:8",
             persevereSkill: true,
             enable: ["chooseToUse", "chooseToRespond"],
+            // 核心修复 1：同时注册使用和响应的钩子
             onChooseToUse: function(event) {
-                if (!game.online) {
-                    const cards = [];
-                    for (let name of lib.inpile) {
-                        if (get.type(name, null, false) != "trick") continue;
-                        const card = get.autoViewAs({ name, isCard: true }, []);
-                        if (event.filterCard(card, event.player, event)) cards.add(name);
-                    }
-                    event.set("sgz_kuitian_list", cards);
+                if (game.online) return;
+                const cards = [];
+                for (let name of lib.inpile) {
+                    const type = get.type(name, null, false);
+                    if (type != "trick" && type != "delay") continue;
+                    // 构造虚拟牌进行合法性检测
+                    const card = { name: name, isCard: true };
+                    if (event.filterCard(card, event.player, event)) cards.add(name);
                 }
+                event.set("sgz_kuitian_list", cards);
             },
+            onChooseToRespond: function(event) {
+                this.onChooseToUse(event);
+            },
+            // 核心修复 2：简化 filter，让 AI 在评估时能通过初步筛选
             filter: function(event, player) {
-                return _status.currentPhase == player && event.sgz_kuitian_list?.length;
+                return event.sgz_kuitian_list?.length;
+            },
+            // 核心修复 3：让 AI 意识到它可以变出任何锦囊来响应
+            hiddenCard: function(player, name) {
+                const type = get.type(name, null, false);
+                if (type == 'trick' || type == 'delay') {
+                    if (player.isMine()) return true;
+                    const count = player.countMark("sgz_kuitian_used");
+                    if (count < player.maxHp || player.maxHp > 7) return true;
+                }
             },
             chooseButton: {
                 dialog: function(event, player) {
-                    const list = event.sgz_kuitian_list;
+                    // 如果是 AI 触发，此时可能还没跑 onChoose，手动补一遍
+                    if (!event.sgz_kuitian_list) {
+                        lib.skill.sgz_kuitian.onChooseToUse(event);
+                    }
+                    const list = event.sgz_kuitian_list || [];
                     const dialog = ui.create.dialog("窥天");
                     dialog.add([list, "vcard"]);
-                    
                     return dialog;
                 },
                 check: function(button) {
-                    const player = get.player();
-                    const cardName = button.link[2];
+                    const player = _status.event.player;
                     const count = player.countMark("sgz_kuitian_used");
+                    
+                    // AI 惜命逻辑：如果已经达到上限且上限 <= 7，AI 在面板里不选任何牌 (返回0)
                     if (count >= player.maxHp && player.maxHp <= 7) return 0;
-                    // 诱导 AI 选火攻（为了刷极慧）
-                    if (!player.hasHistory('damage') && cardName == 'huogong') {
-                        if (player.hp > 1 && player.maxHp < 10) return 20; 
-                    }
-                    // 回复优先级
-                    if (player.hp < Math.min(player.maxHp, 7) && cardName == 'taoyuan') return 15;
 
-                    const card = get.autoViewAs({ name: cardName, isCard: true }, []);
+                    const cardName = button.link[2];
+                    if (cardName == 'huogong') {
+                        if (!player.hasHistory('damage') && player.hp > 1 && player.maxHp < 10) return 25;
+                    }
+                    if (cardName == 'wuxie') return 20;
                     if (["wugu", "zhulu_card", "yiyi", "lulitongxin", "lianjunshengyan", "diaohulishan"].includes(cardName)) return 0;
-                    return player.getUseValue(card);
+                    return get.useful({ name: cardName, isCard: true });
                 },
                 backup: function(links, player) {
                     const selectedTrick = links[0][2]; 
@@ -67,25 +84,37 @@ export default {
                         filterCard: false,
                         selectCard: 0,
                         popname: true,
-                        viewAs: get.autoViewAs({ name: selectedTrick, isCard: true }, []),
+                        viewAs: { name: selectedTrick, isCard: true },
                         ai: {
-                            // 针对火攻自己的特殊目标评估
                             result: {
                                 target: function(player, target) {
+                                    // 目标选择 AI：火攻自己
                                     if (selectedTrick == 'huogong' && player == target && !player.hasHistory('damage')) return 2;
                                     return get.effect(target, {name: selectedTrick}, player, player);
+                                }
+                            },
+                            // 2. 【核心修复】：效果评价意愿
+                            // 这一步决定了 AI 在火攻结算时是否愿意“弃牌造成伤害”
+                            effect: {
+                                target: function(card, player, target) {
+                                    // 如果是火攻自己，告诉 AI：受到伤害收益为正 [系数0, 固定分2]
+                                    // [0, 2] 表示：无视伤害的负面影响，且额外获得 2 分收益
+                                    if (player == target && card.name == 'huogong') {
+                                        return [0, 2]; 
+                                    }
                                 }
                             }
                         },
                         async precontent(event, trigger, player) {
                             var num = [1, 2, 3, 4, 5, 6, 7, 8].randomGet();
                             game.playAudio('../extension/大梦千秋/audio/sgz_guojia/skill/sgz_kuitian' + num + '.mp3');
-                            player.addTempSkill("sgz_kuitian_used", { player: "phaseAfter" });
+                            player.addTempSkill("sgz_kuitian_used", "phaseAfter" );
                             player.addMark("sgz_kuitian_used", 1, false);
+                            
+                            // 反噬监听
                             player.when({ player: "useCardAfter" }).filter(evt => evt.skill == "sgz_kuitian_backup").step(async function (event, trigger, player) {
                                 if (player.countMark("sgz_kuitian_used") > player.maxHp) {
                                     await player.loseMaxHp(1);
-                                    game.log(player, '本回合连续发动【窥天】，受到梦境反噬减1上限');
                                 }
                             });
                         },
@@ -95,24 +124,36 @@ export default {
             subSkill: {
                 backup: { sub: true },
                 used: {
-                    sub: true,
-                    onremove: true,
-                    charlotte: true,
-                    mark: true,
-                    marktext: "窥天",
-                    intro: {
-                        markcount: "mark",
-                        content: function(storage) { return `本回合已发动${storage}次`; },
-                    },
+                    sub: true, onremove: true, charlotte: true, mark: true, marktext: "窥天",
+                    intro: { content: (storage) => `本回合已发动${storage}次` },
                 },
             },
+            // 核心修复 4：AI 引导模块
             ai: {
-                order: 11,
+                order: function(item, player) {
+                    player = player || _status.event.player; // 判空重定向
+                    if (!player || !player.hasHistory) return 11; // 容错防止报错
+                    // AI 惜命逻辑：如果超次了，优先级降为 0
+                    const count = player.countMark("sgz_kuitian_used");
+                    if (count >= player.maxHp && player.maxHp <= 7) return 0;
+                    // 如果需要火攻自残，优先级拉到最高
+                    if (!player.hasHistory('damage') && player.hp > 1 && player.maxHp < 10) return 15;
+                    return 11;
+                },
+                // 开启所有锦囊响应标签
+                respondWuxie: true,
+                // 此函数在 AI 寻找“我有没牌出”时运行
+                skillTagFilter: function(player, tag, arg) {
+                    const count = player.countMark("sgz_kuitian_used");
+                    // 仅当没超次，或上限已经 > 7（进入无限梦境）时，AI 才考虑发动
+                    if (count >= player.maxHp && player.maxHp <= 7) return false;
+                    return true;
+                },
                 result: {
                     player: function(player) {
                         const count = player.countMark("sgz_kuitian_used");
-                        if (count < player.maxHp || player.maxHp > 7) return 1;
-                        return 0;
+                        if (count >= player.maxHp && player.maxHp <= 7) return 0;
+                        return 1; 
                     }
                 }
             }
@@ -346,7 +387,7 @@ export default {
     },
     skillTranslate: {
         sgz_kuitian: "窥天",
-        sgz_kuitian_info: "你的回合内，你可以视为使用任意普通锦囊牌。以此法使用的牌结算后，若你于本回合内发动此技能的次数大于你的体力上限，你减1点体力上限。",
+        sgz_kuitian_info: "任何使用锦囊牌的合理时机，你可以视为使用任意锦囊牌。以此法使用的牌结算后，若你于本回合内发动此技能的次数大于你的体力上限，你减1点体力上限。",
         sgz_guanxu: "观虚",
         sgz_guanxu_info: "牌堆顶的X张牌始终对你可见（X为你的体力上限）。你的回合内/外，你可以如手牌般使用或打出其中的锦囊牌/基本牌。",
         sgz_jihui: "极慧",

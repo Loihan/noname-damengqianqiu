@@ -345,6 +345,7 @@ export default {
             audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:4",
             persevereSkill: true,
             forced: true,
+            ai: {expose: 1,},
             // 技能主时机：准备阶段选目标
             trigger: { player: "phaseZhunbeiBegin" },
             // 挂载子技能，处理核心的体力上限调整逻辑

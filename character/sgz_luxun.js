@@ -183,6 +183,7 @@ export default {
                 
                 player.gainMaxHp(1);
                 player.recover(1 - player.hp);
+                player.addSkill('sgz_taohui_fangzhibingsi');
                 
                 "step 1"
                 // 检查是否还有可执行的效果，若无则结束
@@ -192,6 +193,8 @@ export default {
                 if (game.hasPlayer(p => p != player && player.canUse({name: 'sha'}, p))) canContinue = true;
                 
                 if (!canContinue) {
+                    player.recover(player.maxHp-player.hp);
+                    player.removeSkill('sgz_taohui_fangzhibingsi');
                     event.finish();
                 } else {
                     event.card = get.cards(1)[0];
@@ -260,6 +263,8 @@ export default {
                             });
                         } else {
                             game.log('场上已无未横置的角色，效果中断');
+                            player.recover(player.maxHp-player.hp);
+                            player.removeSkill('sgz_taohui_fangzhibingsi');
                             event.finish();
                         }
                         break;
@@ -321,6 +326,8 @@ export default {
                 if (event.effect_done) {
                     event.goto(1);
                 } else {
+                    player.recover(player.maxHp-player.hp);
+                    player.removeSkill('sgz_taohui_fangzhibingsi');
                     delete player.storage._taohui_active; // 新增：结束发动
                     event.finish();
                 }
@@ -350,6 +357,26 @@ export default {
                 }
             }
         },
+            sgz_taohui_fangzhibingsi: {
+                charlotte: true,
+                trigger: { 
+                    player: "dying", 
+                },
+                forced: true,
+                filter: function(event, player) {
+                    // 1. 拦截濒死
+                    if (event.name == 'dying') return true;
+                },
+                content: function() {
+                    "step 0"
+                    // 如果是濒死，直接取消，防止特效循环
+                    if (trigger.name == 'dying') {
+                        trigger.cancel();
+                        event.finish();
+                        return;
+                    }
+                }
+            },
         // === 4. 焚灭 (权重强化与精准AI版) ===
         sgz_fenmie: { 
             audio: "ext:大梦千秋/audio/sgz_luxun:2",
@@ -363,6 +390,7 @@ export default {
                 return target != player;
             },
             ai:{
+                expose: 1,
                 fireAttack: true, // 可造成火属性伤害
                 directHit_ai: true, // 可强中
             },
@@ -689,7 +717,7 @@ export default {
     skillTranslate: {
         sgz_qujian: "驱剑", sgz_qujian_info: "锁定技，连招技（杀+锦囊牌），出牌阶段限X次（X为你回合开始时的体力数），横置至多一名角色，摸场上已横置角色数张牌且本回合你使用【杀】的额定次数+1，然后你失去一点体力。",
         sgz_lianying: "连营", sgz_lianying_info: "锁定技，①摸牌阶段你多摸X张牌，你的手牌上限+X。②当你失去最后一张手牌时，你摸至X张牌。（X为场上人数）",
-        sgz_taohui: "韬晦", sgz_taohui_info: "每轮限一次，当你进入濒死状态时，你可以增加1点体力上限并回复至1点体力，然后重复亮出牌堆顶的一张牌并根据其花色执行对应效果，直到不可被执行：<br>♥️：回复一点体力；<br>♦️/♠️：视为使用一张无距离限制的火/雷【杀】；<br>♣️：横置1~3名未横置角色。",
+        sgz_taohui: "韬晦", sgz_taohui_info: "每轮限一次，当你进入濒死状态时，你可以增加1点体力上限并回复至1点体力，然后重复亮出牌堆顶的一张牌并根据其花色执行对应效果，直到不可被执行：<br>♥️：回复一点体力；<br>♦️/♠️：视为使用一张无距离限制的火/雷【杀】；<br>♣️：横置1~3名未横置角色。<br>此技能持续期间，防止你的濒死结算；此技能结束时，你回复体力至体力上限。",
         sgz_fenmie: "焚灭", sgz_fenmie_info: "出牌阶段限一次。你可以选择任意名其他角色并摸等量的牌，然后重复以下流程：<br>①被选中的所有角色同时展示一张手牌；<br>②你可以弃置任意张牌或结束技能；<br>③对所有展示了与你所弃牌有相同花色的角色各造成1点火焰伤害，若存在角色防止了该伤害，则技能结束。<br>此技能结算期间每当你失去牌时便摸等量的牌。",
     },
     characterTaici: {

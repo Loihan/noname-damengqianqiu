@@ -291,6 +291,10 @@ export default {
             },
             usable: 1,
             group: "sgz_mingzong_reset",
+            ai:{
+                expose: 1,
+                threaten: 39,
+            },
             mod: {
                 // 【核心 AI 补丁】：强行让 AI 认为鸣踪锦上添花，无视对手拿马收益
                 aiResult: function(player, card, num) {

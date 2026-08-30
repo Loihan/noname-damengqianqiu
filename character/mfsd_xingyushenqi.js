@@ -41,6 +41,7 @@ export default {
                     return "总数：" + total + "<br>" + str;
                 }
             },
+            ai:{threaten:999, },
             init: function(player) {
                 if (!player.storage.mfsd_shisu) player.storage.mfsd_shisu = {};
             },
@@ -622,6 +623,7 @@ export default {
             skillAnimation: true,
             animationColor: 'soil',
             direct: true,
+            ai:{expose: 1,},
             filter: function(event, player) {
                 return event.source && event.source.countCards('hej') > 0;
             },
@@ -735,6 +737,7 @@ export default {
                 // 可以选择任何人，包括自己
                 return true;
             },
+            ai:{expose: 1.0,},
             selectTarget: [1, Infinity], 
             multitarget: true,
             content: function() {
@@ -786,6 +789,8 @@ export default {
                 target.die();
             },
             ai: {
+                expose: 1,
+                threaten: 100,
                 order: 14, // 高于创界12
                 result: {
                     target: function(player, target) {

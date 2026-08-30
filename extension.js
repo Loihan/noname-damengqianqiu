@@ -39,7 +39,7 @@ export default function () {
     return {
         name: "大梦千秋",
         content: function (config, pack) {
-            // --- 1. 设置传说品质 (已改为循环 allCharacters) ---
+            // 1. 设置传说品质 
             lib.arenaReady.push(function () {
                 for (const char of allCharacters) {
                     if (!char || !char.characterName) continue;
@@ -75,6 +75,29 @@ export default function () {
             game.addGroup('dingpan_pan', '叛', '叛', {
                 color: 'wood'   // 使用“吴”势力的绿色描边
             });
+                        
+            // 4. 设定武将威胁度
+            lib.config.threaten = lib.config.threaten || {};
+            lib.config.threaten['sgz_jiangwei'] = 119.0; 
+            lib.config.threaten['sgz_zhugedan'] = 116.7; 
+            lib.config.threaten['sgz_zhonghui'] = 118.6; 
+            lib.config.threaten['sgz_huangyueying'] = 115.0; 
+            lib.config.threaten['sgz_zhaoyun'] = 117.3; 
+            lib.config.threaten['sgz_guojia'] = 115.0; 
+            lib.config.threaten['sgz_luxun'] = 116.4; 
+            lib.config.threaten['sgz_machao'] = 119.0; 
+            lib.config.threaten['sgz_caomao'] = 119.6; 
+            lib.config.threaten['sgz_simazhao'] = 118; 
+            lib.config.threaten['shj_baize'] = 122; 
+            lib.config.threaten['shj_xiangliu'] = 121; 
+            lib.config.threaten['shj_chaofeng'] = 120; 
+            lib.config.threaten['shj_nvwa'] = 120; 
+            lib.config.threaten['mfsd_anyuanmofa'] = 121; 
+            lib.config.threaten['mfsd_xingyushenqi'] = 122; 
+            lib.config.threaten['wgxd_heyuxingzun'] = 118.6; 
+            lib.config.threaten['wgxd_yinianshenmo'] = 118.6; 
+
+          
         },
     
         precontent: function () { 
@@ -223,7 +246,9 @@ export default function () {
             //----------------------↑↑↑↑↑↑↑↑↑出牌语音↑↑↑↑↑↑↑↑↑↑------------------------//
         },
 
-        config: {},
+        config: {
+           
+        },
         help: {},
         package: {
             character: {
@@ -253,7 +278,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包",
             author: "Loihan",
-            version: "7.0",
+            version: "7.1",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };

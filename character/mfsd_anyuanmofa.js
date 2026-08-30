@@ -27,6 +27,7 @@ export default {
                     return "已发动 " + (storage || 0) + " 次<br>共约13次";
                 }
             },
+            ai:{threaten: 99,},
             // 初始化标记为 0，防止开局显示 undefined
             init: function(player) {
                 if (player.storage.mfsd_guishi === undefined) {
@@ -141,6 +142,7 @@ export default {
             persevereSkill: true,
             trigger: { player: "phaseZhunbeiBegin" },
             forced: true,
+            ai:{expose: 1,},
             content: function() {
                 "step 0"
                 player.chooseTarget('咒域：横置任意名角色并获得其一张牌', [1, Infinity], function(card, player, target) {
@@ -179,6 +181,7 @@ export default {
             filter: function(event, player) {
                 return event.num > 0 && event.player.isAlive() && event.player != player;
             },
+            ai:{expose: 0.5,},
             content: function() {
                 "step 0"
                 player.chooseBool('是否发动【降冥】令伤害+1并变为火焰伤害？、').set('ai', function() {
@@ -278,6 +281,7 @@ export default {
                 trigger.player.die(player);
             },
             ai: {
+                expose: 1,
                 order: 20, 
                 result: {
                     target: function(player, target) {

@@ -33,6 +33,8 @@ export default {
             derivation: ["sgz_xinran", "sgz_zhuri", "sgz_juejin", "sgz_guju", "sgz_youming","sgz_fuming"],
             trigger: { global: "phaseBegin" },
             ai:{
+                expose: 1,
+                threaten: 9,
                 fireAttack: true, 
             },
             content: function() {
