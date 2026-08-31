@@ -2,7 +2,7 @@ export default {
     character: {
         sgz_simazhao: {
             sex: "male",
-            group: "shen",
+            group: "jin",
             hp: 5,
             maxHp: 5,
             skills: ["sgz_wowei", "sgz_wowei_ui","sgz_maiyao", "sgz_xietian","sgz_yazhou","sgz_futao"],
@@ -15,7 +15,7 @@ export default {
     },
     characterName: 'sgz_simazhao',
     characterTranslate: {
-        sgz_simazhao: "司马昭",
+        sgz_simazhao: "梦司马昭",
     },
     skills: {
         // === 1. 斡维  ===

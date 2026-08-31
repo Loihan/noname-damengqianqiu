@@ -2,7 +2,7 @@ export default {
     character: {
         sgz_jiangwei: {
             sex:"male", 
-            group:"shen", 
+            group:"shu", 
             hp:4,
             maxHp:9, 
             skills:["sgz_jiufa","sgz_jiangwei_ui",], 
@@ -15,7 +15,7 @@ export default {
     },
     characterName: 'sgz_jiangwei',
     characterTitle: {sgz_jiangwei: "炽剑补天",},
-    characterTranslate: {sgz_jiangwei: "姜维" },
+    characterTranslate: {sgz_jiangwei: "梦姜维" },
     skills: {
         //====================================
         //          核心技能：九伐                   

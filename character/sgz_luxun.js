@@ -3,7 +3,7 @@ export default {
         // 梦陆逊：梦势力，5体力
         sgz_luxun: {
             sex:"male", 
-            group:"shen", 
+            group:"wu", 
             hp:1,
             maxHp:6, 
             skills:["sgz_qujian", "sgz_lianying", "sgz_taohui", "sgz_fenmie","sgz_luxun_ui"], 
@@ -15,7 +15,7 @@ export default {
         },
     },
     characterName: 'sgz_luxun',
-    characterTranslate: {sgz_luxun: "陆逊",},
+    characterTranslate: {sgz_luxun: "梦陆逊",},
     skills: {
         // === 1. 驱剑 (AI 连招强化版) ===
         sgz_qujian: {

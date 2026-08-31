@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- 双龙戏珠 金徽（缚渊·帝诏 主题水印） -->
+  <defs>
+    <linearGradient id="dmqcGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8e3a2"/>
+      <stop offset="0.5" stop-color="#d4af37"/>
+      <stop offset="1" stop-color="#9a7b2d"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 外环 -->
+  <circle cx="100" cy="100" r="74" fill="none" stroke="#d4af37" stroke-width="1.2" opacity="0.5"/>
+  <circle cx="100" cy="100" r="66" fill="none" stroke="#d4af37" stroke-width="0.7" opacity="0.3"/>
+
+  <!-- 左龙（面向中心） -->
+  <g id="dmqcLeftDragon">
+    <!-- 身姿 -->
+    <path d="M78 44 C 100 48 106 66 96 84 C 86 102 58 106 46 126 C 36 142 42 156 62 160" fill="none" stroke="url(#dmqcGold)" stroke-width="9" stroke-linecap="round"/>
+    <!-- 龙首钩环 -->
+    <path d="M78 44 C 84 34 96 36 98 46 C 100 56 90 60 84 54" fill="none" stroke="url(#dmqcGold)" stroke-width="8" stroke-linecap="round"/>
+    <!-- 龙角 -->
+    <path d="M82 40 C 76 28 84 22 92 24" fill="none" stroke="url(#dmqcGold)" stroke-width="3.5" stroke-linecap="round"/>
+    <!-- 龙眼 -->
+    <circle cx="90" cy="46" r="1.8" fill="#8a6420"/>
+    <!-- 龙须 -->
+    <path d="M88 54 C 94 60 90 66 84 68" fill="none" stroke="url(#dmqcGold)" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- 鬃毛 -->
+    <path d="M72 50 C 66 52 62 58 64 64" fill="none" stroke="url(#dmqcGold)" stroke-width="3" stroke-linecap="round"/>
+    <!-- 尾卷 -->
+    <path d="M62 160 C 52 166 42 160 42 150 C 42 142 50 138 56 142" fill="none" stroke="url(#dmqcGold)" stroke-width="6" stroke-linecap="round"/>
+    <!-- 鳞点 -->
+    <g fill="#8a6420" opacity="0.7">
+      <circle cx="88" cy="70" r="1.5"/><circle cx="80" cy="82" r="1.5"/><circle cx="70" cy="92" r="1.5"/>
+      <circle cx="60" cy="104" r="1.5"/><circle cx="52" cy="116" r="1.5"/>
+    </g>
+  </g>
+
+  <!-- 右龙（镜像） -->
+  <g transform="translate(200,0) scale(-1,1)">
+    <use href="#dmqcLeftDragon"/>
+  </g>
+
+  <!-- 龙珠 -->
+  <circle cx="100" cy="100" r="11" fill="url(#dmqcGold)"/>
+  <circle cx="100" cy="100" r="6.5" fill="#fff7e0" opacity="0.88"/>
+  <!-- 珠焰 -->
+  <g stroke="#f2d57e" stroke-width="1.6" fill="none" opacity="0.9" stroke-linecap="round">
+    <path d="M100 80 C 98 72 102 66 100 60"/>
+    <path d="M120 88 C 126 84 130 76 134 74"/>
+    <path d="M80 88 C 74 84 70 76 66 74"/>
+    <path d="M120 112 C 126 116 130 124 134 126"/>
+    <path d="M80 112 C 74 116 70 124 66 126"/>
+    <path d="M100 120 C 98 128 102 134 100 140"/>
+  </g>
+</svg>

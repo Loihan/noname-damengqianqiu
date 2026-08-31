@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 460" width="800" height="460">
+  <!-- 缚渊·帝诏 主题选择框背景：黑金圣旨缎面 -->
+  <defs>
+    <linearGradient id="dmqcBgSilk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a1838"/>
+      <stop offset="0.45" stop-color="#170e24"/>
+      <stop offset="1" stop-color="#0b0611"/>
+    </linearGradient>
+    <radialGradient id="dmqcBgVein" cx="0.5" cy="0.12" r="0.9">
+      <stop offset="0" stop-color="#7a3f09" stop-opacity="0.5"/>
+      <stop offset="0.55" stop-color="#7a3f09" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dmqcBgMeander" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M4 32 L20 32 L20 16 L32 16 L32 24 L24 24 L24 28 L36 28 L36 12 L16 12 L16 32 L4 32 Z" fill="none" stroke="#d4af37" stroke-width="1.4"/>
+      <path d="M6 34 L22 34 L22 18 L34 18 L34 26 L26 26 L26 30 L38 30 L38 10 L14 10 L14 34 L6 34 Z" fill="none" stroke="#d4af37" stroke-width="0.7"/>
+    </pattern>
+  </defs>
+
+  <!-- 缎面底 -->
+  <rect width="800" height="460" fill="url(#dmqcBgSilk)"/>
+  <!-- 暖色宝光 -->
+  <rect width="800" height="460" fill="url(#dmqcBgVein)"/>
+  <!-- 全幅暗回纹 -->
+  <rect width="800" height="460" fill="url(#dmqcBgMeander)" opacity="0.045"/>
+
+  <!-- 上下回纹饰带 -->
+  <g opacity="0.5">
+    <rect x="14" y="16" width="772" height="26" fill="url(#dmqcBgMeander)"/>
+    <rect x="14" y="418" width="772" height="26" fill="url(#dmqcBgMeander)"/>
+  </g>
+
+  <!-- 金色双线边框 -->
+  <rect x="10" y="10" width="780" height="440" fill="none" stroke="#d4af37" stroke-width="2" opacity="0.85"/>
+  <rect x="17" y="17" width="766" height="426" fill="none" stroke="#d4af37" stroke-width="0.8" opacity="0.5"/>
+  <rect x="34" y="52" width="732" height="356" fill="none" stroke="#d4af37" stroke-width="0.6" opacity="0.28"/>
+
+  <!-- 四角云纹钩（如意卷云，纯线条） -->
+  <g fill="none" stroke="#d4af37" stroke-width="1.6" opacity="0.85">
+    <!-- 左上 -->
+    <g transform="translate(46,46)">
+      <path d="M0 0 C -6 14 -2 26 10 30 C 22 34 34 30 38 20 C 24 22 14 18 12 8 C 10 -2 4 -6 0 0 Z"/>
+      <path d="M-6 8 C -2 20 8 28 20 30 C 12 24 8 16 10 8 C 12 0 6 -4 0 2 Z" opacity="0.6"/>
+      <circle cx="14" cy="12" r="1.6"/>
+    </g>
+    <!-- 右上 -->
+    <g transform="translate(754,46) scale(-1,1)">
+      <path d="M0 0 C -6 14 -2 26 10 30 C 22 34 34 30 38 20 C 24 22 14 18 12 8 C 10 -2 4 -6 0 0 Z"/>
+      <path d="M-6 8 C -2 20 8 28 20 30 C 12 24 8 16 10 8 C 12 0 6 -4 0 2 Z" opacity="0.6"/>
+      <circle cx="14" cy="12" r="1.6"/>
+    </g>
+    <!-- 左下 -->
+    <g transform="translate(46,414) scale(1,-1)">
+      <path d="M0 0 C -6 14 -2 26 10 30 C 22 34 34 30 38 20 C 24 22 14 18 12 8 C 10 -2 4 -6 0 0 Z"/>
+      <path d="M-6 8 C -2 20 8 28 20 30 C 12 24 8 16 10 8 C 12 0 6 -4 0 2 Z" opacity="0.6"/>
+      <circle cx="14" cy="12" r="1.6"/>
+    </g>
+    <!-- 右下 -->
+    <g transform="translate(754,414) scale(-1,-1)">
+      <path d="M0 0 C -6 14 -2 26 10 30 C 22 34 34 30 38 20 C 24 22 14 18 12 8 C 10 -2 4 -6 0 0 Z"/>
+      <path d="M-6 8 C -2 20 8 28 20 30 C 12 24 8 16 10 8 C 12 0 6 -4 0 2 Z" opacity="0.6"/>
+      <circle cx="14" cy="12" r="1.6"/>
+    </g>
+  </g>
+
+  <!-- 两侧中央双钩卷云 -->
+  <g fill="none" stroke="#d4af37" stroke-width="1.4" opacity="0.4">
+    <path d="M42 210 C 30 218 26 232 34 242 C 42 252 58 252 66 244 C 54 244 46 236 46 226 C 46 216 44 208 42 210 Z"/>
+    <path d="M38 222 C 34 234 42 244 54 248 C 46 240 44 230 48 220 C 50 212 44 206 38 222 Z" opacity="0.6"/>
+    <path d="M758 210 C 770 218 774 232 766 242 C 758 252 742 252 734 244 C 746 244 754 236 754 226 C 754 216 756 208 758 210 Z"/>
+    <path d="M762 222 C 766 234 758 244 746 248 C 754 240 756 230 752 220 C 750 212 756 206 762 222 Z" opacity="0.6"/>
+  </g>
+
+  <!-- 顶部中线饰点 -->
+  <g fill="#f2d57e" opacity="0.8">
+    <circle cx="400" cy="29" r="3"/>
+    <circle cx="400" cy="431" r="3"/>
+  </g>
+</svg>

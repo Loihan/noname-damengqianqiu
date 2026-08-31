@@ -3,7 +3,7 @@ export default {
         // 梦黄月英：神势力，4/6分布。技能组：集巧、璇和、长明、绮梦
         sgz_huangyueying: {
             sex:"female", 
-            group:"shen", 
+            group:"shu", 
             hp:4,
             maxHp:6, 
             skills:["sgz_jiqiao", "sgz_xuanhe", "sgz_changming", "sgz_qimeng", "sgz_huangyueying_ui"], 
@@ -16,7 +16,7 @@ export default {
     },
     characterName: 'sgz_huangyueying',
     characterTitle: {sgz_huangyueying: "明良千古",},
-    characterTranslate: {sgz_huangyueying: "黄月英",},
+    characterTranslate: {sgz_huangyueying: "梦黄月英",},
     skills: {
         // === 1. 集巧 (锁定技：回合开始摸锦囊) ===
         sgz_jiqiao: { 

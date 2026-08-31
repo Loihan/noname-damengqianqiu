@@ -3,7 +3,7 @@ export default {
         // 梦郭嘉：神势力，4体力
         sgz_guojia: {
             sex:"male", 
-            group:"shen", 
+            group:"wei", 
             hp:3, 
             skills:["sgz_guanxu","sgz_kuitian","sgz_jihui","sgz_tianshang"], 
             img:"extension/大梦千秋/image/sgz_guojia.jpg",
@@ -15,7 +15,7 @@ export default {
     },
     characterName: 'sgz_guojia',
     characterTranslate: {
-        sgz_guojia: "郭嘉",
+        sgz_guojia: "梦郭嘉",
     },
     skills: {
 // === 1. 窥天 (AI 逻辑补导 + 响应补全版) ===

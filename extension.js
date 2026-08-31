@@ -39,6 +39,9 @@ export default function () {
     return {
         name: "大梦千秋",
         content: function (config, pack) {
+            // 版本标记：完全重启游戏后，控制台应输出此行（按 F12/Ctrl+Shift+I 查看）
+            console.log("[大梦千秋] 扩展已加载 v7.2（含缚渊·帝诏诏令确认版）");
+
             // 1. 设置传说品质 
             lib.arenaReady.push(function () {
                 for (const char of allCharacters) {
@@ -71,10 +74,20 @@ export default function () {
                 skininfo: {}
             });
 
-            // 3. 诸葛诞的“叛”势力
+            // 3. 诸葛诞的“叛”势力（血液鲜红主题色；必须用合法颜色格式 #hex 或 4 元 RGBA 数组才会生效）
             game.addGroup('dingpan_pan', '叛', '叛', {
-                color: 'wood'   // 使用“吴”势力的绿色描边
+                color: [[190, 14, 18, 0.95], [150, 10, 14, 0.7], [100, 6, 10, 0.5], [60, 2, 6, 0.3]]   // 血液鲜红渐晕
             });
+
+            // 4. 扩展武将前缀“梦”（粉紫色梦幻）。
+            //    正确机制：lib.namePrefix 注册前缀颜色 + lib.translate[角色名+"_prefix"] 声明拆分 + 角色翻译名以“梦”开头。
+            //    对全部 sgz_ 角色启用。
+            lib.namePrefix.set('梦', { color: '#cb82c2' });
+            for (const c of sgzCharacters) {
+                if (c && c.characterName) {
+                    lib.translate[c.characterName + '_prefix'] = '梦';
+                }
+            }
                         
             // 4. 设定武将威胁度
             lib.config.threaten = lib.config.threaten || {};
@@ -278,7 +291,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包",
             author: "Loihan",
-            version: "7.1",
+            version: "7.2",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };
