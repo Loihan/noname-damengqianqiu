@@ -14,7 +14,6 @@ export default {
         },
     },
     characterName: 'sgz_zhugedan',
-    characterPrefix:"梦",
     characterTranslate: {sgz_zhugedan: "梦诸葛诞"},
     characterTitle: {sgz_zhugedan: "寿春举义",},
     skills: {
@@ -23,7 +22,6 @@ export default {
             audio: "ext:大梦千秋/audio/sgz_zhugedan:5",
             persevereSkill: true,
             enable: "phaseUse",
-            ai: {expose: 1,},
             filter: function(event, player) {
                 return game.hasPlayer(target => target != player);
             },
@@ -37,13 +35,13 @@ export default {
             ai: {
                 // 【核心修改】：根据场上标记情况动态调整顺序
                 order: function(item, player) {
-                    // 1. 如果场上还有敌人不是叛势力，则定叛的优先级为最高 (100)
+                    // 1. 如果场上还有敌人没挂上标记，则定叛的优先级为最高 (100)
                     if (game.hasPlayer(function(current){
-                        return current != player && get.attitude(player, current) < 4 && current.group != "dingpan_pan";
+                        return current != player && get.attitude(player, current) < 4 && !current.hasSkill("sgz_dingpan_pan");
                     })) {
                         return 100; 
                     }
-                    // 2. 如果全场敌人都是叛势力，定叛优先级降为最低 (1)，确保在出完杀后再补刀
+                    // 2. 如果全场敌人都已经挂了标记，定叛优先级降为最低 (1)，确保在出完杀后再补刀
                     return 1;
                 },
                 result: {
@@ -54,11 +52,11 @@ export default {
                     },
                     target: function(player, target) {
                         var att = get.attitude(player, target);
-                        // 目标 1：优先给非叛势力的敌人施加叛势力
-                        if (target.group != "dingpan_pan") {
+                        // 目标 1：优先给没有标记的敌人挂标记
+                        if (!target.hasSkill("sgz_dingpan_pan")) {
                             if (att < 4) return -10; 
                         } 
-                        // 目标 2：如果已经是叛势力，收益评分稍微降低，让位给“施加叛势力”动作
+                        // 目标 2：如果已经有标记了，收益评分稍微降低，让位给“挂标记”动作
                         else if (att < 0) {
                             return -5; 
                         }
@@ -79,10 +77,13 @@ export default {
                 player.draw(extra);
                 game.playAudio('../extension/大梦千秋/audio/sgz_zhugedan/sgz_dingpan.mp3');
                 "step 1"
-                // 统一到“叛”势力：令目标减少1点体力上限；若其不是叛势力，则修改其势力为叛
-                target.loseMaxHp();
-                if (target.group != "dingpan_pan") {
+                // 检测子技能注入的标记名
+                if (target.hasSkill("sgz_dingpan_pan")) {
+                    target.loseMaxHp();
+                } else {
+                    target.loseMaxHp();
                     target.changeGroup("dingpan_pan");
+                    target.addSkill("sgz_dingpan_pan");
                 }
             },
             group: "sgz_dingpan_cleanup",
@@ -94,6 +95,15 @@ export default {
                     content: function() {
                         delete player.storage.sgz_dingpan_targets;
                     }
+                },
+                pan: {
+                    sub: true,
+                    mark: true,
+                    marktext: "叛军",
+                    intro: {
+                        name: "叛军",
+                        content: "已成为叛军，锁定技【伐逆】的目标",
+                    },
                 }
             }
         },
@@ -179,11 +189,11 @@ export default {
                     firstDo: true,
                     filter: function(event, player) {
                         if (event.card.name != "sha" || event.sgz_fani_done) return false;
-                        return game.hasPlayer(p => p.group == "dingpan_pan");
+                        return game.hasPlayer(p => p.hasSkill("sgz_dingpan_pan"));
                     },
                     content: function() {
                         player.logSkill("sgz_fani");
-                        var targets = game.filterPlayer(p => p.group == "dingpan_pan");
+                        var targets = game.filterPlayer(p => p.hasSkill("sgz_dingpan_pan"));
                         game.log(player, "的", trigger.card, "目标变更为", targets);
                         trigger.targets = targets;
                         trigger.sgz_fani_done = true;
@@ -194,7 +204,7 @@ export default {
                     trigger: { player: "useCardToPlayered" },
                     forced: true,
                     filter: function(event, player) {
-                        return event.target.group == "dingpan_pan";
+                        return event.target.hasSkill("sgz_dingpan_pan");
                     },
                     content: function() {
                         player.draw();
@@ -205,7 +215,7 @@ export default {
                     trigger: { source: "damageBegin" },
                     forced: true,
                     filter: function(event, player) {
-                        return event.player.group == "dingpan_pan" && event.num > 0;
+                        return event.player.hasSkill("sgz_dingpan_pan") && event.num > 0;
                     },
                     content: function() {
                         trigger.cancel();
@@ -222,7 +232,7 @@ export default {
             forced: true,
             trigger: { global: "die" },
             filter: function(event, player) {
-                return event.player.group == "dingpan_pan";
+                return event.player.hasSkill("sgz_dingpan_pan");
             },
             content: function() {
                 "step 0"
@@ -245,8 +255,8 @@ export default {
             mark: true,
             marktext: "焚玉",
             intro: {
-                name: "额外回合",
-                content: "因焚玉获得#个额外回合", // 自动显示标记数量
+                name: "焚玉",
+                content: "mark", // 自动显示标记数量
             },
             // 逻辑：每当任何回合（包括额外回合）开始时，消耗一个标记
             trigger: { player: "phaseBeginStart" },
@@ -267,7 +277,7 @@ export default {
             forced: true,
             trigger: { player: "useCard1" }, 
             filter: function(event, player) {
-                var panCount = game.countPlayer(p => p.group == "dingpan_pan");
+                var panCount = game.countPlayer(p => p.hasSkill("sgz_dingpan_pan"));
                 return panCount > player.maxHp;
             },
             content: function() {
@@ -283,7 +293,7 @@ export default {
                     trigger: { target: "useCardToTargeted" },
                     forced: true,
                     filter: function(event, player) {
-                        return event.player.group == "dingpan_pan";
+                        return event.player.hasSkill("sgz_dingpan_pan");
                     },
                     content: function() {
                         player.draw();
@@ -303,11 +313,11 @@ export default {
             filter: function(event, player) {
                 // 排除第一轮
                 //if (game.roundNumber <= 1) return false;
-                return game.countPlayer(p => p.group == "dingpan_pan") > 0;
+                return game.countPlayer(p => p.hasSkill("sgz_dingpan_pan")) > 0;
             },
             content: function() {
                 "step 0"
-                var x = game.countPlayer(p => p.group == "dingpan_pan");
+                var x = game.countPlayer(p => p.hasSkill("sgz_dingpan_pan"));
                 event.countX = x;
                 player.logSkill("sgz_gujue");
                 game.playAudio('../extension/大梦千秋/audio/sgz_zhugedan/sgz_gujue.mp3');
@@ -321,15 +331,15 @@ export default {
     },
     skillTranslate: {
         sgz_dingpan: "定叛",
-        sgz_dingpan_info: "出牌阶段每名角色限一次，你可以减少1点体力上限并获得1点护甲（若你因此减少了体力，你额外获得1点护甲并摸1张牌），令一名其他角色减少1点体力上限，然后若其不为叛势力，修改其势力为叛。",
+        sgz_dingpan_info: "出牌阶段每名角色限一次，你可以减少1点体力上限并获得1点护甲（若你因此减少了体力，你额外获得1点护甲并摸1张牌），令一名其他角色减少1点体力上限，然后若其没有“叛军”标记则获得一个“叛军”标记。",
         sgz_fani: "伐逆",
-        sgz_fani_info: "锁定技，①你的【杀】无距离限制。②当你使用【杀】时，若场上存在叛势力角色，则将目标改为所有叛势力角色。③你每对一名拥有叛势力的角色使用牌时便摸一张牌。④你对叛势力角色即将造成的伤害改为令其减少等量的体力上限。",
+        sgz_fani_info: "锁定技，①你的【杀】无距离限制。②当你使用【杀】时，若场上存在“叛军”则将目标更改为所有“叛军”。③你每对一名“叛军”使用牌时便摸一张牌。④你对“叛军”即将造成的伤害改为令其减少等量的体力上限。",
         sgz_fenyu: "焚玉",
-        sgz_fenyu_info: "锁定技。当一名叛势力角色死亡时，你摸两张牌并增加3点体力上限。然后你于当前回合结束后获得一个额外的回合（此效果可累加）。",
+        sgz_fenyu_info: "锁定技。当一名“叛军”死亡时，你摸两张牌并增加3点体力上限。然后你于当前回合结束后获得一个额外的回合（此效果可累加）。",
         sgz_kunzhu: "困诛",
-        sgz_kunzhu_info: "锁定技。①若场上叛势力角色数大于你的体力上限，你使用的牌不可被响应。②当你成为叛势力角色使用牌的目标时摸一张牌。",
+        sgz_kunzhu_info: "锁定技。①若场上“叛军”数大于你的体力上限，你使用的牌不可被响应。②当你成为“叛军”使用牌的目标时摸一张牌。",
         sgz_gujue: "孤绝",
-        sgz_gujue_info: "锁定技，你的结束阶段开始时，你减少X点体力上限（除第一轮外），然后获得X点护甲并摸X张牌（X为场上叛势力角色数）。",
+        sgz_gujue_info: "锁定技，你的结束阶段开始时，你减少X点体力上限（除第一轮外），然后获得X点护甲并摸X张牌（X为场上“叛军”数）。",
     },
     characterTaici:{
         "sgz_dingpan":{order: 1,content:"守护之獒，虽无龙鳞虎爪，亦可保家国太平！/诞必镇卫四境，以全大魏之江水！/观中原魏旗凋零，唯淮南独树义帜！/诞愿效方邵，为国之爪牙！/念先王之祀，当举义伐之！"},

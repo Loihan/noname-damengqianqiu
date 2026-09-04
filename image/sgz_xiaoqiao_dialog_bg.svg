@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- 夜空：深靛 → 青玉 → 水碧 -->
+    <linearGradient id="xqSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1a2c"/>
+      <stop offset="0.40" stop-color="#16333f"/>
+      <stop offset="0.70" stop-color="#1c4a4d"/>
+      <stop offset="1" stop-color="#0e2b30"/>
+    </linearGradient>
+    <!-- 月晕 -->
+    <radialGradient id="xqMoonGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fdf7e2" stop-opacity="0.9"/>
+      <stop offset="0.42" stop-color="#f8e8bd" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#f8e8bd" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 莲瓣粉 -->
+    <linearGradient id="xqPetal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe3ef"/>
+      <stop offset="0.5" stop-color="#f7adcf"/>
+      <stop offset="1" stop-color="#e57aa8"/>
+    </linearGradient>
+    <linearGradient id="xqPetalDeep" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f9c3dd"/>
+      <stop offset="0.6" stop-color="#e281ad"/>
+      <stop offset="1" stop-color="#c85a8f"/>
+    </linearGradient>
+    <!-- 荷叶绿 -->
+    <linearGradient id="xqLeaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5fae72"/>
+      <stop offset="0.5" stop-color="#377f54"/>
+      <stop offset="1" stop-color="#1f5b3d"/>
+    </linearGradient>
+    <linearGradient id="xqLeafDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3f9159"/>
+      <stop offset="1" stop-color="#16472f"/>
+    </linearGradient>
+    <!-- 水面星光 -->
+    <radialGradient id="xqWaterSparkle" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#bfe8df" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#bfe8df" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 丝弦波光 -->
+    <linearGradient id="xqString" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#d8f4ee" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#eefbf6" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#d8f4ee" stop-opacity="0"/>
+    </linearGradient>
+    <!-- 雾霭滤镜 -->
+    <filter id="xqBlur" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="xqSoft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.5"/>
+    </filter>
+  </defs>
+
+  <!-- 夜空底 -->
+  <rect x="0" y="0" width="900" height="520" fill="url(#xqSky)"/>
+
+  <!-- 远景雾岚 -->
+  <ellipse cx="450" cy="300" rx="520" ry="150" fill="#2a6a68" opacity="0.30" filter="url(#xqBlur)"/>
+
+  <!-- 明月 -->
+  <circle cx="688" cy="120" r="150" fill="url(#xqMoonGlow)"/>
+  <circle cx="688" cy="120" r="52" fill="#fbf3d8" opacity="0.96"/>
+  <circle cx="688" cy="120" r="64" fill="none" stroke="#fbf3d8" stroke-opacity="0.35" stroke-width="2"/>
+  <g fill="#e9dcae" opacity="0.45">
+    <circle cx="668" cy="108" r="6"/>
+    <circle cx="704" cy="132" r="5"/>
+    <circle cx="690" cy="96" r="4"/>
+  </g>
+
+  <!-- 星点 -->
+  <g fill="#e6f7f2" opacity="0.7">
+    <circle cx="90" cy="70" r="1.6"/><circle cx="210" cy="50" r="1.3"/>
+    <circle cx="330" cy="90" r="1.7"/><circle cx="470" cy="40" r="1.2"/>
+    <circle cx="560" cy="86" r="1.5"/><circle cx="150" cy="130" r="1.1"/>
+    <circle cx="40" cy="180" r="1.4"/><circle cx="410" cy="130" r="1.3"/>
+    <circle cx="620" cy="40" r="1.1"/><circle cx="810" cy="64" r="1.6"/>
+  </g>
+
+  <!-- 水岸线 -->
+  <path d="M0 388 Q 150 372 320 386 T 640 388 T 900 380 L 900 520 L 0 520 Z" fill="#0a2a30" opacity="0.85"/>
+  <path d="M0 400 Q 200 386 400 400 T 900 396 L 900 520 L 0 520 Z" fill="#081f26"/>
+
+  <!-- 水面涟漪与星光 -->
+  <g stroke="#bfe8df" stroke-opacity="0.22" fill="none" stroke-width="1.6" filter="url(#xqSoft)">
+    <path d="M60 428 q 40 -8 88 0 q 48 8 96 0"/>
+    <path d="M300 452 q 46 -9 96 0 q 50 9 100 0"/>
+    <path d="M560 430 q 40 -8 88 0 q 48 8 96 0"/>
+    <path d="M180 470 q 52 -9 104 0 q 52 9 104 0"/>
+    <path d="M640 474 q 40 -8 88 0 q 48 8 96 0"/>
+  </g>
+  <g fill="#d8f7ee" opacity="0.5">
+    <circle cx="120" cy="442" r="2"/><circle cx="360" cy="466" r="2.2"/>
+    <circle cx="608" cy="448" r="1.8"/><circle cx="740" cy="486" r="2"/>
+    <circle cx="232" cy="492" r="1.6"/><circle cx="812" cy="440" r="1.8"/>
+  </g>
+
+  <!-- 远处小荷（右下） -->
+  <g opacity="0.9">
+    <path d="M700 470 C 690 448 700 424 726 420 C 754 426 762 448 752 468 C 744 480 716 482 700 470 Z" fill="url(#xqLeafDark)"/>
+    <path d="M726 424 C 712 436 712 452 724 462" stroke="#9fd6ab" stroke-width="1.4" fill="none" opacity="0.6"/>
+    <circle cx="734" cy="472" r="5" fill="#f7adcf" opacity="0.85"/>
+  </g>
+
+  <!-- 主荷塘（左下/中下） -->
+  <!-- 荷叶背光 -->
+  <path d="M96 452 C 76 408 96 368 148 360 C 196 370 212 408 198 446 C 182 470 124 474 96 452 Z" fill="url(#xqLeaf)"/>
+  <path d="M148 366 C 128 396 128 428 146 452" stroke="#a9ddb4" stroke-width="1.6" fill="none" opacity="0.65"/>
+  <!-- 叶脉 -->
+  <g stroke="#a9ddb4" stroke-width="1" fill="none" opacity="0.4">
+    <path d="M148 368 C 132 392 140 420 154 442"/>
+    <path d="M148 368 C 158 388 166 412 162 436"/>
+    <path d="M148 366 C 118 382 108 404 112 430"/>
+    <path d="M148 366 C 172 382 180 404 176 430"/>
+  </g>
+  <!-- 卷叶 -->
+  <path d="M54 448 C 42 428 48 406 70 400 C 90 406 96 424 88 442 C 80 452 62 456 54 448 Z" fill="url(#xqLeafDark)"/>
+
+  <!-- 主莲（粉瓣，多重） -->
+  <g transform="translate(300 452)">
+    <ellipse cx="0" cy="18" rx="38" ry="10" fill="#123a33" opacity="0.5"/>
+    <g>
+      <path d="M0 4 C -22 -8 -30 -26 -22 -40 C -10 -30 -4 -16 0 4 Z" fill="url(#xqPetal)"/>
+      <path d="M0 4 C 22 -8 30 -26 22 -40 C 10 -30 4 -16 0 4 Z" fill="url(#xqPetal)"/>
+      <path d="M0 4 C -16 -4 -20 -20 -14 -32 C -6 -22 -2 -10 0 4 Z" fill="url(#xqPetalDeep)"/>
+      <path d="M0 4 C 16 -4 20 -20 14 -32 C 6 -22 2 -10 0 4 Z" fill="url(#xqPetalDeep)"/>
+      <path d="M0 4 C -7 -4 -8 -14 -4 -24 C -1 -14 0 -6 0 4 Z" fill="#fdeef6"/>
+      <path d="M0 4 C 7 -4 8 -14 4 -24 C 1 -14 0 -6 0 4 Z" fill="#fdeef6"/>
+    </g>
+    <circle cx="0" cy="0" r="6" fill="#f7c74e"/>
+    <circle cx="0" cy="0" r="2.6" fill="#ffe9a8"/>
+  </g>
+
+  <!-- 半开小莲（左中） -->
+  <g transform="translate(178 416)">
+    <path d="M0 2 C -13 -4 -17 -16 -12 -26 C -5 -18 -1 -8 0 2 Z" fill="#f7adcf"/>
+    <path d="M0 2 C 13 -4 17 -16 12 -26 C 5 -18 1 -8 0 2 Z" fill="#f7adcf"/>
+    <path d="M0 2 C -5 -3 -6 -10 -3 -16 C -1 -10 0 -4 0 2 Z" fill="#fdeef6"/>
+    <path d="M0 2 C 5 -3 6 -10 3 -16 C 1 -10 0 -4 0 2 Z" fill="#fdeef6"/>
+    <circle cx="0" cy="1" r="3.4" fill="#f7c74e"/>
+  </g>
+
+  <!-- 飘落花瓣 -->
+  <g fill="#f6b7d4" opacity="0.8">
+    <path d="M470 250 q 8 -12 20 -6 q 2 12 -12 14 q -10 -2 -8 -8 Z" transform="rotate(24 480 252)"/>
+    <path d="M360 330 q 7 -10 17 -5 q 2 10 -10 12 q -9 -2 -7 -7 Z" transform="rotate(-18 368 332)"/>
+    <path d="M560 370 q 7 -10 17 -5 q 2 10 -10 12 q -9 -2 -7 -7 Z" transform="rotate(40 568 372)"/>
+    <path d="M620 300 q 6 -9 15 -4 q 1 9 -9 11 q -8 -2 -6 -7 Z" transform="rotate(-30 628 302)"/>
+  </g>
+
+  <!-- 丝弦波光（五线谱风音律水纹） -->
+  <g stroke="url(#xqString)" fill="none" stroke-width="2" stroke-linecap="round" opacity="0.5">
+    <path d="M120 236 C 220 214 300 214 380 236"/>
+    <path d="M330 258 C 430 238 520 238 620 260"/>
+    <path d="M520 284 C 610 268 700 268 800 288"/>
+  </g>
+  <!-- 高音谱号与音符点缀 -->
+  <g fill="#eefbf6" opacity="0.55">
+    <path d="M206 236 a 7 7 0 1 1 6 11 l -1 9 a 2.6 2.6 0 0 0 4 2.4 l 3 -2.6 a 6 6 0 0 1 7.4 9 l -7 7 a 3 3 0 1 1 -4 -4 l 7 -7 a 2.6 2.6 0 0 0 -3.2 -3.9 l -3.4 2.9 z" transform="scale(0.72) translate(60 30)"/>
+    <g>
+      <circle cx="430" cy="248" r="4.6"/>
+      <rect x="433" y="216" width="2.6" height="34" rx="1.3"/>
+    </g>
+    <g>
+      <circle cx="560" cy="268" r="3.8"/>
+      <rect x="562" y="242" width="2.2" height="28" rx="1.1"/>
+    </g>
+    <g>
+      <circle cx="688" cy="262" r="4"/>
+      <rect x="690" y="234" width="2.4" height="30" rx="1.2"/>
+      <path d="M692 238 q 10 -8 16 0 q -8 -2 -16 2 Z"/>
+    </g>
+  </g>
+
+  <!-- 前景薄雾 -->
+  <rect x="0" y="392" width="900" height="128" fill="#0a1f24" opacity="0.55" filter="url(#xqBlur)"/>
+</svg>

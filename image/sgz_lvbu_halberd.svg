@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- 梦吕布 · 方天画戟 徽记（镇猎/噬炁 主题水印） -->
+  <defs>
+    <linearGradient id="lvbuBladeGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe9a8"/>
+      <stop offset="0.45" stop-color="#f5c95e"/>
+      <stop offset="1" stop-color="#a9741f"/>
+    </linearGradient>
+    <radialGradient id="lvbuBladeAura" cx="0.5" cy="0.42" r="0.62">
+      <stop offset="0" stop-color="#45d8ff" stop-opacity="0.55"/>
+      <stop offset="0.5" stop-color="#ff3fd0" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ff3fd0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lvbuTassel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9273c"/>
+      <stop offset="1" stop-color="#7c121f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 幽光 aura -->
+  <circle cx="100" cy="92" r="86" fill="url(#lvbuBladeAura)"/>
+
+  <!-- 戟刃（月牙双刃 + 枪尖） -->
+  <!-- 主枪尖 -->
+  <polygon points="100,14 88,66 112,66" fill="url(#lvbuBladeGold)" stroke="#6b4a12" stroke-width="1.4"/>
+  <!-- 左上月刃 -->
+  <path d="M96 68 C 66 72 48 92 54 122 C 64 104 78 90 96 88 C 90 98 84 110 83 124 C 90 110 98 98 100 92 Z" fill="url(#lvbuBladeGold)" stroke="#6b4a12" stroke-width="1.3"/>
+  <!-- 右上月刃 -->
+  <path d="M104 68 C 134 72 152 92 146 122 C 136 104 122 90 104 88 C 110 98 116 110 117 124 C 110 110 102 98 100 92 Z" fill="url(#lvbuBladeGold)" stroke="#6b4a12" stroke-width="1.3"/>
+
+  <!-- 戟颈（连接处宝石） -->
+  <rect x="94" y="86" width="12" height="18" rx="3" fill="#3a2a12"/>
+  <circle cx="100" cy="95" r="5" fill="#ffdf8a"/>
+  <circle cx="100" cy="95" r="2.2" fill="#fff4d6"/>
+
+  <!-- 长杆 -->
+  <rect x="96" y="100" width="8" height="70" fill="url(#lvbuBladeGold)" stroke="#6b4a12" stroke-width="1.2"/>
+  <!-- 杆身分段束环 -->
+  <g fill="#8a5c1a">
+    <rect x="94" y="118" width="12" height="5" rx="1.5"/>
+    <rect x="94" y="140" width="12" height="5" rx="1.5"/>
+    <rect x="94" y="162" width="12" height="5" rx="1.5"/>
+  </g>
+
+  <!-- 尾镦 -->
+  <polygon points="100,176 92,170 108,170" fill="url(#lvbuBladeGold)" stroke="#6b4a12" stroke-width="1.2"/>
+
+  <!-- 红缨 -->
+  <g fill="url(#lvbuTassel)" opacity="0.92">
+    <path d="M96 88 C 88 96 86 106 90 116 C 94 106 98 98 98 92 Z"/>
+    <path d="M104 88 C 112 96 114 106 110 116 C 106 106 102 98 102 92 Z"/>
+    <path d="M100 90 C 96 100 94 108 96 116 C 100 108 102 100 102 92 Z"/>
+  </g>
+
+  <!-- 装饰光点 -->
+  <g fill="#cfefff" opacity="0.85">
+    <circle cx="58" cy="126" r="1.6"/>
+    <circle cx="142" cy="126" r="1.6"/>
+    <circle cx="70" cy="112" r="1.2"/>
+    <circle cx="130" cy="112" r="1.2"/>
+  </g>
+</svg>

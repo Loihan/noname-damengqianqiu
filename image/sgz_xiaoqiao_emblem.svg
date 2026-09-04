@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <defs>
+    <radialGradient id="xqEmblemGlow" cx="0.5" cy="0.46" r="0.62">
+      <stop offset="0" stop-color="#d8f4ee" stop-opacity="0.5"/>
+      <stop offset="0.55" stop-color="#7fd0c4" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#7fd0c4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="xqEmblemRing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2d99c"/>
+      <stop offset="0.5" stop-color="#c9a55a"/>
+      <stop offset="1" stop-color="#7d5f26"/>
+    </linearGradient>
+    <linearGradient id="xqEmblemCore" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbe9f3"/>
+      <stop offset="0.5" stop-color="#f4bcd8"/>
+      <stop offset="1" stop-color="#e08ab6"/>
+    </linearGradient>
+    <linearGradient id="xqEmblemPetal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe4f0"/>
+      <stop offset="0.6" stop-color="#f2a6cd"/>
+      <stop offset="1" stop-color="#d66f9e"/>
+    </linearGradient>
+    <filter id="xqEmblemSoft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.6"/>
+    </filter>
+  </defs>
+
+  <!-- 光环 -->
+  <circle cx="120" cy="120" r="118" fill="url(#xqEmblemGlow)"/>
+
+  <!-- 外圈金环（双层） -->
+  <circle cx="120" cy="120" r="104" fill="none" stroke="url(#xqEmblemRing)" stroke-width="2.2" opacity="0.9"/>
+  <circle cx="120" cy="120" r="96" fill="none" stroke="#f2d99c" stroke-width="0.9" opacity="0.55"/>
+  <circle cx="120" cy="120" r="74" fill="none" stroke="#f2d99c" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- 五音连珠线（连线为五边形边，象征相生） -->
+  <g stroke="#e6cf96" stroke-width="1" fill="none" opacity="0.6">
+    <path d="M120 46 L 190 104 L 163 182 L 77 182 L 50 104 Z"/>
+  </g>
+
+  <!-- 五个音位节点（宫商角徵羽），以花色区分 -->
+  <g font-family="KaiTi, STKaiti, serif" text-anchor="middle" dominant-baseline="central">
+    <!-- 宫 · 心(上) -->
+    <g>
+      <circle cx="120" cy="46" r="17" fill="#123b36" opacity="0.82" stroke="#e8b46a" stroke-width="1.4"/>
+      <text x="120" y="47" font-size="19" fill="#ffd8e4">宫</text>
+    </g>
+    <!-- 商 · 角(右上) -->
+    <g>
+      <circle cx="190" cy="104" r="16" fill="#123b36" opacity="0.82" stroke="#e8b46a" stroke-width="1.4"/>
+      <text x="190" y="105" font-size="18" fill="#ffe6a8">商</text>
+    </g>
+    <!-- 徵 · 羽(右下) -->
+    <g>
+      <circle cx="163" cy="182" r="16" fill="#123b36" opacity="0.82" stroke="#e8b46a" stroke-width="1.4"/>
+      <text x="163" y="183" font-size="18" fill="#ffb08f">徵</text>
+    </g>
+    <!-- 羽 · 羽(左下) -->
+    <g>
+      <circle cx="77" cy="182" r="16" fill="#123b36" opacity="0.82" stroke="#e8b46a" stroke-width="1.4"/>
+      <text x="77" y="183" font-size="18" fill="#a8c8ff">羽</text>
+    </g>
+    <!-- 角 · 羽(左上) -->
+    <g>
+      <circle cx="50" cy="104" r="16" fill="#123b36" opacity="0.82" stroke="#e8b46a" stroke-width="1.4"/>
+      <text x="50" y="105" font-size="18" fill="#cfe8dd">角</text>
+    </g>
+  </g>
+
+  <!-- 中央莲（寓意“弦歌入梦”） -->
+  <g transform="translate(120 118)">
+    <g>
+      <path d="M0 8 C -26 -2 -34 -22 -26 -38 C -12 -28 -4 -12 0 8 Z" fill="url(#xqEmblemPetal)"/>
+      <path d="M0 8 C 26 -2 34 -22 26 -38 C 12 -28 4 -12 0 8 Z" fill="url(#xqEmblemPetal)"/>
+      <path d="M0 8 C -19 0 -24 -16 -18 -30 C -8 -20 -2 -8 0 8 Z" fill="#f6bcd8"/>
+      <path d="M0 8 C 19 0 24 -16 18 -30 C 8 -20 2 -8 0 8 Z" fill="#f6bcd8"/>
+      <path d="M0 8 C -9 0 -10 -10 -6 -22 C -2 -12 0 -4 0 8 Z" fill="#fdeef6"/>
+      <path d="M0 8 C 9 0 10 -10 6 -22 C 2 -12 0 -4 0 8 Z" fill="#fdeef6"/>
+    </g>
+    <circle cx="0" cy="4" r="7" fill="#f7c74e"/>
+    <circle cx="0" cy="4" r="3" fill="#ffe9a8"/>
+  </g>
+
+  <!-- 祥云/音波细纹（点睛） -->
+  <g fill="none" stroke="#dff4ef" stroke-width="1.3" opacity="0.5" filter="url(#xqEmblemSoft)">
+    <path d="M84 88 q 8 -8 16 0 q 8 8 16 0"/>
+    <path d="M124 202 q 8 -8 16 0 q 8 8 16 0"/>
+    <path d="M198 64 q 7 -7 14 0"/>
+  </g>
+</svg>

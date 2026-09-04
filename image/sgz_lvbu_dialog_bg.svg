@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 460" width="800" height="460">
+  <!-- 梦吕布 · 镇猎噬炁 主题选择框背景：夜穹裂晶猎场 -->
+  <defs>
+    <linearGradient id="lvbuBgBase" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f1b33"/>
+      <stop offset="0.45" stop-color="#0a1024"/>
+      <stop offset="1" stop-color="#04050d"/>
+    </linearGradient>
+    <radialGradient id="lvbuBgCyan" cx="0.5" cy="0.12" r="0.85">
+      <stop offset="0" stop-color="#2fd4ff" stop-opacity="0.42"/>
+      <stop offset="0.5" stop-color="#2fd4ff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#2fd4ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lvbuBgMagenta" cx="0.5" cy="1.05" r="0.9">
+      <stop offset="0" stop-color="#ff3fd0" stop-opacity="0.35"/>
+      <stop offset="0.5" stop-color="#ff3fd0" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#ff3fd0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lvbuBgGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8e3a2"/>
+      <stop offset="0.5" stop-color="#ffcf5e"/>
+      <stop offset="1" stop-color="#cf8f2e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 夜穹底 -->
+  <rect width="800" height="460" fill="url(#lvbuBgBase)"/>
+  <!-- 青/紫 幽光 -->
+  <rect width="800" height="460" fill="url(#lvbuBgCyan)"/>
+  <rect width="800" height="460" fill="url(#lvbuBgMagenta)"/>
+
+  <!-- 碎裂晶片群（对战冲击的破碎感） -->
+  <g>
+    <!-- 青色晶片 -->
+    <polygon points="150,60 175,120 128,96" fill="#2fd4ff" opacity="0.16"/>
+    <polygon points="238,40 252,92 210,72" fill="#45d8ff" opacity="0.14"/>
+    <polygon points="560,52 590,110 540,92" fill="#2fd4ff" opacity="0.13"/>
+    <polygon points="668,90 700,150 646,132" fill="#45d8ff" opacity="0.15"/>
+    <polygon points="120,300 156,360 104,340" fill="#2fd4ff" opacity="0.12"/>
+    <polygon points="690,300 724,360 668,344" fill="#45d8ff" opacity="0.12"/>
+    <!-- 品红晶片 -->
+    <polygon points="330,80 356,132 306,118" fill="#ff3fd0" opacity="0.16"/>
+    <polygon points="420,46 442,94 396,78" fill="#ff66dd" opacity="0.13"/>
+    <polygon points="470,300 500,354 448,338" fill="#ff3fd0" opacity="0.13"/>
+    <polygon points="180,360 210,414 158,398" fill="#ff66dd" opacity="0.12"/>
+    <!-- 灿金晶片 -->
+    <polygon points="300,270 326,320 276,306" fill="#ffcf5e" opacity="0.13"/>
+    <polygon points="508,232 534,282 486,268" fill="#ffd76a" opacity="0.12"/>
+    <polygon points="70,140 94,188 48,176" fill="#ffcf5e" opacity="0.11"/>
+    <polygon points="742,220 768,268 720,258" fill="#ffd76a" opacity="0.11"/>
+    <!-- 血红利刃 -->
+    <polygon points="400,180 428,238 376,224" fill="#ff4f6d" opacity="0.12"/>
+    <polygon points="252,180 276,228 232,216" fill="#ff4f6d" opacity="0.1"/>
+    <polygon points="588,130 612,178 568,166" fill="#ff4f6d" opacity="0.1"/>
+  </g>
+
+  <!-- 斜向冲击速度线 -->
+  <g stroke="#9fe8ff" stroke-width="1.2" opacity="0.18" stroke-linecap="round">
+    <line x1="0" y1="110" x2="268" y2="110"/>
+    <line x1="560" y1="70" x2="800" y2="70"/>
+    <line x1="0" y1="330" x2="212" y2="330"/>
+    <line x1="600" y1="380" x2="800" y2="380"/>
+  </g>
+
+  <!-- 中央竖直天光 -->
+  <rect x="398" y="0" width="4" height="460" fill="#bfefff" opacity="0.10"/>
+  <rect x="392" y="0" width="16" height="460" fill="#bfefff" opacity="0.05"/>
+
+  <!-- 上下饰带：金色细线 -->
+  <g opacity="0.55">
+    <rect x="16" y="14" width="768" height="1.6" fill="url(#lvbuBgGold)"/>
+    <rect x="16" y="444" width="768" height="1.6" fill="url(#lvbuBgGold)"/>
+    <rect x="16" y="22" width="768" height="0.7" fill="#9fe8ff" opacity="0.5"/>
+    <rect x="16" y="436" width="768" height="0.7" fill="#9fe8ff" opacity="0.5"/>
+  </g>
+
+  <!-- 金色双层边框 -->
+  <rect x="9" y="9" width="782" height="442" fill="none" stroke="#d4af60" stroke-width="2" opacity="0.8"/>
+  <rect x="15" y="15" width="770" height="430" fill="none" stroke="#9fe8ff" stroke-width="1" opacity="0.35"/>
+
+  <!-- 四角霓虹折角（青色+品红双色） -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M36 58 L36 36 L58 36" stroke="#45d8ff" stroke-width="3" opacity="0.85"/>
+    <path d="M42 64 L42 42 L64 42" stroke="#ff3fd0" stroke-width="1.4" opacity="0.5"/>
+    <path d="M764 58 L764 36 L742 36" stroke="#45d8ff" stroke-width="3" opacity="0.85"/>
+    <path d="M758 64 L758 42 L736 42" stroke="#ff3fd0" stroke-width="1.4" opacity="0.5"/>
+    <path d="M36 402 L36 424 L58 424" stroke="#45d8ff" stroke-width="3" opacity="0.85"/>
+    <path d="M42 396 L42 418 L64 418" stroke="#ff3fd0" stroke-width="1.4" opacity="0.5"/>
+    <path d="M764 402 L764 424 L742 424" stroke="#45d8ff" stroke-width="3" opacity="0.85"/>
+    <path d="M758 396 L758 418 L736 418" stroke="#ff3fd0" stroke-width="1.4" opacity="0.5"/>
+  </g>
+
+  <!-- 顶部中央铆钉 -->
+  <g fill="#ffdd88" opacity="0.85">
+    <circle cx="400" cy="27" r="3"/>
+    <circle cx="400" cy="433" r="3"/>
+  </g>
+
+  <!-- 中心淡淡“梦”字水印 -->
+  <text x="400" y="260" text-anchor="middle" dominant-baseline="middle"
+        font-family="xinwei, KaiTi, STKaiti, serif" font-size="240" fill="#cfeeff" opacity="0.04">梦</text>
+</svg>

@@ -9,8 +9,10 @@ import sgzZhaoyun from './character/sgz_zhaoyun.js';
 import sgzGuojia from './character/sgz_guojia.js';
 import sgzLuxun from './character/sgz_luxun.js';
 import sgzMachao from './character/sgz_machao.js';
+import sgzLvbu from './character/sgz_lvbu.js';
 import sgzCaomao from './character/sgz_caomao.js';
 import sgzSimazhao from './character/sgz_simazhao.js';
+import sgzXiaoqiao from './character/sgz_xiaoqiao.js';
 
 // === 山海经武将 ===
 import shjBaize from './character/shj_baize.js'; 
@@ -27,7 +29,7 @@ import wgxdHeyuxingzun from './character/wgxd_heyuxingzun.js';
 import wgxdYinianshenmo from './character/wgxd_yinianshenmo.js';
 
 // 分类数组定义
-const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia, sgzLuxun, sgzMachao, sgzCaomao, sgzSimazhao];
+const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia, sgzLuxun, sgzMachao, sgzLvbu, sgzCaomao, sgzSimazhao, sgzXiaoqiao];
 const shjCharacters = [shjBaize, shjXiangliu, shjChaofeng, shjNvwa];
 const mfsdCharacters = [mfsdAnyuanmofa, mfsdXingyushenqi]; 
 const wgxdCharacters = [wgxdHeyuxingzun, wgxdYinianshenmo];
@@ -40,7 +42,7 @@ export default function () {
         name: "大梦千秋",
         content: function (config, pack) {
             // 版本标记：完全重启游戏后，控制台应输出此行（按 F12/Ctrl+Shift+I 查看）
-            console.log("[大梦千秋] 扩展已加载 v7.2（含缚渊·帝诏诏令确认版）");
+            console.log("[大梦千秋] 扩展已加载 v7.3（新增梦吕布·梦小乔）");
 
             // 1. 设置传说品质 
             lib.arenaReady.push(function () {
@@ -74,9 +76,9 @@ export default function () {
                 skininfo: {}
             });
 
-            // 3. 诸葛诞的“叛”势力（血液鲜红主题色；必须用合法颜色格式 #hex 或 4 元 RGBA 数组才会生效）
+            // 3. 诸葛诞的“叛”势力
             game.addGroup('dingpan_pan', '叛', '叛', {
-                color: [[190, 14, 18, 0.95], [150, 10, 14, 0.7], [100, 6, 10, 0.5], [60, 2, 6, 0.3]]   // 血液鲜红渐晕
+                color: 'wood'
             });
 
             // 4. 扩展武将前缀“梦”（粉紫色梦幻）。
@@ -101,6 +103,7 @@ export default function () {
             lib.config.threaten['sgz_machao'] = 119.0; 
             lib.config.threaten['sgz_caomao'] = 119.6; 
             lib.config.threaten['sgz_simazhao'] = 118; 
+            lib.config.threaten['sgz_xiaoqiao'] = 117.0; 
             lib.config.threaten['shj_baize'] = 122; 
             lib.config.threaten['shj_xiangliu'] = 121; 
             lib.config.threaten['shj_chaofeng'] = 120; 
@@ -291,7 +294,7 @@ export default function () {
             },
             intro: "大梦千秋扩展包",
             author: "Loihan",
-            version: "7.2",
+            version: "7.3",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };
