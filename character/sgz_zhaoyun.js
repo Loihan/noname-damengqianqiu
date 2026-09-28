@@ -217,10 +217,14 @@ export default {
                     priority: -10, // 较低优先级，确保在“暴击”等加伤效果之后执行最终截断
                     content: function() {
                         "step 0"
-                        var d = Math.min(game.roundNumber, player.maxHp - player.Hp);
-                        if (trigger.num > d ) {
+                        // 【修复】原来写的是 player.Hp —— 引擎里没有这个属性（只有 player.hp），
+                        // 于是 player.maxHp - player.Hp 恒为 NaN，`trigger.num > NaN` 永远为假，
+                        // 截断从来没生效过。这里改用 player.getHp()（等价 player.hp）。
+                        var d = Math.min(game.roundNumber, player.maxHp - player.hp);
+                        if (d < 0) d = 0;
+                        if (trigger.num > d) {
                             player.logSkill('sgz_guzhi');
-                            game.log(player, '受当前游戏轮数影响，受到的伤害被限制为',d, '点');
+                            game.log(player, '受当前游戏轮数影响，受到的伤害被限制为', d, '点');
                             trigger.num = d;
                         }
                     }
@@ -648,7 +652,7 @@ export default {
         sgz_longxiao: "龙霄",
         sgz_longxiao_info: "你可以将1至3张花色相同的牌当做对应牌使用或打出并根据其数量与花色执行对应效果：<br>♥️当【桃】；两张：目标增加一点体力上限且回复量+1；三张：目标增加两点体力上限并回满体力。<br>♦️当火【杀】（无距离次数限制且不可被响应）；两张：伤害+1；三张：伤害改为等同于目标的体力与护甲之和且至少为3。<br>♠️当【无懈可击】：两张：获得当前回合角色一张牌；三张：不可被响应且摸两张牌。<br>♣️当【闪】：两张：获得当前回合角色一张牌；三张：弃置一名角色所有牌。<br>若你依此法使用或打出了2或3张牌，你增加一点体力上限。",
         sgz_jiejin: "劫烬",
-        sgz_jiejin_info: "蓄力技(0/7)，每名角色准备阶段开始时或你进入濒死状态时，你获得1点蓄力点。<br>当你发动“龙霄”时，你可以消耗1点蓄力点并执行相应效果：若在你的回合内/外，你获得一名其他角色/当前回合角色的一张牌。",
+        sgz_jiejin_info: "<span style='color:#FF0000;'><strong>蓄力技</strong></span>(0/7)，①<span style='color:#00FF00;'>蓄力</span>：每名角色回合开始时或你进入濒死状态时。<br>②当你发动“龙霄”时，你可以消耗1点蓄力点并执行相应效果：若在你的回合内/外，你获得一名其他角色/当前回合角色的一张牌。",
     },
     characterTaici:{
         "sgz_guzhi":{order: 1,content:"九阳断魂，斩却三尸，脱凡蜕而化应龙!/潜龙在渊，声震九天，身可战于四野!"},

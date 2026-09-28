@@ -1,5 +1,5 @@
-﻿// 业火残响 UI 已抽离至 effect/sgz_luxun.js
-import { luxunUI } from '../effect/sgz_luxun.js';
+// 业火残响 UI 已抽离至 effect/sgz_luxun.js
+import { luxunUI, dmqcFenmieDialogTheme } from '../effect/sgz_luxun.js';
 
 export default {
     character: {
@@ -196,8 +196,10 @@ export default {
                 if (game.hasPlayer(p => p != player && player.canUse({name: 'sha'}, p))) canContinue = true;
                 
                 if (!canContinue) {
+                    delete player.storage._taohui_active; // 韬晦结束：先清除标记
                     player.recover(player.maxHp-player.hp);
                     player.removeSkill('sgz_taohui_fangzhibingsi');
+                    if (player.dmqcRefreshLunxBar) player.dmqcRefreshLunxBar(); // 重拨业火条（经 player 方法调用，content 作用域可用）
                     event.finish();
                 } else {
                     event.card = get.cards(1)[0];
@@ -266,8 +268,10 @@ export default {
                             });
                         } else {
                             game.log('场上已无未横置的角色，效果中断');
+                            delete player.storage._taohui_active; // 韬晦结束：清除标记
                             player.recover(player.maxHp-player.hp);
                             player.removeSkill('sgz_taohui_fangzhibingsi');
+                            if (player.dmqcRefreshLunxBar) player.dmqcRefreshLunxBar(); // 重拨业火条
                             event.finish();
                         }
                         break;
@@ -329,9 +333,10 @@ export default {
                 if (event.effect_done) {
                     event.goto(1);
                 } else {
+                    delete player.storage._taohui_active; // 韬晦结束：先清除标记
                     player.recover(player.maxHp-player.hp);
                     player.removeSkill('sgz_taohui_fangzhibingsi');
-                    delete player.storage._taohui_active; // 新增：结束发动
+                    if (player.dmqcRefreshLunxBar) player.dmqcRefreshLunxBar(); // 韬晦结束：重拨业火条
                     event.finish();
                 }
             },
@@ -354,6 +359,9 @@ export default {
                     },
                     content: function() {
                         player.addSkill('sgz_taohui_mark');
+                        // 安全网：新回合清除可能残留的「发动中」标记并重拨能量条
+                        delete player.storage._taohui_active;
+                        if (player.dmqcRefreshLunxBar) player.dmqcRefreshLunxBar();
                         // 换回常态原画
                         player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun.jpg');
                     }
@@ -433,6 +441,13 @@ export default {
                     const next = player.showCards(cards, `${get.translation(player)} 发动了【焚灭】`, false)
                         .set("showers", targets)
                         .set("customButton", button => {
+                            // 只在本人（陆逊）客户端套上「业火焚天」主题框、标注花色/武将名。
+                            // 其余玩家/观战者仅看到默认揭示框，避免把焚灭交互框公开给所有人。
+                            // 用 typeof 防御：customButton 会被广播/序列化到远端，彼时闭包 player 可能不存在。
+                            if (typeof player === 'undefined' || !player.isMine || !player.isMine()) return;
+                            // 在引擎 dialog.open() 之前套上主题框，避免先闪出默认引擎框再切换（theme 幂等）。
+                            const dlg = button.closest ? button.closest('.dialog') : null;
+                            if (dlg) dmqcFenmieDialogTheme(dlg);
                             const target = get.owner(button.link);
                             if (target) {
                                 const div = button.querySelector(".info");
@@ -445,14 +460,37 @@ export default {
                     const id = next.videoId;
 
                     // 5. 陆逊选择弃牌 (每种花色仅需一张)
+                    //    交互优化：提示词写进同一揭示框的 caption，展示牌持续显示并为每张牌标注武将名；
+                    //    再为每个目标叠加特大号花色标签，便于"弃牌→对应目标"匹配。
+                    const update = function (id, suits) {
+                        const dialog = get.idDialog(id);
+                        if (dialog) {
+                            // 焚灭主题展示框（纯表现层，不改尺寸/逻辑）
+                            dmqcFenmieDialogTheme(dialog);
+                            const div = dialog.querySelector(".caption");
+                            if (div) {
+                                div.innerHTML = '你可以弃置任意张花色为<span style="font-weight:bold;font-size:150%">' + get.translation(suits) + '</span>的牌，对对应的角色各造成1点火焰伤害';
+                                ui.update();
+                            }
+                        }
+                    };
+                    if (player == game.me) {
+                        update(id, suits);
+                    } else if (player.isOnline()) {
+                        player.send(update, id, suits);
+                    }
+
                     const nextx = player.chooseCardTarget({
-                        prompt: `焚灭：弃置花色为 ${suits.map(s=>get.translation(s)).join('或')} 的牌造成火焰伤害 (同花色弃置一张即可)`,
+                        prompt: false,
                         dialog: get.idDialog(id),
                         filterCard(card, player) {
                             return suits.includes(get.suit(card, player)) && lib.filter.cardDiscardable.apply(this, arguments);
                         },
                         selectCard: [1, Infinity],
                         filterTarget(card, player, target) {
+                            // 选中手牌变化时，同步点亮焚灭框内「花色命中」的展示牌（每个目标评估都会触发，幂等）。
+                            const _evt = _status.event;
+                            if (_evt && _evt.dialog && _evt.dialog._dmqcFenmieSync) _evt.dialog._dmqcFenmieSync();
                             const selected = ui.selected.cards;
                             if (!selected.length) return false;
                             const currentSuits = selected.map(c => get.suit(c, player)).unique();
@@ -480,7 +518,22 @@ export default {
                         ai2: function(target) {
                             return -get.attitude(_status.event.player, target);
                         }
-                    });
+                    }).set("noconfirm", true); // 隐藏引擎原生取消/确认栏，改用主题框内按钮
+                    // 为每个目标叠加特大号花色标签（颜色随花色）
+                    nextx.set("targetprompt2", (nextx.targetprompt2 || []).concat([
+                        target => {
+                            const evt = get.event();
+                            if (!target.isIn() || !evt.filterTarget(null, get.player(), target)) {
+                                return;
+                            }
+                            const card = evt.cards[evt.targets.indexOf(target)];
+                            if (!card) return;
+                            const suit = get.suit(card, target);
+                            const color = get.color(card, target);
+                            const str = get.translation(suit);
+                            return '<span style="color:' + color + ';font-weight:bold;font-size:200%">' + str + '</span>';
+                        }
+                    ]));
 
                     const resultx = await nextx.forResult();
                     game.broadcastAll("closeDialog", id);
@@ -544,10 +597,10 @@ export default {
         sgz_luxun_ui: luxunUI,
     },
     skillTranslate: {
-        sgz_qujian: "驱剑", sgz_qujian_info: "锁定技，连招技（杀+锦囊牌），出牌阶段限X次（X为你回合开始时的体力数），横置至多一名角色，摸场上已横置角色数张牌且本回合你使用【杀】的额定次数+1，然后你失去一点体力。",
+        sgz_qujian: "驱剑", sgz_qujian_info: "锁定技，<span style='color:#FF0000;'><strong>连招技</strong></span>（杀+锦囊牌），出牌阶段限X次（X为你回合开始时的体力数），横置至多一名角色，摸场上已横置角色数张牌且本回合你使用【杀】的额定次数+1，然后你失去一点体力。",
         sgz_lianying: "连营", sgz_lianying_info: "锁定技，①摸牌阶段你多摸X张牌，你的手牌上限+X。②当你失去最后一张手牌时，你摸至X张牌。（X为场上人数）",
-        sgz_taohui: "韬晦", sgz_taohui_info: "每轮限一次，当你进入濒死状态时，你可以增加1点体力上限并回复至1点体力，然后重复亮出牌堆顶的一张牌并根据其花色执行对应效果，直到不可被执行：<br>♥️：回复一点体力；<br>♦️/♠️：视为使用一张无距离限制的火/雷【杀】；<br>♣️：横置1~3名未横置角色。<br>此技能持续期间，防止你的濒死结算；此技能结束时，你回复体力至体力上限。",
-        sgz_fenmie: "焚灭", sgz_fenmie_info: "出牌阶段限一次。你可以选择任意名其他角色并摸等量的牌，然后重复以下流程：<br>①被选中的所有角色同时展示一张手牌；<br>②你可以弃置任意张牌或结束技能；<br>③对所有展示了与你所弃牌有相同花色的角色各造成1点火焰伤害，若存在角色防止了该伤害，则技能结束。<br>此技能结算期间每当你失去牌时便摸等量的牌。",
+        sgz_taohui: "韬晦", sgz_taohui_info: "<span style='color:#FF0000;'><strong>战场技</strong></span>，每轮限一次，当你进入濒死状态时，你增加1点体力上限并回复至1点体力。<br><span style='color:#00FF00;'>战流</span>：亮出牌堆顶的一张牌并根据其花色执行对应效果：♥️：回复一点体力；♣️：横置1~3名未横置角色；♦️/♠️：视为使用一张无距离限制的火/雷【杀】。<br><span style='color:#00FF00;'>战间</span>：防止你的濒死结算；<br><span style='color:#00FF00;'>退战</span>：当战流不可被执行时，你回复体力至体力上限。",
+        sgz_fenmie: "焚灭", sgz_fenmie_info: "<span style='color:#FF0000;'><strong>战场技</strong></span>，出牌阶段限一次，你可以选择任意名其他角色参战并摸等量的牌。<br><span style='color:#00FF00;'>战流</span>：①参战角色同时展示一张手牌；②你可以弃置任意张相同花色的牌或退战；③你对所有对应花色的参战角色各造成1点火焰伤害。<br><span style='color:#00FF00;'>战间</span>：每当你失去牌时便摸等量的牌。<br><span style='color:#00FF00;'>退战</span>：当一名角色角色防止了该火焰伤害。",
     },
     characterTaici: {
         "sgz_qujian": { order: 1, content: "何日试青锋，匣中长剑夜夜鸣。/江东山河甫定，正乃用武之时。" },

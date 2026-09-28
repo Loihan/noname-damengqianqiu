@@ -28,7 +28,7 @@ export default {
             group: "qun",
             hp: 3,
             maxHp: 3,
-            hujia:1,
+            hujia:3,
             skills: ["sgz_shiqi", "sgz_zhenlie", "sgz_lvbu_ui"],
             img: "extension/大梦千秋/image/sgz_lvbu.jpg",
             dieAudios: ["ext:大梦千秋/audio/sgz_lvbu/die.mp3"],
@@ -75,8 +75,15 @@ export default {
                             event.result = { bool: false };
                             return;
                         }
+                        // 【触发条件修正】目标此时必须拥有手牌：
+                        //   噬炁①的收益是「将其手牌标记为“炁”」，无手牌者既无“炁”可标
+                        //   （噬炁②的“炁尽即死”也就无从触发），只会白白浪费每轮一次的发动机会。
+                        if (X.countCards("h") == 0) {
+                            event.result = { bool: false };
+                            return;
+                        }
                         // 每名角色限一次：已被噬炁①指定过的角色不可再指定
-                        if (player.storage.sgz_shiqi_used && player.storage.sgz_shiqi_used.contains(X)) {
+                        if (player.storage.sgz_shiqi_used && player.storage.sgz_shiqi_used.contains(X) && ( X.countCards("h") == 0 )) {
                             event.result = { bool: false };
                             return;
                         }
@@ -88,6 +95,8 @@ export default {
                             .set("ai", () => {
                                 var X = sgzLvbuNextPlayer();
                                 if (!X) return 0;
+                                // 与上方 cost 保持一致：无手牌的目标不发动（标不出“炁”）
+                                if (X.countCards("h") == 0) return 0;
                                 if (get.attitude(player, X) < 0 && (X.countCards("he") > 0 || X.countCards("h") > 0)) {
                                     return 1;
                                 }
@@ -572,9 +581,9 @@ export default {
         "sgz_qi": "炁", // gaintag 卡面文字（被噬炁标记的手牌显示“炁”字）
         "sgz_zhenlie_sha": "镇猎", // 镇猎杀卡面标签
         sgz_shiqi: "噬炁",
-        sgz_shiqi_info: "①昂扬技，一名没有被“噬炁”过的其他角色的回合开始前（首轮一号位除外），你可以执行一个额外回合。若如此做，其收回其装备区的所有牌并将手牌标记为“炁”。昂扬：当你受到伤害时。②被“噬炁”指定过的角色失去其手牌里的所有“炁”时，其立即死亡。③当一名其他角色即将死亡时，你增加X点体力上限、蓄力点上限和蓄力点（X为其手牌中“炁”标记的牌数+1）。",
+        sgz_shiqi_info: "①<span style='color:#FF0000;'><strong>昂扬技</strong></span>，一名没有被“噬炁”过的有手牌的其他角色的回合开始前（首轮一号位除外），你可以执行一个额外回合。若如此做，其收回其装备区的所有牌并将手牌标记为“炁”。<span style='color:#00FF00;'>昂扬</span>：当你受到伤害时。②被“噬炁”指定过的角色失去其手牌里的所有“炁”时，其立即死亡。③当一名其他角色即将死亡时，你增加X点体力上限、蓄力点上限和蓄力点（X为其手牌中“炁”标记的牌数+1）。",
         sgz_zhenlie: "镇猎",
-        sgz_zhenlie_info: "蓄力技（1/4）。①当你对一名其他角色造成伤害时，你获得1点蓄力点。然后：<br>1.若其有“炁”，你获得其一张“炁”。<br>2.若其没有“炁”且手牌数大于体力值，你获得其一张手牌。<br>3.若你手牌中“镇猎”杀的点数之和小于你的体力上限，你获得一张“镇猎”杀（花色随机，点数为你手牌中“镇猎”杀点数之和+1）。<br>②当你使用杀时，你可以消耗任意蓄力点执行等量选项（每回合每项限一次，无可选项时所有选项视为未选择过）：1.令此杀伤害+1；2.不可被响应；3.额外指定至多两个目标；4.若此杀造成伤害你回复等量体力。",
+        sgz_zhenlie_info: "<span style='color:#FF0000;'><strong>蓄力技</strong></span>（1/4），①<span style='color:#00FF00;'>蓄力</span>：当你对一名其他角色造成伤害时：<br>1.若其有“炁”，你获得其一张“炁”。<br>2.若其没有“炁”且手牌数大于体力值，你获得其一张手牌。<br>3.若你手牌中“镇猎”杀的点数之和小于你的体力上限，你获得一张“镇猎”杀（花色随机，点数为你手牌中“镇猎”杀点数之和+1）。<br>②当你使用杀时，你可以消耗任意蓄力点执行等量选项（每回合每项限一次，无可选项时所有选项视为未选择过）：1.令此杀伤害+1；2.不可被响应；3.额外指定至多两个目标；4.若此杀造成伤害你回复等量体力。",
         sgz_lvbu_ui: "特效",
     },
     characterTaici: {

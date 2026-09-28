@@ -1,5 +1,227 @@
-﻿// 绂嶆笂主题选择框 + 潜龙火焰特效已抽离至 effect/sgz_caomao.js
+// 绂嶆笂主题选择框 + 潜龙火焰特效已抽离至 effect/sgz_caomao.js
 import { dmqcBuildFuyuanDialog, qianlongUI } from '../effect/sgz_caomao.js';
+
+// ============================================================
+//  梦曹髦 · 【倾讨】的「决进特效」播放器（可复用）
+// ============================================================
+//  两个触发点都会用到它：
+//    ① 正常发动【倾讨】→ 子技能 `sgz_qingtao_effect` 的 contentBefore 里调用；
+//    ② 「缚渊」终极对决分支（缚渊的效果叠满、选项用尽时）——
+//       该分支不经过「倾讨」技能本身，所以直接调本函数
+//       （引擎只在 useSkill 流程里调 contentBefore：noname/library/element/content.js:10181，
+//        所以这个分支必须自己调一次）。
+//  ⚠ 必须是模块级函数：contentBefore 由引擎编译执行，拿不到技能定义里的局部函数。
+//  ⚠ 素材在 extension/大梦千秋/animation/caomao/（本扩展自带），
+//    播放器用十周年UI 的全局 window.dcdAnim；不可用时静默跳过。
+//  ⚠ **两套素材，按当前皮肤分流**（详见函数内 `useNewSet` 那段）：
+//      · 旧套（默认）              → animation/caomao/SS_cmskill + SS_cmmask + audio/…
+//      · 新套（**枭龙破渊**皮肤）  → animation/caomao/juejin2/SS_cmnewskill + SS_cmnewmask + …
+//    两套都源自「无名美化」曹髦决进美化（配置项 b=枭龙破渊），新套已随本扩展自带。
+// ============================================================
+function sgzQingtaoJuejinEffect(player) {
+    if (!player) return;
+    try {
+        if (!window.dcdAnim) return;
+        // 路径前缀是「十周年UI/assets/dynamic/」，故用 ../../.. 回到 extension/
+        var base = "../../../大梦千秋/animation/caomao";
+
+        // ============================================================
+        //  【可调参数】尺寸与位置 —— 改这里就够了
+        // ============================================================
+        //  x / y 的写法：[像素, 比例]
+        //      · 像素 = 相对基准点的偏移（可为负）
+        //      · 比例 = 0 / 0.5 / 1，对应画布宽高的 0% / 50% / 100%
+        //      · y 的比例**越大越靠下**（画布坐标原点在左上角），0.5 即垂直居中
+        //      · 不写 x / y 就默认居中（等于 [0, 0.5]）
+        //  scale = 整体缩放倍数（1 = 原始大小；越大越大）
+        //  speed = 播放速度（1 = 原速；越小越慢）
+        //  delay = （可选）这一层比别人晚起多少毫秒，不写就是 0、三层同时起
+        //
+        //  ⚠⚠ 两套素材的参数是**分开的**，互不影响：
+        //     · 顶层这组      = 旧套（无名美化模式 a「向死存魏」）
+        //     · `xiaolong` 这组 = 新套（无名美化模式 b「枭龙破渊」，即 juejin2）★ 你要调的是这组
+        //    在游戏里穿「枭龙破渊 / 枭龙破渊2」时走的是 `xiaolong`。
+        // ============================================================
+        var CFG = {
+            // ---------- 旧套：向死存魏 ----------
+            // 技能特效：SS_cmskill（主特效）
+            skill: { scale: 1, x: null, y: null, speed: 1 },
+            // 面具：SS_cmmask（循环）
+            mask: { scale: 1, x: null, y: null, speed: 1 },
+            // 战场火：aozhan_huo（循环铺底）
+            fire: { scale: 1, x: null, y: null, speed: 0.9 },
+            // 兜底时长（毫秒）：**正常永远用不到** —— 收尾以「主特效骨骼播完」为准（挂 oncomplete）。
+            //   只有拿不到 oncomplete 时才会走到这个数，届时控制台会打一条「兜底」提示。
+            //   ⚠ 它必须**大于**主特效的真实时长，否则会把特效提前掐掉：
+            //     真实时长 ≈ 骨骼自身时长 ÷ speed（你上面把旧套 speed 调成了 0.6，就是变慢、变长）。
+            duration: 12000,
+
+            // ---------- ★★★ 新套：枭龙破渊（juejin2）—— 中央那套，调这里 ★★★ ----------
+            xiaolong: {
+                // 主特效：juejin2/SS_cmnewskill
+                skill: { scale: 0.9, x: null, y: null, speed: 1 },
+                // 面具：juejin2/SS_cmnewmask（循环）
+                mask: { scale: 0.9, x: null, y: null, speed: 1 },
+                // 战场火：和旧套**共用同一套素材**（aozhan_huo），但参数可以单独设
+                fire: { scale: 0.9, x: null, y: null, speed: 1 },
+                // 兜底时长（毫秒）：同上，正常用不到；以主特效骨骼的 oncomplete 为准。
+                duration: 12000,
+            },
+        };
+        // 移动端按原版惯例用 1 倍（想在手机上也另设大小，改这段）
+        if (lib.device) {
+            CFG.skill.scale = 1;
+            CFG.mask.scale = 1;
+            CFG.fire.scale = 1;
+            CFG.xiaolong.skill.scale = 1;
+            CFG.xiaolong.mask.scale = 1;
+            CFG.xiaolong.fire.scale = 1;
+        }
+        var posOf = function (c) {
+            var pos = { scale: c.scale, speed: c.speed };
+            if (c.x != null) pos.x = c.x;
+            if (c.y != null) pos.y = c.y;
+            return pos;
+        };
+        // ============================================================
+        //  播放逻辑，一般不用改
+        // ============================================================
+        // ============================================================
+        //  【两套素材，按皮肤分流】
+        // ============================================================
+        //  这两套都来自「无名美化」的曹髦决进美化（配置项 `无名美化|特效`，
+        //  可选值 a=向死存魏 / b=枭龙破渊 / off，见 新无名美化 config/index.js:755）：
+        //    · 旧套（模式 a，向死存魏）：
+        //        animation/caomao/SS_cmskill + SS_cmmask + audio/effect_caomao_skill.mp3
+        //      这是 v7.6 时从**旧版**无名美化复制过来的那套。
+        //    · 新套（模式 b，**枭龙破渊**）：
+        //        animation/caomao/juejin2/SS_cmnewskill + SS_cmnewmask
+        //        + juejin2/effect_caomao_skill_2025.mp3
+        //      这是「枭龙破渊」这张皮的专属技能特效。
+        //  判据：**当前正在播的立绘**是不是枭龙破渊系列（`曹髦/枭龙破渊*`）。
+        //  ⚠ 读 `player.dynamic.primary.name`（正在播的骨骼），**不是** `game.qhly_getSkin()`
+        //    （那读的是存档里的皮肤选择，而自动换肤不写存档）。
+        //  ⚠ 这里读到的天然是**发动前**那张（枭龙破渊）：本函数由子技能的 `contentBefore`
+        //    调用，而换成立绘「枭龙破渊2」发生在之后的 `content` 里 —— 正合需求
+        //    「先播变身前形态的技能动画，再变形」。
+        var spineNow = null;
+        try {
+            spineNow = player.dynamic && player.dynamic.primary && player.dynamic.primary.name;
+        } catch (e) {
+            /* 读不到就按旧套处理 */
+        }
+        var useNewSet = typeof spineNow === "string" && spineNow.indexOf("曹髦/枭龙破渊") === 0;
+        // 本次实际使用的那组参数（旧套 = CFG 顶层；新套 = CFG.xiaolong）
+        var P = useNewSet ? CFG.xiaolong : CFG;
+
+        var assets = useNewSet
+            ? {
+                  skill: { name: base + "/juejin2/SS_cmnewskill", speed: 1 },
+                  mask: { name: base + "/juejin2/SS_cmnewmask", speed: 1 },
+                  fire: { name: base + "/aozhan_huo" },
+              }
+            : {
+                  skill: { name: base + "/SS_cmskill", speed: 0.6 },
+                  mask: { name: base + "/SS_cmmask", speed: 0.6 },
+                  fire: { name: base + "/aozhan_huo" },
+              };
+        // 音效也在各自目录下（新套在 juejin2/，旧套在 audio/）
+        var audioArgs = useNewSet
+            ? ["大梦千秋", "animation", "caomao", "juejin2", "effect_caomao_skill_2025"]
+            : ["大梦千秋", "animation", "caomao", "audio", "effect_caomao_skill"];
+        // ============================================================
+        //  播放逻辑：三份素材**全部加载完**再**同一时刻**开播，
+        //            并以**主特效播完**的时刻收掉两个循环层
+        // ============================================================
+        //  ⚠ 为什么要等全部加载完才开播：
+        //    `dcdAnim.loadSpine` 的回调是在**该份素材加载完成**时触发的，而三份素材体积差极大
+        //    （juejin2 主特效 ≈9 MB，面具 ≈1 MB，战场火 ≈0.7 MB）→ 谁先加载完谁先播，
+        //    表现就是「面具 / 战场火比主特效早一点起来」，怎么调参数都对不齐。
+        //  ⚠ 为什么收尾不能再用固定 `duration`：
+        //    那是从**本函数被调用那一刻**起算的绝对时间，而主特效自己还要等加载 + 播它的
+        //    自然时长，两者不相等 → 主特效播完后循环层还挂着，表现就是「残留一小会儿」。
+        //    现在改成挂在主特效骨骼的 `oncomplete` 上（十周年UI 官方机制：
+        //    `js/animation.js:343-356` 的 `APNode.complete → this.oncomplete`，
+        //    由 `:626-641` 的 spine state 监听器在**非循环**动画结束时调用）。
+        //    `duration` 因此**退化为兜底**（万一 oncomplete 拿不到，也不会把结算卡死）。
+        //  每一层都支持可选字段 `delay`（毫秒）：想让某层比别人晚起一点就加上它，
+        //    例如 `mask: { scale: 1, x: null, y: null, speed: 1, delay: 200 }`。
+        var layers = [
+            { key: "fire", asset: assets.fire, pos: P.fire, loop: true },
+            { key: "mask", asset: assets.mask, pos: P.mask, loop: true },
+            { key: "skill", asset: assets.skill, pos: P.skill, loop: false },
+        ];
+        var pending = layers.length;
+        var started = false;
+        var settled = false;
+        var stopLoops = function () {
+            if (player.storage._dmqc_qt_fire_) {
+                dcdAnim.stopSpine(player.storage._dmqc_qt_fire_);
+                player.storage._dmqc_qt_fire_ = undefined;
+            }
+            if (player.storage._dmqc_qt_mask_) {
+                dcdAnim.stopSpine(player.storage._dmqc_qt_mask_);
+                player.storage._dmqc_qt_mask_ = undefined;
+            }
+        };
+        return new Promise(function (resolve) {
+            var finish = function () {
+                if (settled) return;
+                settled = true;
+                stopLoops();
+                resolve();
+            };
+            var startAll = function () {
+                if (started) return;
+                started = true;
+                var anyPlayed = false;
+                layers.forEach(function (L) {
+                    var playNow = function () {
+                        var sprite = L.asset;
+                        if (L.loop) sprite.loop = true;
+                        var ref = dcdAnim.playSpine(sprite, posOf(L.pos));
+                        if (!ref) return;
+                        anyPlayed = true;
+                        if (L.key === "fire") player.storage._dmqc_qt_fire_ = ref;
+                        else if (L.key === "mask") player.storage._dmqc_qt_mask_ = ref;
+                        // 主特效是唯一非循环的一层 → 它的结束就是本次特效的结束
+                        else if (L.key === "skill") ref.oncomplete = finish;
+                    };
+                    var d = L.pos.delay || 0;
+                    if (d > 0) setTimeout(playNow, d);
+                    else playNow();
+                });
+                // 一层都没播出来（骨骼没加载成功等）→ 立刻结束，绝不卡住技能结算
+                if (!anyPlayed) return finish();
+                // 兜底：万一 oncomplete 没被触发，也不能卡住技能结算
+                setTimeout(function () {
+                    if (settled) return;
+                    console.warn("[大梦千秋] 决进特效走了兜底时长（oncomplete 未触发）：" + P.duration + "ms");
+                    finish();
+                }, P.duration);
+            };
+            // 三份都加载完 → 同一次同步执行里三连开播，起点自然对齐
+            layers.forEach(function (L) {
+                dcdAnim.loadSpine(L.asset.name, "skel", function () {
+                    pending--;
+                    if (pending <= 0) {
+                        game.playAudio.apply(game, ["..", "extension"].concat(audioArgs));
+                        startAll();
+                    }
+                });
+            });
+            // 加载兜底：某份骨骼加载失败时也别把结算卡住（正常情况早就 started 了）
+            setTimeout(function () {
+                if (started || settled) return;
+                console.warn("[大梦千秋] 决进特效有素材未加载完成，已先行播放");
+                game.playAudio.apply(game, ["..", "extension"].concat(audioArgs));
+                startAll();
+            }, 2500);
+        });
+    } catch (e) {
+        console.error("[大梦千秋] 倾讨·决进特效播放异常（不影响技能结算）：", e);
+    }
+}
 
 export default {
     character: {
@@ -197,11 +419,19 @@ export default {
 
                         // 5. 终极对决逻辑：若都不可选
                         if (choices.length === 0) {
-                            player.$skill('倾讨', 'fire', 'red', 'avatar');
+                            // 这个分支是手动走的，不经过「倾讨」技能本身，所以：
+                            //   · 直接调那个可复用的特效播放器（决进那套，素材在本扩展内）；
+                            //   · **不再调 player.$skill('倾讨', ...)** —— 那句会经十周年UI 的 $skill
+                            //     触发「无名美化」的通用限定技特效，正是要去掉的东西。
+                            //     （技能名横幅只是装饰，去掉它换来干净的画面）
+                            sgzQingtaoJuejinEffect(player);
                             game.playAudio(`../extension/大梦千秋/audio/sgz_caomao/sgz_qingtao${[1,2,3,4,5].randomGet()}.mp3`);
-                            player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_caomao2.jpg');
-                            // A. 开启腾渊形态
+                            // A. 开启腾渊形态 → 立绘变「枭龙破渊2」
+                            //   ⚠ 这里**不再**直接 `setBackgroundImage('.../sgz_caomao2.jpg')`：
+                            //     那会绕过动皮体系、把立绘钉成一张静态图（梦姜维九伐那次踩过同样的坑）。
+                            //     改走本扩展的换肤入口（见 skin.js 第 8b 节），与「枭龙破渊」动皮共存。
                             player.addTempSkill('sgz_tengyuan', 'roundStart');
+                            if (typeof window.dmqcApplyTengyuanSkin == "function") window.dmqcApplyTengyuanSkin(player);
                             player.useSkill('sgz_caomao_qianlong_ui')
                             player.update();
                             game.log(player, '已彻底封死', target, '，移除所有枷锁，进行生死对决！');
@@ -447,17 +677,25 @@ export default {
                 priority:1,
                 intro: { name: "秉尊", content: "造成伤害-1；造成伤害时，曹髦摸一张牌。" }
             },
-        // === 限定技：倾讨 ===
+        // === 限定技：倾讨（空壳） ===
+        //  结构：本技能只负责「能不能点、选谁、AI 怎么想」，**不放任何实际效果**；
+        //  真正结算与特效都在子技能 `sgz_qingtao_effect` 里（引擎会把 subSkill 注册成
+        //  `sgz_qingtao_effect`，见 noname/game/index.js:8933-8953），由下面的 content 拉起。
+        //
+        //  为什么这样拆（关键）：只要本技能自己**没有特效、也不调 $skill**，
+        //  它就不会触发任何「通用技能/限定技特效」（十周年UI 的 $skill → decadeUI.effect.skill
+        //  那条链，见 十周年UI/main/content.js:783-803）。特效只跟着子技能走。
         sgz_qingtao: {
             audio: "ext:大梦千秋/audio/sgz_caomao:5",
             persevereSkill: true,
             enable: "phaseUse",
             limited: true,
             mark: false,
-            derivation:"sgz_tengyuan",
-            skillAnimation: true,
-            animationColor: "fire",
-            
+            silent: true,
+            derivation: "sgz_tengyuan",
+            skillAnimation: false,
+            //animationColor: "fire",
+
             intro: { content: 'limited' },
             // 修改 sgz_qingtao 的 ai 块
             ai: { 
@@ -511,71 +749,107 @@ export default {
                 return !player.storage.sgz_qingtao;
             },
             filterTarget: function(card, player, target) {
-                player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_caomao2.jpg');
                 return player != target;
             },
+            // 空壳：只把实际结算交给子技能（子技能自己的 contentBefore 里播决进特效）
             async content(event, trigger, player) {
+                // ⚠⚠ 必须自己把限定技「发动掉」，引擎**不会**代劳（务必保留结论）：
+                //   `limited: true` 只让引擎补几个默认值（noname/game/index.js:8916-8932），
+                //   「已发动」状态得由技能自己写进 `player.storage[技能名]` —— 也就是
+                //   `player.awakenSkill('sgz_qingtao')`（noname/library/element/player.js:10240-10251）。
+                //   而本技能的可用性判据正是它：`filter: !player.storage.sgz_qingtao`（见下）。
+                //   漏了这一步的后果 = 限定技可以无限发动（v7.6 重构时踩过）。
+                // ⚠ 这里**必须写死技能 id `sgz_qingtao`**，不能用 `event.skill`：
+                //   走到 content 时 event.skill 已经是子技能 `sgz_qingtao_effect` 了，
+                //   照抄无名美化的 `player.awakenSkill(event.skill)` 会唤醒错的技能
+                //   —— 这正是 v7.6 当初把这一行整个删掉的原因。
+                // ⚠ `awakenSkill` 本身只做状态/UI 记账，**不会播任何特效**，所以放心调；
+                //   通用限定技特效那条链早就被 `skillAnimation: false` 关掉了。
                 player.awakenSkill('sgz_qingtao');
-                var target = event.target;
-                // A. 开启腾渊形态
-                player.addTempSkill('sgz_tengyuan', 'roundStart');
-                player.useSkill('sgz_caomao_qianlong_ui')
-                player.update();
-                game.log(player, '对', target, '发动了【倾讨】，进行最终的死斗！');
+                await player.useSkill("sgz_qingtao_effect", event.targets || []);
+            },
+            subSkill: {
+                // 实际结算 + 【决进特效】都在这里
+                effect: {
+                    // 子技能本身不单独结算，由上面的空壳拉起
+                    sub: true,
+                    // ⚠ 与手杀曹髦的决进同款：直接挂 contentBefore 播特效
+                    //   （引擎对 useSkill 流程同样会调 contentBefore：content.js:10181）
+                    //   素材在本扩展 animation/caomao/；不换皮肤、不换 BGM。
+                    //   ⚠ 「把限定技发动掉」**不在这里**，而在上层空壳 `sgz_qingtao.content` 里
+                    //     —— 这里已经是子技能，`event.skill` 不是 `sgz_qingtao` 了。
+                    contentBefore: async function (event, trigger, player) {
+                        await sgzQingtaoJuejinEffect(player);
+                    },
+                    audio: "ext:大梦千秋/audio/sgz_caomao:5",
+                    silent: true,
+                    async content(event, trigger, player) {
+                        var target = (event.targets && event.targets[0]) || event.target;
+                        if (!target) return;
+                        // A. 开启腾渊形态 → 立绘变「枭龙破渊2」
+                        //   ⚠ 同样不再写死 `setBackgroundImage('.../sgz_caomao2.jpg')`，
+                        //     改走本扩展的换肤入口（见 skin.js 第 8b 节）。
+                        player.addTempSkill('sgz_tengyuan', 'roundStart');
+                        if (typeof window.dmqcApplyTengyuanSkin == "function") window.dmqcApplyTengyuanSkin(player);
+                        player.useSkill('sgz_caomao_qianlong_ui')
+                        player.update();
+                        game.log(player, '对', target, '发动了【倾讨】，进行最终的死斗！');
 
-                // B. 移除该目标身上所有来自“缚渊”的枷锁（无论是否由缚渊触发）
-                target.removeSkill(['sgz_fuyuan_mark', 'sgz_fuyuan_gaofeng', 'sgz_fuyuan_juechi', 'sgz_fuyuan_bingzun']);
-                const f_cards = target.getCards('h', c => c.hasGaintag('sgz_fuyuan_tag'));
-                if (f_cards.length) {
-                    target.removeGaintag('sgz_fuyuan_tag', f_cards);
-                }
-                delete target.storage.sgz_fuyuan_mark;
-                for (let i = 1; i <= 5; i++) {target.enableEquip(i);target.enableEquip(i);target.enableEquip(i);}
-                const js = target.getCards('j');
-                if (js.length) target.discard(js);
-                
-                // C. 轮流打杀逻辑（对方先）
-                let currentAttacker = target;
-                let winner, loser;
+                        // B. 移除该目标身上所有来自“缚渊”的枷锁（无论是否由缚渊触发）
+                        target.removeSkill(['sgz_fuyuan_mark', 'sgz_fuyuan_gaofeng', 'sgz_fuyuan_juechi', 'sgz_fuyuan_bingzun']);
+                        const f_cards = target.getCards('h', c => c.hasGaintag('sgz_fuyuan_tag'));
+                        if (f_cards.length) {
+                            target.removeGaintag('sgz_fuyuan_tag', f_cards);
+                        }
+                        delete target.storage.sgz_fuyuan_mark;
+                        for (let i = 1; i <= 5; i++) {target.enableEquip(i);target.enableEquip(i);target.enableEquip(i);}
+                        const js = target.getCards('j');
+                        if (js.length) target.discard(js);
 
-                while (true) {
-                    // 提示信息
-                    let promptStr = `<span style='color:#FF4500;'>倾讨·生死</span>：请打出一张【杀】，否则将面临<span style='color:#FF4500;'>处决</span>`;
-                    let res = await currentAttacker.chooseToRespond({ name: 'sha' }).set('prompt', promptStr).forResult();
+                        // C. 轮流打杀逻辑（对方先）
+                        let currentAttacker = target;
+                        let winner, loser;
 
-                    if (!res.bool) {
-                        loser = currentAttacker;
-                        winner = (loser === player) ? target : player;
-                        break;
-                    }
-                    // 交换出牌人
-                    currentAttacker = (currentAttacker === player) ? target : player;
-                }
+                        while (true) {
+                            // 提示信息
+                            let promptStr = `<span style='color:#FF4500;'>倾讨·生死</span>：请打出一张【杀】，否则将面临<span style='color:#FF4500;'>处决</span>`;
+                            let res = await currentAttacker.chooseToRespond({ name: 'sha' }).set('prompt', promptStr).forResult();
 
-                game.log(winner, '获得了最终的胜利！');
+                            if (!res.bool) {
+                                loser = currentAttacker;
+                                winner = (loser === player) ? target : player;
+                                break;
+                            }
+                            // 交换出牌人
+                            currentAttacker = (currentAttacker === player) ? target : player;
+                        }
 
-                // D. 赢家夺取一切 (保持原有逻辑)
-                const l_hp = loser.hp;
-                const l_maxHp = Math.min(loser.maxHp , 5);
-                const l_cards = loser.getCards('hej');
+                        game.log(winner, '获得了最终的胜利！');
 
-                winner.maxHp += l_maxHp;
-                winner.hp += l_hp;
-                winner.update();
-                if (l_cards.length) {
-                    await winner.gain(l_cards, loser, 'gain2');
-                }
-                if(winner == player){
-                    game.playAudio(`../extension/大梦千秋/audio/sgz_caomao/sgz_qingtao${[1,2].randomGet()}.mp3`);
-                }
+                        // D. 赢家夺取一切 (保持原有逻辑)
+                        const l_hp = loser.hp;
+                        const l_maxHp = Math.min(loser.maxHp , 5);
+                        const l_cards = loser.getCards('hej');
 
-                // E. 输家处决
-                loser.die(winner);
+                        winner.maxHp += l_maxHp;
+                        winner.hp += l_hp;
+                        winner.update();
+                        if (l_cards.length) {
+                            await winner.gain(l_cards, loser, 'gain2');
+                        }
+                        if(winner == player){
+                            game.playAudio(`../extension/大梦千秋/audio/sgz_caomao/sgz_qingtao${[1,2].randomGet()}.mp3`);
+                        }
 
-                // F. 额外回合奖励
-                winner.insertPhase();
-                winner.addSkill('sgz_qingtao_mark');
-                winner.addMark('sgz_qingtao_mark', 1);
+                        // E. 输家处决
+                        loser.die(winner);
+
+                        // F. 额外回合奖励
+                        winner.insertPhase();
+                        winner.addSkill('sgz_qingtao_mark');
+                        winner.addMark('sgz_qingtao_mark', 1);
+                    },
+                },
             },
         },
         sgz_qingtao_mark: {
@@ -615,7 +889,11 @@ export default {
                 threaten:1.6,
             },
             onremove: function(player) {
-                player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_caomao.jpg');
+                // 【腾渊】结束 → 立绘还原为「枭龙破渊」
+                //   ⚠ 不再写死 `setBackgroundImage('.../sgz_caomao.jpg')`；改走换肤入口。
+                //     按需求：只有当前立绘确实还停在「枭龙破渊2」时才切回，
+                //     玩家自己换过皮就不覆盖他的选择（判据在 skin.js 的 dmqcRevertTengyuanSkin）。
+                if (typeof window.dmqcRevertTengyuanSkin == "function") window.dmqcRevertTengyuanSkin(player);
                 player.useSkill('sgz_caomao_qianlong_ui');
             },
             content: function() {

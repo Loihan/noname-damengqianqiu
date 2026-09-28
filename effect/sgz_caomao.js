@@ -6,6 +6,8 @@
 //  以“帝王诏令”为主题：黑金诏书界面 + 篆字封印 + 传国玉玺。
 //  仅对本地人类玩家生效，AI/联机/录像回放自动回退到引擎默认框。
 // ============================================================
+import { dmqcMountParticles } from "./dmqc_particles.js";
+
 const dmqcFuyuanStyleId = 'dmqc_fuyuan_style';
 let dmqcFuyuanPatternUid = 0;
 
@@ -510,6 +512,9 @@ function dmqcBuildFuyuanDialog(player, target, choices) {
     );
     wrap.querySelector('.dmqc-fy-bg').style.backgroundImage = "url('extension/大梦千秋/image/sgz_caomao_dialog_bg.svg')";
     wrap.querySelector('.dmqc-fy-emblem').style.backgroundImage = "url('extension/大梦千秋/image/sgz_caomao_double_dragon.svg')";
+
+    // 金色诏令碎屑上浮层（在底板/徽记之上、正文之下）
+    dmqcMountParticles(wrap, "caomao");
 
     // 头部：头像 + 标题 + 竖排“帝权”
     var head = ui.create.div('dmqc-fy-head', wrap);

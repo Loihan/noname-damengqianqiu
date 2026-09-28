@@ -56,17 +56,7 @@ export default {
                 nogain: true,
                 freeSha: true,
                 freeShan: true,
-                maixie: true,
-                // === 【核心修改】：患标记少于2时，认为受伤是正收益，故意不响应伤害牌（参考基础卖血技） ===
-                effect: {
-                    target: function(card, player, target) {
-                        // “患”少于2：将我方受到的伤害威胁值清零，使AI评估受伤收益为正、不再主动出闪/出杀去响应伤害牌，
-                        // 而是选择承受伤害以换取“患”（受创后可获得等量“患”标记）
-                        if (target.countMark('sgz_quanhuan_huan') < 2) {
-                            if (get.tag(card, 'damage')) return [0, 0];
-                        }
-                    }
-                }
+                maixie: false,
             },
             // 音频路径适配
             audio: "ext:大梦千秋/audio/sgz_zhonghui/skill:12", //开局一声获得4权
@@ -169,7 +159,9 @@ export default {
                         trigger.cancel();
                         player.addMark("sgz_quanhuan_huan", trigger.num);
                         game.playAudio('../extension/大梦千秋/audio/sgz_zhonghui/clanxieshu.mp3');
-                        if(player.countMark("sgz_quanhuan_huan") > 2 ) player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_zhonghui2.jpg');
+                        // ⚠ 这里**原来**是按「患 ≥ 3」自动换肤（写死 setBackgroundImage + skin.js 的规则表），
+                        //   已按需求**整体丢弃** —— 换皮时机改由「局内首次发动【矫诏】」驱动，
+                        //   见 skin.js 第 11 节的 `window.dmqcZhonghuiJiaozhaoVideo`。
                     },
                 },
                 lose: {
@@ -242,7 +234,14 @@ export default {
                         precontent() {
                             player.removeMark("sgz_quanhuan_huan", 1);
                             player.logSkill("sgz_jiaozhao");
-                            if(player.countMark("sgz_quanhuan_huan") <= 2 ) player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_zhonghui.jpg');
+                            // ★ 局内**第一次**发动【矫诏】→ 屏幕中央播放「钟会.mp4」+ 换成「潜蛟觊天2」
+                            //   （skin.js 第 11 节；「每局一次」由 player.storage 记，换皮不写存档）
+                            if (typeof window.dmqcZhonghuiJiaozhaoVideo == "function") window.dmqcZhonghuiJiaozhaoVideo(player);
+                            // ⚠ 出框特效**已不在这里触发**（2026 改动）：按规定改由「使用【兴伐】」触发，
+                            //   见 skin.js 第 10 节的 `dmqcPlayZhonghuiEffect` 与 sgz_xingfa.content。
+                            //   矫诏这边现在只有视频演出，不再叠一个出框。
+                            // ⚠ 这里**原来**还有一句「患 ≤ 2 就写死切回 sgz_zhonghui.jpg」的逆向换皮，
+                            //   已随「患 ≥ 3 自动换皮」整体丢弃（现在是单向：首次矫诏 → 潜蛟觊天2）。
                             // 修改点：弃置任意张牌，也可以不弃
                             player.chooseToDiscard('he', [0, Infinity], `###矫诏###你可以弃置任意数量的牌`).set("ai", card => 4.6 - get.value(card));
                         },
@@ -317,7 +316,8 @@ export default {
                         // 2. 若有“患”标记，则移除一个
                         if (player.countMark("sgz_quanhuan_huan") > 0) {
                             player.removeMark("sgz_quanhuan_huan", 1);
-                            if(player.countMark("sgz_quanhuan_huan") <= 2 ) player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_zhonghui.jpg');
+                            // ⚠ 这里**原来**还有一句「患 ≤ 2 就写死切回 sgz_zhonghui.jpg」的逆向换皮，
+                            //   已随「患 ≥ 3 自动换皮」整体丢弃（现在是单向：首次矫诏 → 潜蛟觊天2）。
                         }
                         game.log(player, '因在本回合发动过【觊天】，移除了标记');
                     }
@@ -372,6 +372,11 @@ export default {
             group: "sgz_xingfa_logic",
             async content(event, trigger, player) {
                 player.logSkill('sgz_xingfa');
+                // ★【兴伐】= 出框特效的唯一触发源（2026 改动）。
+                //   两个皮肤形态都认（潜蛟觊天 / 潜蛟觊天2）；原来「使用伤害牌」的自动触发
+                //   已在 skin.js 第 3b 节的 _gj.filter 里关掉（来龙去脉见 skin.js 第 10 节）。
+                //   【矫诏】那边现在只播视频，不再叠加出框（见同函数上方的 precontent）。
+                if (typeof window.dmqcPlayZhonghuiEffect == "function") window.dmqcPlayZhonghuiEffect(player);
                 const { result } = await player.chooseTarget(
                     '兴伐：请选择一名角色对其造成1点伤害并即时调整其体力上限',
                     true

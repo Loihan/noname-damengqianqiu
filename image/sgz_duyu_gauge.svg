@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 260" width="44" height="260" preserveAspectRatio="none">
+  <!-- 梦杜预 · 破竹 进度条底纹：一竿竹的内壁（纯竹丝纹理，不画节环——节环由 CSS 的竹节格绘制，
+       这样任意体力值下节与格的间距都精确对齐） -->
+  <defs>
+    <linearGradient id="dyGaugeBody" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#08100f"/>
+      <stop offset="0.18" stop-color="#14282a"/>
+      <stop offset="0.5" stop-color="#1b3733"/>
+      <stop offset="0.82" stop-color="#102223"/>
+      <stop offset="1" stop-color="#060d0e"/>
+    </linearGradient>
+    <linearGradient id="dyGaugeEdge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6fd39a" stop-opacity="0.08"/>
+      <stop offset="0.5" stop-color="#6fd39a" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#6fd39a" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="dyGaugeBronze" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7d6330" stop-opacity="0.16"/>
+      <stop offset="0.5" stop-color="#c8a15c" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#7d6330" stop-opacity="0.16"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="44" height="260" fill="url(#dyGaugeBody)"/>
+
+  <!-- 竹丝：纵向细纹（疏密不等，避免机械感） -->
+  <g stroke="#6fd39a" stroke-opacity="0.1" stroke-width="0.6">
+    <path d="M8 0 V260 M13 0 V260 M19 0 V260 M25 0 V260 M31 0 V260 M36 0 V260"/>
+  </g>
+  <g stroke="#d8ffe9" stroke-opacity="0.05" stroke-width="0.5">
+    <path d="M22 0 V260"/>
+  </g>
+
+  <!-- 竹隔内部的横向暗纹（竹膜），只做质感，不参与刻度 -->
+  <g fill="#000" fill-opacity="0.16">
+    <rect x="0" y="64" width="44" height="1.2"/>
+    <rect x="0" y="150" width="44" height="1.2"/>
+  </g>
+
+  <!-- 内壁两侧高光：制造"竹筒中空"的立体感 -->
+  <rect x="0" y="0" width="3" height="260" fill="url(#dyGaugeEdge)"/>
+  <rect x="41" y="0" width="3" height="260" fill="url(#dyGaugeEdge)"/>
+  <!-- 竹节两端的青铜束环 -->
+  <rect x="0" y="0" width="44" height="3" fill="url(#dyGaugeBronze)"/>
+  <rect x="0" y="257" width="44" height="3" fill="url(#dyGaugeBronze)"/>
+  <rect x="0" y="0" width="44" height="260" fill="none" stroke="#c8a15c" stroke-opacity="0.3" stroke-width="1"/>
+</svg>

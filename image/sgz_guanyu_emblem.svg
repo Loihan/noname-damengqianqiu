@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- 梦关羽 · 青龙偃月魂刃 徽记（魂断荆州 主题水印） -->
+  <defs>
+    <linearGradient id="gyBladeGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe9a8"/>
+      <stop offset="0.45" stop-color="#f0c05a"/>
+      <stop offset="1" stop-color="#a9741f"/>
+    </linearGradient>
+    <linearGradient id="gyBladeRed" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9273c"/>
+      <stop offset="1" stop-color="#7c121f"/>
+    </linearGradient>
+    <radialGradient id="gyBladeAura" cx="0.5" cy="0.42" r="0.66">
+      <stop offset="0" stop-color="#ff3a2a" stop-opacity="0.5"/>
+      <stop offset="0.55" stop-color="#8f0f12" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#8f0f12" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gyPole" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6b4a12"/>
+      <stop offset="0.5" stop-color="#e2c06a"/>
+      <stop offset="1" stop-color="#6b4a12"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 血魂幽光 -->
+  <circle cx="100" cy="94" r="88" fill="url(#gyBladeAura)"/>
+
+  <!-- 锁链金环 -->
+  <circle cx="100" cy="98" r="82" fill="none" stroke="url(#gyBladeGold)" stroke-width="1.4" opacity="0.5"
+          stroke-dasharray="10 5"/>
+  <circle cx="100" cy="98" r="76" fill="none" stroke="#a31c12" stroke-width="0.8" opacity="0.4"/>
+
+  <!-- 中央魂火（上升之火，缠绕刃尖） -->
+  <g fill="url(#gyBladeRed)" opacity="0.85">
+    <path d="M100 30 C 92 40 90 50 96 58 C 94 50 98 44 100 42 C 102 44 106 50 104 58 C 110 50 108 40 100 30 Z"/>
+    <path d="M100 40 C 96 48 96 54 100 60 C 104 54 104 48 100 40 Z" fill="#ff7a4a" opacity="0.9"/>
+  </g>
+
+  <!-- 上段：刀首（双偃月刃，左右对称） -->
+  <g stroke="#6b4a12" stroke-width="1.4">
+    <!-- 右刃 -->
+    <path d="M100 74 C 128 62 152 68 164 86 C 168 96 170 108 166 120 C 160 138 146 150 128 154 C 138 140 142 122 138 106 C 134 90 122 79 109 77 C 107 76 103 75 100 74 Z"
+          fill="url(#gyBladeGold)"/>
+    <!-- 左刃 -->
+    <path d="M100 74 C 72 62 48 68 36 86 C 32 96 30 108 34 120 C 40 138 54 150 72 154 C 62 140 58 122 62 106 C 66 90 78 79 91 77 C 93 76 97 75 100 74 Z"
+          fill="url(#gyBladeGold)"/>
+  </g>
+  <!-- 刃口血线 -->
+  <path d="M162 86 C 166 96 168 108 164 120" fill="none" stroke="#c9273c" stroke-width="1.6" opacity="0.75"/>
+  <path d="M38 86 C 34 96 32 108 36 120" fill="none" stroke="#c9273c" stroke-width="1.6" opacity="0.75"/>
+
+  <!-- 刀颈（连接处宝石） -->
+  <rect x="93" y="70" width="14" height="22" rx="4" fill="#3a2a12"/>
+  <circle cx="100" cy="81" r="6" fill="#ffdf8a"/>
+  <circle cx="100" cy="81" r="2.4" fill="#fff4d6"/>
+
+  <!-- 长杆 -->
+  <rect x="96.5" y="92" width="7" height="66" fill="url(#gyPole)" stroke="#6b4a12" stroke-width="1.1"/>
+  <!-- 杆身分段束环 -->
+  <g fill="#8a5c1a">
+    <rect x="94.5" y="112" width="11" height="5" rx="1.5"/>
+    <rect x="94.5" y="134" width="11" height="5" rx="1.5"/>
+    <rect x="94.5" y="152" width="11" height="5" rx="1.5"/>
+  </g>
+
+  <!-- 尾镦 -->
+  <polygon points="100,162 92,156 108,156" fill="url(#gyBladeGold)" stroke="#6b4a12" stroke-width="1.1"/>
+
+  <!-- 血缨（垂于刀颈） -->
+  <g fill="url(#gyBladeRed)" opacity="0.9">
+    <path d="M95 82 C 88 90 86 99 90 107 C 94 98 97 92 97 86 Z"/>
+    <path d="M105 82 C 112 90 114 99 110 107 C 106 98 103 92 103 86 Z"/>
+    <path d="M100 84 C 96 94 94 102 96 110 C 100 102 102 94 102 86 Z"/>
+  </g>
+
+  <!-- 装饰血火星屑 -->
+  <g fill="#ffb36a" opacity="0.9">
+    <circle cx="40" cy="118" r="1.6"/>
+    <circle cx="160" cy="118" r="1.6"/>
+    <circle cx="52" cy="100" r="1.1"/>
+    <circle cx="148" cy="100" r="1.1"/>
+    <circle cx="100" cy="150" r="1.3" fill="#e8452a"/>
+  </g>
+</svg>

@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140" aria-hidden="true">
+  <!-- 梦郭嘉 · 窥天 徽记：天眼 · 星穹之瞳（金环星轨 + 玉青弦月 + 浮金瞳孔） -->
+  <defs>
+    <radialGradient id="kt-eye-bg" cx="50%" cy="48%" r="56%">
+      <stop offset="0%" stop-color="#0a1028"/>
+      <stop offset="60%" stop-color="#15234e"/>
+      <stop offset="100%" stop-color="#243a76"/>
+    </radialGradient>
+    <linearGradient id="kt-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff3c4"/>
+      <stop offset="0.5" stop-color="#f0c25a"/>
+      <stop offset="1" stop-color="#9a6a1c"/>
+    </linearGradient>
+    <linearGradient id="kt-iris" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe9a8"/>
+      <stop offset="0.55" stop-color="#d9a63c"/>
+      <stop offset="1" stop-color="#7a5115"/>
+    </linearGradient>
+    <radialGradient id="kt-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fffbe8"/>
+      <stop offset="55%" stop-color="#ffd978"/>
+      <stop offset="100%" stop-color="#b9872e"/>
+    </radialGradient>
+    <filter id="kt-soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- 星穹底晕 -->
+  <circle cx="70" cy="66" r="60" fill="url(#kt-eye-bg)"/>
+  <circle cx="70" cy="66" r="58" fill="none" stroke="url(#kt-gold)" stroke-width="1.1" opacity="0.35"/>
+
+  <!-- 玉青弦月（左上，衬在眼外） -->
+  <g filter="url(#kt-soft)">
+    <path d="M34 30 A 30 30 0 1 0 66 74 A 24 24 0 1 1 34 30 Z" fill="#7fe0a6" opacity="0.55"/>
+    <path d="M38 34 A 26 26 0 1 0 62 70 A 21 21 0 1 1 38 34 Z" fill="#9ff0c0" opacity="0.4"/>
+  </g>
+
+  <!-- 金环星轨（双环 + 虚线刻痕） -->
+  <circle cx="70" cy="66" r="54" fill="none" stroke="url(#kt-gold)" stroke-width="1.6" opacity="0.9" filter="url(#kt-soft)"/>
+  <circle cx="70" cy="66" r="48" fill="none" stroke="url(#kt-gold)" stroke-width="0.7" opacity="0.5" stroke-dasharray="3 5"/>
+  <circle cx="70" cy="66" r="60" fill="none" stroke="url(#kt-gold)" stroke-width="0.6" opacity="0.28" stroke-dasharray="1 7"/>
+
+  <!-- 星轨极星（绕环均匀布点） -->
+  <g fill="#ffe9a8" filter="url(#kt-soft)">
+    <circle cx="70" cy="12" r="1.6"/><circle cx="94" cy="19" r="1.2"/>
+    <circle cx="116" cy="38" r="1.8"/><circle cx="124" cy="66" r="1.2"/>
+    <circle cx="114" cy="93" r="1.6"/><circle cx="94" cy="111" r="1.2"/>
+    <circle cx="70" cy="120" r="1.8"/><circle cx="46" cy="111" r="1.2"/>
+    <circle cx="26" cy="93" r="1.6"/><circle cx="16" cy="66" r="1.2"/>
+    <circle cx="26" cy="38" r="1.8"/><circle cx="46" cy="19" r="1.2"/>
+  </g>
+
+  <!-- 天眼（杏形眼廓 + 虹膜 + 浮金瞳） -->
+  <g filter="url(#kt-soft)">
+    <!-- 眼廓 -->
+    <path d="M34 66 C 44 48 96 48 106 66 C 96 84 44 84 34 66 Z" fill="url(#kt-eye-bg)" stroke="url(#kt-gold)" stroke-width="2.6" stroke-linecap="round"/>
+    <!-- 内沿金线 -->
+    <path d="M40 66 C 48 52 92 52 100 66 C 92 80 48 80 40 66 Z" fill="none" stroke="url(#kt-gold)" stroke-width="0.9" opacity="0.7"/>
+    <!-- 虹膜 -->
+    <circle cx="70" cy="66" r="20" fill="none" stroke="url(#kt-iris)" stroke-width="2"/>
+    <circle cx="70" cy="66" r="16" fill="url(#kt-iris)" opacity="0.35"/>
+    <!-- 瞳孔 -->
+    <circle cx="70" cy="66" r="9" fill="url(#kt-core)"/>
+    <circle cx="66" cy="62" r="2.4" fill="#ffffff"/>
+    <!-- 眼底反光 -->
+    <ellipse cx="52" cy="76" rx="6" ry="2" fill="#9fb6ff" opacity="0.5"/>
+    <ellipse cx="88" cy="56" rx="5" ry="1.8" fill="#ffe9a8" opacity="0.55"/>
+  </g>
+
+  <!-- 瞳芒：从瞳孔向外的稀疏金光针 -->
+  <g stroke="url(#kt-gold)" stroke-width="1" opacity="0.55">
+    <line x1="70" y1="42" x2="70" y2="34"/>
+    <line x1="70" y1="90" x2="70" y2="98"/>
+    <line x1="46" y1="66" x2="38" y2="66"/>
+    <line x1="94" y1="66" x2="102" y2="66"/>
+    <line x1="53" y1="49" x2="48" y2="43"/>
+    <line x1="87" y1="83" x2="92" y2="89"/>
+    <line x1="53" y1="83" x2="48" y2="89"/>
+    <line x1="87" y1="49" x2="92" y2="43"/>
+  </g>
+
+  <!-- 幂幂纤尘（画中浮星） -->
+  <g fill="#ffe9a8" opacity="0.85" filter="url(#kt-soft)">
+    <circle cx="121" cy="26" r="1.3"/><circle cx="17" cy="104" r="1.3"/>
+    <circle cx="63" cy="8" r="1.1"/><circle cx="79" cy="128" r="1.1"/>
+  </g>
+</svg>

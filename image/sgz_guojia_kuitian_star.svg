@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
+  <!-- 梦郭嘉 · 窥天 星芒：四芒浮金星（分段刻度 / 满盈星芒） -->
+  <defs>
+    <linearGradient id="kt-star-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff6d6"/>
+      <stop offset="0.5" stop-color="#ffd978"/>
+      <stop offset="1" stop-color="#d9a63c"/>
+    </linearGradient>
+    <filter id="kt-star-soft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="0.9" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <path d="M16 2 C 17 8 19 12 24 14 C 19 16 17 20 16 26 C 15 20 13 16 8 14 C 13 12 15 8 16 2 Z"
+        fill="url(#kt-star-gold)" filter="url(#kt-star-soft)"/>
+  <path d="M16 7 C 16.6 11 18 13 21 14 C 18 15 16.6 17 16 21 C 15.4 17 14 15 11 14 C 14 13 15.4 11 16 7 Z"
+        fill="#fff6d6" opacity="0.9"/>
+</svg>

@@ -10,6 +10,8 @@
 //  仅对本地人类玩家生效；AI/联机/录像回放回退到引擎默认框。
 // ============================================================
 
+import { dmqcMountParticles, dmqcMountSheen, dmqcToggleSheen } from "./dmqc_particles.js";
+
 const dmqcLvbuStyleId = 'dmqc_lvbu_style';
 
 // 镇猎③ 四个选项的主题化展示数据（封印字 / 铭文 / 强调色）
@@ -118,6 +120,7 @@ export function dmqcBuildLvbuPickDialog(player, title, options, max) {
                 const sel = chosen.indexOf(opt.key) >= 0;
                 const acc = (dmqcLvbuOptionMap[opt.key] || {}).accent || '#45d8ff';
                 node.classList.toggle('selected', sel);
+                dmqcToggleSheen(node, sel);
                 node.style.cssText = dmqcLvbuCardCss(sel, acc);
                 // 已达上限：未选中的变灰且不可再点
                 const prohibit = !sel && chosen.length >= max;
@@ -199,6 +202,9 @@ export function dmqcBuildLvbuPickDialog(player, title, options, max) {
             "url('extension/大梦千秋/image/sgz_lvbu_dialog_bg.svg')";
         panel.querySelector('.dmqc-lvbu-emblem').style.backgroundImage =
             "url('extension/大梦千秋/image/sgz_lvbu_halberd.svg')";
+
+        // 青/品红能量晶屑上浮层（在底板/徽记之上、正文之下）
+        dmqcMountParticles(panel, "lvbu");
 
         // ---------- 头部：头像 + 标题 + 竖排“武神” ----------
         const head = ui.create.div();
@@ -284,6 +290,8 @@ export function dmqcBuildLvbuPickDialog(player, title, options, max) {
                 node.style.cssText = dmqcLvbuCardCss(false, data.accent);
             });
             opts.appendChild(node);
+            // 选中时的青金斜向扫光（须在 innerHTML 赋值之后挂）
+            dmqcMountSheen(node, 'rgba(190,240,255,.18)');
             optionNodes.push(node);
         });
 

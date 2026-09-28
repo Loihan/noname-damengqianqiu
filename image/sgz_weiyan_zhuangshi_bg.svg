@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 580" width="880" height="580">
+  <!-- 梦魏延 · 壮誓 主题选择框背景：玄铁血誓 · 反骨断刃 -->
+  <defs>
+    <linearGradient id="wyBase" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#131a1e"/>
+      <stop offset="0.46" stop-color="#0a1013"/>
+      <stop offset="1" stop-color="#030607"/>
+    </linearGradient>
+    <radialGradient id="wyBlood" cx="0.5" cy="0.06" r="0.96">
+      <stop offset="0" stop-color="#c2261c" stop-opacity="0.5"/>
+      <stop offset="0.5" stop-color="#8d140f" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#8d140f" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="wyEmber" cx="0.84" cy="0.95" r="0.7">
+      <stop offset="0" stop-color="#ff7a1e" stop-opacity="0.2"/>
+      <stop offset="0.55" stop-color="#e0452a" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#e0452a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wyGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2e4b8"/>
+      <stop offset="0.5" stop-color="#c9a45e"/>
+      <stop offset="1" stop-color="#7d6330"/>
+    </linearGradient>
+    <!-- 角落断刃碎片用的暗钢（避免亮银发飘，与玄铁底板同调） -->
+    <linearGradient id="wySteelDark" x1="0.2" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#9aa3a0"/>
+      <stop offset="0.5" stop-color="#586263"/>
+      <stop offset="1" stop-color="#2b3234"/>
+    </linearGradient>
+    <!-- 反骨 · 脊椎骨节纹 -->
+    <pattern id="wySpine" width="60" height="36" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#d8b878" stroke-width="1.1">
+        <rect x="17" y="11" width="26" height="14" rx="7"/>
+        <path d="M17 18 H8 M43 18 H52"/>
+        <circle cx="30" cy="18" r="2.6"/>
+      </g>
+    </pattern>
+    <!-- 断刃血纹 -->
+    <pattern id="wyCrack" width="96" height="96" patternUnits="userSpaceOnUse" patternTransform="rotate(-16)">
+      <path d="M0 30 L24 21 L42 40 L64 25 L96 36" fill="none" stroke="#e0452a" stroke-width="1" opacity="0.5"/>
+      <path d="M32 0 L36 22 L22 44 L38 68 L26 96" fill="none" stroke="#8d140f" stroke-width="0.8" opacity="0.4"/>
+    </pattern>
+  </defs>
+
+  <!-- 玄铁底 -->
+  <rect width="880" height="580" fill="url(#wyBase)"/>
+  <!-- 血誓幽光 / 余烬 -->
+  <rect width="880" height="580" fill="url(#wyBlood)"/>
+  <rect width="880" height="580" fill="url(#wyEmber)"/>
+  <!-- 断刃血纹层 -->
+  <rect width="880" height="580" fill="url(#wyCrack)" opacity="0.32"/>
+  <!-- 脊椎骨节暗纹（反骨） -->
+  <rect width="880" height="580" fill="url(#wySpine)" opacity="0.085"/>
+
+  <!-- 四角断刃铸饰（暗钢 + 血线 + 金铆钉） -->
+  <g opacity="0.7">
+    <g transform="translate(34,30)">
+      <path d="M0 0 L42 11 L28 19 L46 26 L18 40 Z" fill="url(#wySteelDark)" stroke="#8a6a2c" stroke-width="1"/>
+      <path d="M0 0 L42 11" fill="none" stroke="#e0452a" stroke-width="1.4" opacity="0.85"/>
+      <path d="M28 19 L46 26" fill="none" stroke="#c9a45e" stroke-width="0.8" opacity="0.6"/>
+      <circle cx="19" cy="16" r="2.4" fill="#f2e4b8" stroke="#7d6330" stroke-width="0.7"/>
+    </g>
+    <g transform="translate(846,30) scale(-1,1)">
+      <path d="M0 0 L42 11 L28 19 L46 26 L18 40 Z" fill="url(#wySteelDark)" stroke="#8a6a2c" stroke-width="1"/>
+      <path d="M0 0 L42 11" fill="none" stroke="#e0452a" stroke-width="1.4" opacity="0.85"/>
+      <path d="M28 19 L46 26" fill="none" stroke="#c9a45e" stroke-width="0.8" opacity="0.6"/>
+      <circle cx="19" cy="16" r="2.4" fill="#f2e4b8" stroke="#7d6330" stroke-width="0.7"/>
+    </g>
+    <g transform="translate(34,550) scale(1,-1)">
+      <path d="M0 0 L42 11 L28 19 L46 26 L18 40 Z" fill="url(#wySteelDark)" stroke="#8a6a2c" stroke-width="1"/>
+      <path d="M0 0 L42 11" fill="none" stroke="#e0452a" stroke-width="1.4" opacity="0.85"/>
+      <path d="M28 19 L46 26" fill="none" stroke="#c9a45e" stroke-width="0.8" opacity="0.6"/>
+      <circle cx="19" cy="16" r="2.4" fill="#f2e4b8" stroke="#7d6330" stroke-width="0.7"/>
+    </g>
+    <g transform="translate(846,550) scale(-1,-1)">
+      <path d="M0 0 L42 11 L28 19 L46 26 L18 40 Z" fill="url(#wySteelDark)" stroke="#8a6a2c" stroke-width="1"/>
+      <path d="M0 0 L42 11" fill="none" stroke="#e0452a" stroke-width="1.4" opacity="0.85"/>
+      <path d="M28 19 L46 26" fill="none" stroke="#c9a45e" stroke-width="0.8" opacity="0.6"/>
+      <circle cx="19" cy="16" r="2.4" fill="#f2e4b8" stroke="#7d6330" stroke-width="0.7"/>
+    </g>
+  </g>
+
+  <!-- 上下骨金饰带（压暗，仅作锻造质感） -->
+  <g opacity="0.3">
+    <rect x="16" y="14" width="848" height="30" fill="url(#wySpine)"/>
+    <rect x="16" y="536" width="848" height="30" fill="url(#wySpine)"/>
+  </g>
+  <rect x="16" y="46" width="848" height="1.4" fill="url(#wyGold)" opacity="0.4"/>
+  <rect x="16" y="532" width="848" height="1.4" fill="url(#wyGold)" opacity="0.4"/>
+
+  <!-- 血金双层边框 -->
+  <rect x="9" y="9" width="862" height="562" fill="none" stroke="url(#wyGold)" stroke-width="2.2" opacity="0.8"/>
+  <rect x="15" y="15" width="850" height="550" fill="none" stroke="#e0452a" stroke-width="1" opacity="0.45"/>
+  <rect x="34" y="58" width="812" height="464" fill="none" stroke="#c9a45e" stroke-width="0.6" opacity="0.26"/>
+
+  <!-- 中央「誓」字水印（血誓） -->
+  <text x="440" y="300" text-anchor="middle" dominant-baseline="middle"
+        font-family="xinwei, KaiTi, STKaiti, serif" font-size="310" fill="#e0452a" opacity="0.042">誓</text>
+  <!-- 右上「反骨」小篆水印 -->
+  <g font-family="xiaozhuan, KaiTi, STKaiti, serif" font-size="34" fill="#ded6c2" opacity="0.075">
+    <text x="800" y="132">反</text>
+    <text x="800" y="176">骨</text>
+  </g>
+
+  <!-- 灼灼血火星屑 -->
+  <g fill="#ffb36a" opacity="0.5">
+    <circle cx="132" cy="104" r="1.8"/><circle cx="196" cy="152" r="1.2"/>
+    <circle cx="286" cy="86" r="1.4"/><circle cx="348" cy="128" r="1.0"/>
+    <circle cx="506" cy="82" r="1.5"/><circle cx="588" cy="140" r="1.1"/>
+    <circle cx="672" cy="98" r="1.7"/><circle cx="736" cy="158" r="1.2"/>
+    <circle cx="164" cy="382" r="1.3"/><circle cx="258" cy="436" r="1.0"/>
+    <circle cx="548" cy="404" r="1.5"/><circle cx="636" cy="448" r="1.1"/>
+    <circle cx="722" cy="386" r="1.3"/>
+  </g>
+  <g fill="#e0452a" opacity="0.4">
+    <circle cx="322" cy="66" r="2.2"/><circle cx="452" cy="164" r="1.8"/>
+    <circle cx="404" cy="452" r="2.0"/><circle cx="694" cy="248" r="1.7"/>
+    <circle cx="98" cy="238" r="1.9"/>
+  </g>
+
+  <!-- 上下中央铆钉 -->
+  <g fill="url(#wyGold)" opacity="0.85">
+    <circle cx="440" cy="29" r="3.2"/>
+    <circle cx="440" cy="551" r="3.2"/>
+  </g>
+</svg>

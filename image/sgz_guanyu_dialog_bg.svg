@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 460" width="800" height="460">
+  <!-- 梦关羽 · 魂断荆州 主题选择框背景：血渊焚刃 -->
+  <defs>
+    <linearGradient id="gyBgBase" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3c0607"/>
+      <stop offset="0.45" stop-color="#220304"/>
+      <stop offset="1" stop-color="#0c0202"/>
+    </linearGradient>
+    <radialGradient id="gyBgBlood" cx="0.5" cy="0.12" r="0.98">
+      <stop offset="0" stop-color="#c71d1d" stop-opacity="0.58"/>
+      <stop offset="0.5" stop-color="#8f0f12" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#8f0f12" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="gyBgEmber" cx="0.82" cy="0.92" r="0.72">
+      <stop offset="0" stop-color="#ff7a1e" stop-opacity="0.26"/>
+      <stop offset="0.55" stop-color="#ff4a16" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#ff4a16" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gyGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8e3a2"/>
+      <stop offset="0.5" stop-color="#d09b3f"/>
+      <stop offset="1" stop-color="#8a6420"/>
+    </linearGradient>
+    <linearGradient id="gyGoldDim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a97f2f"/>
+      <stop offset="1" stop-color="#5c3f13"/>
+    </linearGradient>
+    <!-- 铸铁锁链节纹 -->
+    <pattern id="gyChain" width="46" height="30" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#d09b3f" stroke-width="1.3">
+        <rect x="8" y="9" width="22" height="13" rx="6.5"/>
+        <rect x="16" y="-7" width="22" height="13" rx="6.5"/>
+        <rect x="16" y="24" width="22" height="13" rx="6.5"/>
+      </g>
+    </pattern>
+    <!-- 血焰裂纹 -->
+    <pattern id="gyCrack" width="88" height="88" patternUnits="userSpaceOnUse">
+      <path d="M0 44 L18 38 L32 52 L50 40 L66 58 L88 48" fill="none" stroke="#e8452a" stroke-width="1" opacity="0.55"/>
+      <path d="M44 0 L40 20 L56 34 L44 54 L60 72 L50 88" fill="none" stroke="#a31c12" stroke-width="0.8" opacity="0.45"/>
+    </pattern>
+  </defs>
+
+  <!-- 血渊底 -->
+  <rect width="800" height="460" fill="url(#gyBgBase)"/>
+  <!-- 血/火 幽光 -->
+  <rect width="800" height="460" fill="url(#gyBgBlood)"/>
+  <rect width="800" height="460" fill="url(#gyBgEmber)"/>
+  <!-- 血焰裂纹层 -->
+  <rect width="800" height="460" fill="url(#gyCrack)" opacity="0.35"/>
+  <!-- 锁链暗纹（极淡） -->
+  <rect width="800" height="460" fill="url(#gyChain)" opacity="0.10"/>
+
+  <!-- 四角锁链坠饰（血金） -->
+  <g fill="none" stroke="#d09b3f" stroke-width="1.6" opacity="0.8">
+    <!-- 左上 -->
+    <g transform="translate(38,36)">
+      <path d="M0 0 L26 26"/>
+      <circle cx="30" cy="30" r="8"/>
+      <circle cx="30" cy="30" r="2.2" fill="#e8452a" stroke="none"/>
+      <path d="M12 6 L34 28 M6 12 L28 34" stroke-width="1" opacity="0.5"/>
+    </g>
+    <!-- 右上 -->
+    <g transform="translate(762,36) scale(-1,1)">
+      <path d="M0 0 L26 26"/>
+      <circle cx="30" cy="30" r="8"/>
+      <circle cx="30" cy="30" r="2.2" fill="#e8452a" stroke="none"/>
+      <path d="M12 6 L34 28 M6 12 L28 34" stroke-width="1" opacity="0.5"/>
+    </g>
+    <!-- 左下 -->
+    <g transform="translate(38,424) scale(1,-1)">
+      <path d="M0 0 L26 26"/>
+      <circle cx="30" cy="30" r="8"/>
+      <circle cx="30" cy="30" r="2.2" fill="#e8452a" stroke="none"/>
+      <path d="M12 6 L34 28 M6 12 L28 34" stroke-width="1" opacity="0.5"/>
+    </g>
+    <!-- 右下 -->
+    <g transform="translate(762,424) scale(-1,-1)">
+      <path d="M0 0 L26 26"/>
+      <circle cx="30" cy="30" r="8"/>
+      <circle cx="30" cy="30" r="2.2" fill="#e8452a" stroke="none"/>
+      <path d="M12 6 L34 28 M6 12 L28 34" stroke-width="1" opacity="0.5"/>
+    </g>
+  </g>
+
+  <!-- 上下血金饰带（锁链横纹） -->
+  <g opacity="0.55">
+    <rect x="16" y="14" width="768" height="26" fill="url(#gyChain)"/>
+    <rect x="16" y="420" width="768" height="26" fill="url(#gyChain)"/>
+  </g>
+  <rect x="16" y="42" width="768" height="1.4" fill="url(#gyGold)" opacity="0.5"/>
+  <rect x="16" y="416" width="768" height="1.4" fill="url(#gyGold)" opacity="0.5"/>
+
+  <!-- 血金双层边框 -->
+  <rect x="9" y="9" width="782" height="442" fill="none" stroke="url(#gyGold)" stroke-width="2.2" opacity="0.85"/>
+  <rect x="15" y="15" width="770" height="430" fill="none" stroke="#e8452a" stroke-width="1" opacity="0.5"/>
+  <rect x="33" y="54" width="734" height="352" fill="none" stroke="#d09b3f" stroke-width="0.6" opacity="0.3"/>
+
+  <!-- 中央“魂”字水印（如怨魂低语） -->
+  <text x="400" y="268" text-anchor="middle" dominant-baseline="middle"
+        font-family="xinwei, KaiTi, STKaiti, serif" font-size="250" fill="#ff2a2a" opacity="0.045">魂</text>
+
+  <!-- 灼灼血火星屑 -->
+  <g fill="#ffb36a" opacity="0.5">
+    <circle cx="120" cy="96" r="1.8"/><circle cx="180" cy="140" r="1.2"/>
+    <circle cx="260" cy="80" r="1.4"/><circle cx="330" cy="120" r="1.0"/>
+    <circle cx="470" cy="78" r="1.5"/><circle cx="560" cy="132" r="1.1"/>
+    <circle cx="640" cy="92" r="1.7"/><circle cx="710" cy="150" r="1.2"/>
+    <circle cx="150" cy="330" r="1.3"/><circle cx="240" cy="380" r="1.0"/>
+    <circle cx="520" cy="352" r="1.5"/><circle cx="610" cy="388" r="1.1"/>
+    <circle cx="690" cy="330" r="1.3"/>
+  </g>
+  <g fill="#e8452a" opacity="0.4">
+    <circle cx="300" cy="60" r="2.2"/><circle cx="430" cy="150" r="1.8"/>
+    <circle cx="380" cy="390" r="2.0"/><circle cx="660" cy="230" r="1.7"/>
+    <circle cx="90" cy="210" r="1.9"/>
+  </g>
+
+  <!-- 顶部/底部中央铆钉 -->
+  <g fill="url(#gyGold)" opacity="0.85">
+    <circle cx="400" cy="27" r="3"/>
+    <circle cx="400" cy="433" r="3"/>
+  </g>
+</svg>

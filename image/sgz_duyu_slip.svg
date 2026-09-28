@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 200" width="30" height="200" preserveAspectRatio="none">
+  <!-- 梦杜预 · 谏国「武库名录」竹简底纹（单片竹简，CSS 里以 background-repeat: repeat-x 平铺成册）
+       一格 = 24px 竹片 + 6px 编绳缝隙 -->
+  <defs>
+    <linearGradient id="dySlipBody" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0d1c17"/>
+      <stop offset="0.14" stop-color="#1b352d"/>
+      <stop offset="0.46" stop-color="#264a3e"/>
+      <stop offset="0.72" stop-color="#193329"/>
+      <stop offset="1" stop-color="#0a1512"/>
+    </linearGradient>
+    <linearGradient id="dySlipEdge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6fd39a" stop-opacity="0.16"/>
+      <stop offset="0.5" stop-color="#9fe6bd" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#6fd39a" stop-opacity="0.12"/>
+    </linearGradient>
+    <linearGradient id="dySlipCord" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c8a15c" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#7d6330" stop-opacity="0.45"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 竹片本体 -->
+  <rect x="0" y="0" width="24" height="200" fill="url(#dySlipBody)"/>
+  <!-- 竹丝 -->
+  <g stroke="#6fd39a" stroke-opacity="0.16" stroke-width="0.6">
+    <path d="M5 0 V200 M9 0 V200 M13 0 V200 M17 0 V200"/>
+  </g>
+  <g stroke="#d8ffe9" stroke-opacity="0.08" stroke-width="0.5">
+    <path d="M11.5 0 V200"/>
+  </g>
+  <!-- 左右内缘高光（竹片的圆弧面） -->
+  <rect x="0" y="0" width="2" height="200" fill="url(#dySlipEdge)"/>
+  <rect x="22" y="0" width="2" height="200" fill="url(#dySlipEdge)"/>
+  <!-- 上下端收口 -->
+  <rect x="0" y="0" width="24" height="2.4" fill="#c8a15c" fill-opacity="0.3"/>
+  <rect x="0" y="197.6" width="24" height="2.4" fill="#c8a15c" fill-opacity="0.3"/>
+  <!-- 编绳：两道横编（位于 1/3 与 2/3 处，平铺后即成册） -->
+  <g fill="url(#dySlipCord)">
+    <rect x="0" y="64" width="24" height="4"/>
+    <rect x="0" y="132" width="24" height="4"/>
+  </g>
+  <g fill="#000" fill-opacity="0.4">
+    <rect x="0" y="68" width="24" height="1.4"/>
+    <rect x="0" y="136" width="24" height="1.4"/>
+  </g>
+  <!-- 片缝（右侧 6px 的编绳间隙） -->
+  <rect x="24" y="0" width="6" height="200" fill="#040a09"/>
+  <rect x="24" y="0" width="1" height="200" fill="#c8a15c" fill-opacity="0.18"/>
+</svg>

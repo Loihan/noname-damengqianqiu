@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
+  <!-- 梦杜预 · 倾势·失败 徽记「武库化烬 · 神兵现世」
+       与成功版「完整裂竹 × 交叠兵戈」严格对照、同一构图：
+         · 外环：由完整回纹环 → 断裂的四段冷银弧（缺口在四个对角）
+         · 交叠兵戈：仍为对称十字，但矛尖被削去、只余锯齿断口
+         · 中央竹竿：只剩一截断桩（与剑柄之间留出空隙，避免与剑连成一个剪影）
+         · 中央主形：由"竹"换成"自断桩中重铸的神兵"，刃身缠绕幽紫电光
+       —— 意在表达"武库虽崩，此亦一途"，而非凋敝丧气。 -->
+  <defs>
+    <radialGradient id="dyFemAura" cx="0.5" cy="0.44" r="0.66">
+      <stop offset="0" stop-color="#a98cff" stop-opacity="0.46"/>
+      <stop offset="0.55" stop-color="#3a2d78" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#0a0818" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dyFemSilver" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2f5ff"/>
+      <stop offset="0.5" stop-color="#9aa8c4"/>
+      <stop offset="1" stop-color="#4d5670"/>
+    </linearGradient>
+    <linearGradient id="dyFemGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e8e2f5"/>
+      <stop offset="0.5" stop-color="#8d84ad"/>
+      <stop offset="1" stop-color="#463f63"/>
+    </linearGradient>
+    <linearGradient id="dyFemViolet" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#4a30b8"/>
+      <stop offset="0.5" stop-color="#c3b0ff"/>
+      <stop offset="1" stop-color="#4a30b8"/>
+    </linearGradient>
+    <linearGradient id="dyFemBlade" x1="0.15" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.3" stop-color="#e2e9f8"/>
+      <stop offset="0.62" stop-color="#94a0bd"/>
+      <stop offset="1" stop-color="#3d4459"/>
+    </linearGradient>
+    <linearGradient id="dyFemStump" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1d1734"/>
+      <stop offset="0.36" stop-color="#6f63a8"/>
+      <stop offset="0.62" stop-color="#a493e0"/>
+      <stop offset="1" stop-color="#221b3e"/>
+    </linearGradient>
+    <linearGradient id="dyFemBolt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4eeff"/>
+      <stop offset="0.5" stop-color="#a98cff"/>
+      <stop offset="1" stop-color="#5a3fd0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 幽紫余辉 -->
+  <circle cx="120" cy="118" r="112" fill="url(#dyFemAura)"/>
+
+  <!-- ① 交叠断兵（对称十字；矛尖被削去，只余锯齿断口） -->
+  <g stroke="#3b3454" stroke-width="1.2">
+    <g transform="rotate(-38 120 120)">
+      <!-- 长柄 -->
+      <rect x="116" y="74" width="8" height="136" rx="3" fill="url(#dyFemGold)" opacity="0.9"/>
+      <!-- 断口：锯齿（原本是矛尖的位置） -->
+      <path d="M116 74 L118 62 L121 72 L124 58 L126 70 L128 64 L130 76 L124 78 L116 78 Z"
+            fill="#d9d2ee" stroke="#4d5670"/>
+      <!-- 束环与血缨残根 -->
+      <rect x="113" y="120" width="14" height="5" rx="2" fill="#8d84ad"/>
+      <circle cx="120" cy="140" r="6.5" fill="#2a2340" stroke="url(#dyFemSilver)" stroke-width="1.2"/>
+      <circle cx="120" cy="140" r="2.6" fill="#c3b0ff"/>
+    </g>
+    <g transform="rotate(38 120 120)">
+      <rect x="116" y="74" width="8" height="136" rx="3" fill="url(#dyFemGold)" opacity="0.9"/>
+      <path d="M116 74 L118 62 L121 72 L124 58 L126 70 L128 64 L130 76 L124 78 L116 78 Z"
+            fill="#d9d2ee" stroke="#4d5670"/>
+      <rect x="113" y="120" width="14" height="5" rx="2" fill="#8d84ad"/>
+      <circle cx="120" cy="140" r="6.5" fill="#2a2340" stroke="url(#dyFemSilver)" stroke-width="1.2"/>
+      <circle cx="120" cy="140" r="2.6" fill="#c3b0ff"/>
+    </g>
+  </g>
+
+  <!-- ② 中央神兵：一柄自上而下贯通的直刃（刃身 / 护手 / 柄 / 柄首） -->
+  <g>
+    <!-- 刃身：自刃尖向下渐宽 -->
+    <path d="M120 28 L131 74 L133 112 L107 112 L109 74 Z" fill="url(#dyFemBlade)" stroke="#5d6680" stroke-width="1.2"/>
+    <!-- 血槽 -->
+    <path d="M120 40 V108" fill="none" stroke="#4a30b8" stroke-width="1.3" opacity="0.75"/>
+    <!-- 刃脊高光 -->
+    <path d="M120 30 V110" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.55"/>
+    <!-- 护手（横出，冷银，两端上翘） -->
+    <path d="M88 110 Q120 104 152 110 L152 118 Q120 112 88 118 Z" fill="url(#dyFemSilver)" stroke="#4d5670" stroke-width="1"/>
+    <!-- 柄 -->
+    <rect x="113" y="118" width="14" height="30" rx="4" fill="#2a2340" stroke="#9aa8c4" stroke-width="1.1"/>
+    <g fill="#9aa8c4" opacity="0.5">
+      <rect x="113" y="124" width="14" height="2"/>
+      <rect x="113" y="132" width="14" height="2"/>
+      <rect x="113" y="140" width="14" height="2"/>
+    </g>
+    <!-- 柄首 -->
+    <circle cx="120" cy="152" r="7" fill="#1a1530" stroke="url(#dyFemSilver)" stroke-width="1.5"/>
+    <circle cx="120" cy="152" r="2.8" fill="#c3b0ff"/>
+  </g>
+
+  <!-- ③ 断竹之桩：短、带锯齿断口，与剑柄之间留出空隙（不会连成一个剪影） -->
+  <g>
+    <rect x="109" y="170" width="22" height="38" rx="7" fill="url(#dyFemStump)" stroke="#1c1630" stroke-width="1.2"/>
+    <g stroke="#f2f5ff" stroke-opacity="0.2" stroke-width="0.7">
+      <path d="M114 174 V204 M120 172 V206 M126 174 V204"/>
+    </g>
+    <g fill="url(#dyFemSilver)" stroke="#3d4459" stroke-width="0.8">
+      <rect x="106" y="186" width="28" height="6" rx="2.6" transform="rotate(-2 120 189)"/>
+      <rect x="106" y="200" width="28" height="6" rx="2.6" transform="rotate(3 120 203)"/>
+    </g>
+    <!-- 断口：斜劈的茬口 -->
+    <path d="M106 172 L114 158 L120 174 L127 160 L128 174 L134 166 L134 175 Z" fill="#08060f"/>
+    <path d="M106 172 L114 158 L120 174 L127 160 L128 174 L134 166 L134 175"
+          fill="none" stroke="#c3b0ff" stroke-width="1.4" stroke-opacity="0.9"/>
+  </g>
+
+  <!-- ④ 幽紫电光：自天而落击于刃尖，另有电芒绕刃游走（不划过刃身，避免看成裂纹） -->
+  <g fill="none" stroke="url(#dyFemBolt)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 落雷：自上击中刃尖 -->
+    <path d="M120 8 L108 22 L120 30" stroke-width="2.4" opacity="0.95"/>
+    <path d="M120 8 L108 22 L120 30" stroke-width="5.4" opacity="0.26"/>
+    <!-- 绕刃电芒（左右各一，贴着刃身外侧走） -->
+    <path d="M92 46 L80 60 L96 72 L82 88 L100 98" stroke-width="1.8" opacity="0.85"/>
+    <path d="M92 46 L80 60 L96 72 L82 88 L100 98" stroke-width="4.4" opacity="0.2"/>
+    <path d="M150 52 L162 68 L146 78 L160 96 L144 106" stroke-width="1.8" opacity="0.85"/>
+    <path d="M150 52 L162 68 L146 78 L160 96 L144 106" stroke-width="4.4" opacity="0.2"/>
+    <!-- 桩侧电芒 -->
+    <path d="M78 168 L92 178 L80 192 L94 200" stroke-width="1.4" opacity="0.6"/>
+    <path d="M164 166 L150 176 L164 190 L150 198" stroke-width="1.4" opacity="0.6"/>
+  </g>
+
+  <!-- 崩裂飞屑 -->
+  <g fill="#c3b0ff" opacity="0.9">
+    <path d="M70 96 l-9 6 l10 6 Z"/>
+    <path d="M172 92 l9 6 l-10 6 Z"/>
+    <path d="M60 132 l-8 5 l8 6 Z"/>
+    <path d="M182 130 l8 5 l-8 6 Z"/>
+    <path d="M120 222 l-6 9 l12 0 Z"/>
+  </g>
+
+  <!-- 外环：断裂的四段冷银弧（缺口落在四个对角，与成功版完整环形成对照） -->
+  <g fill="none" stroke="url(#dyFemSilver)" stroke-linecap="round">
+    <path d="M120 12 A108 108 0 0 1 196 44" stroke-width="2.6" opacity="0.85"/>
+    <path d="M214 84 A108 108 0 0 1 214 156" stroke-width="2.6" opacity="0.85"/>
+    <path d="M196 196 A108 108 0 0 1 44 196" stroke-width="2.6" opacity="0.85"/>
+    <path d="M26 156 A108 108 0 0 1 44 44" stroke-width="2.6" opacity="0.85"/>
+  </g>
+  <circle cx="120" cy="120" r="98" fill="none" stroke="#8f7dff" stroke-width="0.9" opacity="0.45"
+          stroke-dasharray="4 7 22 8 3 12"/>
+  <circle cx="120" cy="120" r="88" fill="none" stroke="#9aa8c4" stroke-width="0.7" opacity="0.22"/>
+
+  <!-- 环侧小篆：神 / 兵 -->
+  <g font-family="xiaozhuan, KaiTi, STKaiti, serif" font-size="26" fill="#9aa8c4" opacity="0.85" text-anchor="middle">
+    <text x="120" y="30">神</text>
+    <text x="120" y="234">兵</text>
+  </g>
+
+  <!-- 剑柄交会处：神兵之核（与成功版"竹青核心"同位置，便于对照） -->
+  <circle cx="120" cy="120" r="12" fill="none" stroke="url(#dyFemViolet)" stroke-width="1.4" opacity="0.85"/>
+</svg>

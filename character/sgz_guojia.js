@@ -1,3 +1,6 @@
+// 窥天星穹能量条 UI 已抽离至 effect/sgz_guojia.js
+import { guojiaKuitianUI } from '../effect/sgz_guojia.js';
+
 export default {
     character: {
         // 梦郭嘉：神势力，4体力
@@ -5,7 +8,7 @@ export default {
             sex:"male", 
             group:"wei", 
             hp:3, 
-            skills:["sgz_guanxu","sgz_kuitian","sgz_jihui","sgz_tianshang"], 
+            skills:["sgz_guanxu","sgz_kuitian","sgz_jihui","sgz_tianshang","sgz_guojia_kuitian_ui"], 
             img:"extension/大梦千秋/image/sgz_guojia.jpg",
             dieAudios:["ext:大梦千秋/audio/sgz_guojia/die/die.mp3"],
             names:"郭|嘉",
@@ -124,8 +127,9 @@ export default {
             subSkill: {
                 backup: { sub: true },
                 used: {
-                    sub: true, onremove: true, charlotte: true, mark: true, marktext: "窥天",
-                    intro: { content: (storage) => `本回合已发动${storage}次` },
+                    // 窥天次数标记：仅作计数与回合重置（onremove 清除 storage），
+                    // 不再渲染武将牌上的“窥天”标记角标——由右侧星穹能量条显示。
+                    sub: true, onremove: true, charlotte: true,
                 },
             },
             // 核心修复 4：AI 引导模块
@@ -158,6 +162,8 @@ export default {
                 }
             }
         },
+        // === 1.5 窥天 · 星穹能量条（挂载武将牌右侧，实现见 effect/sgz_guojia.js） ===
+        sgz_guojia_kuitian_ui: guojiaKuitianUI,
         // === 2. 观虚(傲才体力上限)===
         sgz_guanxu: {
             audio: "ext:大梦千秋/audio/sgz_guojia/skill:10",
@@ -350,6 +356,11 @@ export default {
             },
             content: function() {
                 "step 0"
+                // 「以身证道」出框特效本来挂在「使用伤害类牌」上（皮肤切换的全局技能 _gj），
+                // 现按需求改到极慧触发：那条触发已在 skin.js 第 3b 节的 _gj.filter 里关掉
+                // （来龙去脉见 skin.js 第 10 节），这里手动补播同一个出框。
+                // 用 window. 调用是因为 content 会被编译；函数不存在时静默跳过。
+                if (typeof window.dmqcPlayJihuiEffect == "function") window.dmqcPlayJihuiEffect(player);
                 event.cards = [];
                 event.suits = [];
                 "step 1"

@@ -539,7 +539,15 @@ export const wuyinRecordUI = {
         try { dmqcRefreshWuyinRec(player); } catch (e) {}
         dmqcStartWuyinRecPolling(player);
     },
-    content: function () {
+    // ⚠⚠ 必须是 `async function`（梦孙寒华【妙剑】④踩过的同一个坑，务必保留结论）：
+    //   `ContentCompiler` 的 `StepCompiler.filter()` 会认领**所有非 async / 非 generator 的函数**
+    //   （`noname/library/element/GameEvent/compilers/StepCompiler.js:10-12`），把它**转成字符串 +
+    //   用隔离作用域重新 eval**（`packStep`，:81-93）。隔离作用域里只有 `_status/lib/game/ui/get/ai`
+    //   与 `event/trigger/player`，**模块作用域整个消失** —— 所以这里的 `dmqcRefreshWuyinRec`（模块函数）
+    //   在编译后是 `undefined`，一句 `try{...}catch(e){}` 把 ReferenceError 咽掉了：
+    //   表现为「事件触发时的那次刷新从来没生效」，只剩 `init` 里启动的 420ms 轮询在兜底。
+    //   写成 async 后由 `AsyncCompiler` 接走（`AsyncCompiler.js:7`），闭包保留，刷新才会真的生效。
+    content: async function () {
         try { dmqcRefreshWuyinRec(player); } catch (e) {}
     },
     onremove: function (player) {

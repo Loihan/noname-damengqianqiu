@@ -408,10 +408,16 @@ export default {
                             if (target.hp <= 2 && target.hasSkill('sgz_leiji_boom') && target.hasSkill('sgz_leiji_thunder')) return 0;
                         }
                         // --- 核心 AI：送马逻辑 ---
-                        // 目标 1：优先还给刚被标记过的敌人 (连招)
+                        // 目标 1：优先还给刚被标记过的敌人 (雷殛连招，最高优先)
                         if (att < 0 && target.hasSkill('sgz_leiji_boom') && target.hasSkill('sgz_leiji_thunder')) return 300;
-                        // 目标 2：还给手牌最多的敌人 (贪婪掠夺)
-                        if (att < 0) return 200 + target.countCards('h') * 20;
+                        // 目标 2：还给敌人。
+                        //   【核心 AI 修正】原先只按“手牌最多”评分，attitude 完全不参与：
+                        //   一旦敌人手牌都为 0（或手牌数相同），全场敌人同分，实际由遍历顺序决出，
+                        //   于是常常落在默认一号位，而不是最该压制的那个敌人。
+                        //   现在让 attitude 主导优先序（attitude 越低＝敌意越强＝分越高：
+                        //   态度每低 1 点 +40 分，足以压过任何手牌数差异 3×10=30），
+                        //   手牌数降为同态度档位内的次级考量（送马后可偷回更多牌）。
+                        if (att < 0) return 200 + target.countCards('h') * 10 - att * 40;
                         // 目标 3：实在没敌人了，还给快死的队友保命
                         if (att >= 0 && target != player ) return target.countCards('h') * 20;
                         return 5;

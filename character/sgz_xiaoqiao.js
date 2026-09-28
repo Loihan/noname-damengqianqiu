@@ -225,10 +225,13 @@ export default {
                 const hs = player.countCards("h");
                 const hp = Math.max(0, player.hp);
 
-                // 若手牌数 > 体力：弃至体力、防止此伤害、转移等量伤害
-                if (hs > hp) {
-                    const need = hs - hp;
-                    if (need > 0) {
+                // 若手牌数 < 体力：弃至体力、防止此伤害、转移等量伤害
+                const need = hp > hs ? hp-hs : hs-hp;
+                if ( need > 1 ) {
+                    if ( hp > hs ) {
+                        await player.draw(need);
+                    }
+                    else if( hp < hs) {
                         await player.chooseToDiscard(need, "h", "弦律：弃置" + need + "张手牌（至体力数）").forResult();
                     }
                     trigger.cancel(); // 防止此伤害
@@ -410,10 +413,10 @@ export default {
         sgz_linglai: "灵籁",
         sgz_linglai_info: "锁定技，当你获得牌时，你将本次获得的牌的花色视为你已有手牌中数量最少的一种花色（最少不唯一则选择其中随机一种）。",
         sgz_xianlv: "弦律",
-        sgz_xianlv_info: "锁定技，当你即将受到伤害时依次执行以下效果：<br>①若你的手牌数大于体力，你将手牌弃至体力数并将此伤害转移给一名其他角色；<br>②将你所有手牌的花色随机视为一种可视为花色并删除此花色，删除所有花色后重置。",
+        sgz_xianlv_info: "锁定技，当你即将受到伤害时依次执行以下效果：①若你的手牌数与体力值之差大于1，你将手牌调整至体力数并将此伤害转移给一名其他角色；②将你所有手牌的花色随机视为一种可视为花色并删除此花色，删除所有花色后重置。",
         "sgz_xianlv_bg": "韵",
         sgz_wuyin: "五音",
-        sgz_wuyin_info: "①出牌阶段限一次，选择一种花色，视为你于此阶段下一张使用的牌的实际花色；<br>②锁定技，当你使用牌时，选择一名角色并根据花色执行对应效果：<br>宫·♥️：回复A点体力并获得A点护甲；<br>商·♦️：受到B点伤害并失去B点体力；<br>角·无色：减少C点体力上限；<br>徵·♣️：弃置2D张牌；<br>羽·♠️：摸3E张牌后弃置3E张牌。<br>然后记录本次的花色韵律；所有韵律变量初始均为1。<br>③当韵律记录变化时，你根据最近的4次韵律执行对应效果：<br>1.均不相同：执行一次变量+1的最近一次韵律的效果；<br>2.有相同且不完全相同：摸一张牌；<br>3.完全相同：增加一点体力上限，该韵律变量永久+1。",
+        sgz_wuyin_info: "①<span style='color:#00FF00;'>变</span>：出牌阶段限一次，选择一种花色，视为你于此阶段下一张使用的牌的实际花色；②<span style='color:#00FF00;'>弦</span>：你使用牌时须选择一名角色，其根据花色执行音韵效果并记录至五音谱；③<span style='color:#00FF00;'>律</span>：当五音谱记录变化时，你根据最近4次音韵执行对应效果。<br><span style='color:#00FF00;'>弦效果</span>：音韵变量初始均为1;<br>宫·♥️：回复A点体力并获得A点护甲；<br>商·♦️：受到B点伤害并失去B点体力；<br>角·无色：减少C点体力上限；<br>徵·♣️：弃置2D张牌；<br>羽·♠️：摸3E张牌后弃置3E张牌。<br><span style='color:#00FF00;'>律效果</span>：若最近4次音韵记录：<br>1.均不相同：执行一次变量+1的最近一次音韵的弦效果；<br>2.有相同且不完全相同：摸一张牌；<br>3.完全相同：增加一点体力上限，该音韵变量永久+1。",
         "sgz_wuyin_jilu": "五音·用牌记录",
         "sgz_wuyin_jilu_bg": "音",
         sgz_wuyin_effects: "五音·律",

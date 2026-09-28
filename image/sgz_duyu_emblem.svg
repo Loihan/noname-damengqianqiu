@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
+  <!-- 梦杜预 · 破竹武库 徽记：一竿裂竹 × 交叠兵戈 -->
+  <defs>
+    <radialGradient id="dyEmAura" cx="0.5" cy="0.44" r="0.64">
+      <stop offset="0" stop-color="#4fae7a" stop-opacity="0.4"/>
+      <stop offset="0.55" stop-color="#1d4a3c" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#0a1a16" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dyEmGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2e4b8"/>
+      <stop offset="0.5" stop-color="#c8a15c"/>
+      <stop offset="1" stop-color="#7d6330"/>
+    </linearGradient>
+    <linearGradient id="dyEmJade" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#2f6a58"/>
+      <stop offset="0.5" stop-color="#8fe4b4"/>
+      <stop offset="1" stop-color="#2f6a58"/>
+    </linearGradient>
+    <linearGradient id="dyEmSteel" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#eef3ee"/>
+      <stop offset="0.38" stop-color="#b3bfb8"/>
+      <stop offset="0.72" stop-color="#6d7570"/>
+      <stop offset="1" stop-color="#39413f"/>
+    </linearGradient>
+    <linearGradient id="dyEmBamboo" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1b3b30"/>
+      <stop offset="0.34" stop-color="#5cbb8b"/>
+      <stop offset="0.62" stop-color="#9fe6bd"/>
+      <stop offset="1" stop-color="#22443a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 竹青幽光 -->
+  <circle cx="120" cy="116" r="108" fill="url(#dyEmAura)"/>
+
+  <!-- 三重环：金（外·回纹） / 玉（中） / 金（内·细） -->
+  <circle cx="120" cy="120" r="108" fill="none" stroke="url(#dyEmGold)" stroke-width="1.6" opacity="0.55"
+          stroke-dasharray="12 6"/>
+  <circle cx="120" cy="120" r="100" fill="none" stroke="url(#dyEmJade)" stroke-width="0.9" opacity="0.5"/>
+  <circle cx="120" cy="120" r="88" fill="none" stroke="url(#dyEmGold)" stroke-width="0.7" opacity="0.3"/>
+  <!-- 环上刻度：兵器架的"齿" -->
+  <g stroke="#c8a15c" stroke-width="1.1" opacity="0.4">
+    <path d="M120 6 v9 M120 225 v9 M6 120 h9 M225 120 h9"/>
+    <path d="M39 39 l6 6 M195 39 l-6 6 M39 201 l6 -6 M195 201 l-6 -6"/>
+  </g>
+
+  <!-- 环侧小篆：破 / 竹 -->
+  <g font-family="xiaozhuan, KaiTi, STKaiti, serif" font-size="27" fill="#c8a15c" opacity="0.72" text-anchor="middle">
+    <text x="120" y="27">破</text>
+    <text x="120" y="228">竹</text>
+  </g>
+
+  <!-- ① 交叠兵戈（-45° / +45°，青铜） -->
+  <g stroke="#6b5a2a" stroke-width="1.2">
+    <g transform="rotate(-45 120 120)">
+      <rect x="116" y="46" width="8" height="150" rx="3" fill="url(#dyEmGold)" opacity="0.85"/>
+      <path d="M120 22 L134 62 H106 Z" fill="url(#dyEmSteel)"/>
+      <path d="M120 40 L114 66 H126 Z" fill="url(#dyEmGold)"/>
+      <circle cx="120" cy="72" r="6" fill="#2a2317"/>
+      <circle cx="120" cy="72" r="3" fill="#8fe4b4"/>
+    </g>
+    <g transform="rotate(45 120 120)">
+      <rect x="116" y="46" width="8" height="150" rx="3" fill="url(#dyEmGold)" opacity="0.85"/>
+      <path d="M120 22 L134 62 H106 Z" fill="url(#dyEmSteel)"/>
+      <path d="M120 40 L114 66 H126 Z" fill="url(#dyEmGold)"/>
+      <circle cx="120" cy="72" r="6" fill="#2a2317"/>
+      <circle cx="120" cy="72" r="3" fill="#8fe4b4"/>
+    </g>
+  </g>
+
+  <!-- ② 中央竹竿（竖直，四节，节环为金） -->
+  <g>
+    <rect x="106" y="40" width="28" height="160" rx="9" fill="url(#dyEmBamboo)" stroke="#16302a" stroke-width="1.2"/>
+    <!-- 竹丝 -->
+    <g stroke="#eafff2" stroke-opacity="0.26" stroke-width="0.8">
+      <path d="M113 44 V196 M120 42 V198 M127 44 V196"/>
+    </g>
+    <!-- 节环 -->
+    <g fill="url(#dyEmGold)" stroke="#6b5a2a" stroke-width="0.8">
+      <rect x="102" y="76" width="36" height="7" rx="3"/>
+      <rect x="102" y="116" width="36" height="7" rx="3"/>
+      <rect x="102" y="156" width="36" height="7" rx="3"/>
+    </g>
+    <g fill="#000" fill-opacity="0.34">
+      <rect x="103" y="83" width="34" height="2.4"/>
+      <rect x="103" y="123" width="34" height="2.4"/>
+      <rect x="103" y="163" width="34" height="2.4"/>
+    </g>
+  </g>
+
+  <!-- ③ 裂竹：斜向裂纹 + 崩开的碎屑（破竹之势） -->
+  <path d="M120 34 L106 74 L126 96 L100 132 L124 154 L104 200"
+        fill="none" stroke="#06110e" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M120 34 L106 74 L126 96 L100 132 L124 154 L104 200"
+        fill="none" stroke="#c9ffe4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+  <path d="M120 34 L106 74 L126 96 L100 132 L124 154 L104 200"
+        fill="none" stroke="#6fd39a" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.34"/>
+
+  <!-- 崩裂飞屑 -->
+  <g fill="#8fe4b4" opacity="0.9">
+    <path d="M141 66 l7 -9 l3 11 Z"/>
+    <path d="M160 104 l10 -4 l-6 10 Z"/>
+    <path d="M78 122 l-9 5 l7 7 Z"/>
+    <path d="M146 176 l8 7 l-11 4 Z"/>
+    <path d="M94 60 l-8 -6 l-2 10 Z"/>
+  </g>
+
+  <!-- 交会处竹青核心 -->
+  <g>
+    <circle cx="120" cy="120" r="11" fill="#0b1a16" stroke="url(#dyEmGold)" stroke-width="1.6"/>
+    <circle cx="120" cy="120" r="6.4" fill="url(#dyEmJade)"/>
+    <circle cx="117.6" cy="117.4" r="2.1" fill="#f0fff6" opacity="0.92"/>
+  </g>
+</svg>

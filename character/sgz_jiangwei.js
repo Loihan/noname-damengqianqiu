@@ -1,4 +1,4 @@
-﻿// 九伐天殇 UI 已抽离至 effect/sgz_jiangwei.js
+// 九伐天殇 UI 已抽离至 effect/sgz_jiangwei.js
 import { jiangweiUI } from '../effect/sgz_jiangwei.js';
 
 export default {
@@ -122,7 +122,23 @@ export default {
                     if (num >= 7 && !player.hasSkill('sgz_guju')) skills_to_add.push('sgz_guju');
                     if (num >= 9 && !player.hasSkill('sgz_youming')) {
                         skills_to_add.push('sgz_youming');
-                        player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_jiangwei_9.png');
+                        // 【伐达 9 的形态切换】
+                        // ⚠ 这里**不再**直接 setBackgroundImage('.../sgz_jiangwei_9.png')：
+                        //   那行会把立绘写死成静态图，正是「动皮没能切成敕剑伏波」的原因
+                        //   （写死的图会覆盖/绕过动皮体系）。
+                        // 现在交给 skin.js 第 8 节的规则分流：
+                        //   · 当前是动皮「炽剑补天」→ 切换到动皮「敕剑伏波」
+                        //   · 当前是原皮等静态皮肤 → 切换到静态「敕剑伏波(静)」
+                        //     （该静态图就是原来的 sgz_jiangwei_9.png，已放进
+                        //       skin/image/sgz_jiangwei/敕剑伏波(静).jpg 并加入皮肤列表）
+                        // 用 setTimeout 让出当前事件帧，避免在技能结算中途改皮肤引发重绘异常。
+                        setTimeout(function () {
+                            try {
+                                if (typeof window.dmqcApplySwapRules === "function") {
+                                    window.dmqcApplySwapRules(player, "sgz_jiufa");
+                                }
+                            } catch (e) {}
+                        }, 0);
                     }
                 }
                 if (skills_to_add.length) {
@@ -370,12 +386,12 @@ export default {
                 });
             },
             ai:{
-                maixue:true,
-                effect: {
-                    target: function(card, player, target) {
-                        if (player.countCards("h") + player.maxHp >= 14&&player.hp==1) return [1,9];
-                    }
-                }
+                maixue:false,
+                //effect: {
+                //    target: function(card, player, target) {
+                //        if (player.countCards("h") + player.maxHp >= 14&&player.hp==1) return [1,9];
+                //    }
+                //}
             },
             content: function() {
                 'step 0'
@@ -559,7 +575,7 @@ export default {
     },
     skillTranslate: {
         sgz_jiufa: "九伐",
-        sgz_jiufa_info: "<span style='color:#FF4500;font-weight:bold;'>1级</span>：锁定技，①每名角色回合开始时，你将手牌摸至体力上限，然后若你的“伐”标记数<9，你选择一名其他角色拼点：若你赢，你增加X点体力上限、获得X个“伐”标记并视为对其使用X张火【杀】（X为本次拼点牌的点数差，“伐”标记数至多为9）。②根据你的“伐”标记数量，你视为拥有以下技能：1：【薪燃】 3：【逐日】 5：【绝烬】 7：【孤炬】 9：【幽明】。<br><span style='color:#FF4500;font-weight:bold;'>2级</span>：每名角色回合开始时，你将手牌摸至体力上限并选择一名其他角色拼点：若你赢，视为对其使用X张神【杀】（X为本次拼点牌的点数差+4）。",
+        sgz_jiufa_info: "蓄力技（0/9），①每名角色回合开始时，你将手牌摸至体力上限：<br><span style='color:#FF4500;font-weight:bold;'>1级</span>：若蓄力点未满，你选择一名其他角色拼点：若你赢，你增加X点体力上限、获得X个蓄力点并视为对其使用X张火【杀】。<br><span style='color:#FF4500;font-weight:bold;'>2级</span>：你选择一名其他角色拼点，若你赢，你视为对其使用X+4张神【杀】（X为点数差）。<br>②若你未发动过【幽明】，根据你的蓄力点数量，你视为拥有以下技能：1：【薪燃】 3：【逐日】 5：【绝烬】 7：【孤炬】 9：【幽明】。",
         //衍生技能
         sgz_xinran: "薪燃",//传子龙将军之力
         sgz_xinran_info: "锁定技。当你进入濒死状态时，若你的体力上限不为1，则你减少1点体力上限，若此时你的体力上限大于/不大于9，你摸一/两张牌并将体力回复至一/两点。",
@@ -570,9 +586,9 @@ export default {
         sgz_guju: "孤炬",//承玄德先帝之仁
         sgz_guju_info: "出牌阶段限一次。你可以选择一名其他角色，令其将手牌摸至其体力上限。然后，你观看其手牌，并可以用任意张你的手牌交换其等量的手牌。",
         sgz_youming: "幽明",//复伯约匡汉之明
-        sgz_youming_info: "限定技，当你进入濒死状态时，你可以令一名其他角色获得“仇雠”标记并取消你的濒死结算，然后你摸体力上限数张牌，失去技能【薪燃】、【逐日】、【绝烬】、【孤炬】，升级技能【九伐】，获得技能【复明】。",
+        sgz_youming_info: "限定技，当你进入濒死状态时，你可以令一名其他角色获得“仇雠”标记并取消你的濒死结算，然后你摸体力上限数张牌，升级【九伐】，获得【复明】。",
         sgz_fuming: "复明",
-        sgz_fuming_info: "使命技，①取消你的所有濒死结算。你使用手牌只能指定自己和“仇雠”角色且无次数距离限制。<br>②成功：当你对“仇雠”角色累计使用9张牌时，其立即死亡，你将所有牌交给一名其他角色（其增加1点体力上限并回复9点体力），然后你立即死亡。<br>③失败：你的出牌阶段结束时，你立即死亡。",
+        sgz_fuming_info: "使命技，①取消你的所有濒死结算。你使用手牌只能指定自己和“仇雠”且无次数距离限制。<br>②成功：当你对“仇雠”累计使用9张牌时，其立即死亡，你将所有牌交给一名其他角色（其增加1点体力上限并回复9点体力），然后你立即死亡。<br>③失败：你的出牌阶段结束时，你立即死亡。",
     },
     characterTaici:{
         "sgz_jiufa":{order: 1,content:"汉贼岂能两相立，长驱河洛王业安！/雄关高岭壮英姿，一腔热血谱汉风!/残兵盘据雄关险，独梁力支大厦倾！/谋伐布划方寸内，驰马试剑天地间！/从丞相之重托，剑指雍凉!/尊先主之遗志，举兵北伐!"},

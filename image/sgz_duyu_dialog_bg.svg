@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 660" width="1000" height="660" preserveAspectRatio="none">
+  <!-- 梦杜预 · 三陈「武库开阖」选择框底板：墨青武库 + 竹影 + 兵架 -->
+  <defs>
+    <linearGradient id="dyBgBase" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1b1e"/>
+      <stop offset="0.48" stop-color="#0a1416"/>
+      <stop offset="1" stop-color="#060d0f"/>
+    </linearGradient>
+    <radialGradient id="dyBgGlow" cx="0.5" cy="0.36" r="0.72">
+      <stop offset="0" stop-color="#2f6a58" stop-opacity="0.4"/>
+      <stop offset="0.5" stop-color="#16302f" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#04090a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="dyBgForge" cx="0.5" cy="0.95" r="0.6">
+      <stop offset="0" stop-color="#c8a15c" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#c8a15c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dyBgStalk" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2f6a58" stop-opacity="0.06"/>
+      <stop offset="0.45" stop-color="#6fd39a" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#2f6a58" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="dyBgBronze" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c8a15c" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#7d6330" stop-opacity="0.12"/>
+    </linearGradient>
+    <pattern id="dyBgMeander" x="0" y="0" width="36" height="18" patternUnits="userSpaceOnUse">
+      <path d="M2 15 V7 H12 V13 H7 V10 H16 V16" fill="none" stroke="#c8a15c" stroke-width="1.4" stroke-opacity="0.55"/>
+      <path d="M20 3 V11 H30 V5 H25 V8 H34 V2" fill="none" stroke="#6fd39a" stroke-width="1.1" stroke-opacity="0.34"/>
+    </pattern>
+  </defs>
+
+  <!-- 底色 -->
+  <rect x="0" y="0" width="1000" height="660" fill="url(#dyBgBase)"/>
+  <rect x="0" y="0" width="1000" height="660" fill="url(#dyBgGlow)"/>
+  <rect x="0" y="0" width="1000" height="660" fill="url(#dyBgForge)"/>
+
+  <!-- 远景：竹影（左三右二，疏密错落） -->
+  <g>
+    <g transform="translate(74 0)">
+      <rect x="0" y="-10" width="13" height="680" fill="url(#dyBgStalk)"/>
+      <g fill="#6fd39a" fill-opacity="0.2">
+        <rect x="-3" y="118" width="19" height="4" rx="2"/>
+        <rect x="-3" y="300" width="19" height="4" rx="2"/>
+        <rect x="-3" y="486" width="19" height="4" rx="2"/>
+      </g>
+    </g>
+    <g transform="translate(124 0)" opacity="0.72">
+      <rect x="0" y="-10" width="8" height="680" fill="url(#dyBgStalk)"/>
+      <g fill="#6fd39a" fill-opacity="0.17">
+        <rect x="-2" y="196" width="12" height="3" rx="1.5"/>
+        <rect x="-2" y="392" width="12" height="3" rx="1.5"/>
+      </g>
+    </g>
+    <g transform="translate(882 0)">
+      <rect x="0" y="-10" width="13" height="680" fill="url(#dyBgStalk)"/>
+      <g fill="#6fd39a" fill-opacity="0.2">
+        <rect x="-3" y="86" width="19" height="4" rx="2"/>
+        <rect x="-3" y="268" width="19" height="4" rx="2"/>
+        <rect x="-3" y="452" width="19" height="4" rx="2"/>
+      </g>
+    </g>
+    <g transform="translate(930 0)" opacity="0.7">
+      <rect x="0" y="-10" width="8" height="680" fill="url(#dyBgStalk)"/>
+      <g fill="#6fd39a" fill-opacity="0.16">
+        <rect x="-2" y="164" width="12" height="3" rx="1.5"/>
+        <rect x="-2" y="360" width="12" height="3" rx="1.5"/>
+        <rect x="-2" y="548" width="12" height="3" rx="1.5"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- 中景：兵架（横梁 + 垂挂兵器剪影） -->
+  <g stroke="url(#dyBgBronze)" fill="none" stroke-width="2" stroke-opacity="0.5">
+    <path d="M150 92 H850"/>
+    <path d="M150 566 H850"/>
+  </g>
+  <g fill="url(#dyBgBronze)" opacity="0.34">
+    <!-- 架上的戟 / 戈 / 矛剪影，仅顶部一段，起到"武库"的暗示 -->
+    <g>
+      <path d="M186 92 v30 M186 96 l-16 -12 h-3 v9 h9 l10 6 Z"/>
+      <path d="M240 92 v26 M240 96 l14 -11 h3 v8 h-8 l-9 5 Z"/>
+      <path d="M760 92 v28 M760 95 l-15 -11 h-3 v9 h9 l9 5 Z"/>
+      <path d="M814 92 v30 M814 96 l15 -12 h3 v9 h-9 l-9 6 Z"/>
+      <path d="M340 92 v20 M372 92 v20 M404 92 v20"/>
+      <path d="M596 92 v20 M628 92 v20 M660 92 v20"/>
+    </g>
+    <g transform="translate(0 660) scale(1 -1)">
+      <path d="M186 92 v30 M186 96 l-16 -12 h-3 v9 h9 l10 6 Z"/>
+      <path d="M240 92 v26 M240 96 l14 -11 h3 v8 h-8 l-9 5 Z"/>
+      <path d="M760 92 v28 M760 95 l-15 -11 h-3 v9 h9 l9 5 Z"/>
+      <path d="M814 92 v30 M814 96 l15 -12 h3 v9 h-9 l-9 6 Z"/>
+      <path d="M340 92 v20 M372 92 v20 M404 92 v20"/>
+      <path d="M596 92 v20 M628 92 v20 M660 92 v20"/>
+    </g>
+  </g>
+
+  <!-- 近景：云雷纹上下边带 -->
+  <g opacity="0.5">
+    <rect x="0" y="0" width="1000" height="18" fill="url(#dyBgMeander)"/>
+    <rect x="0" y="642" width="1000" height="18" fill="url(#dyBgMeander)"/>
+  </g>
+
+  <!-- 四角回纹角饰 -->
+  <g fill="none" stroke="#c8a15c" stroke-width="1.6" stroke-opacity="0.4">
+    <path d="M6 42 V6 H42"/>
+    <path d="M994 42 V6 H958"/>
+    <path d="M6 618 V654 H42"/>
+    <path d="M994 618 V654 H958"/>
+  </g>
+
+  <!-- 暗角 -->
+  <rect x="0" y="0" width="1000" height="660" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="26"/>
+</svg>
