@@ -57,7 +57,15 @@ export function dmqcInjectMiaojianCardStyle() {
     const style = document.createElement("style");
     style.id = MJ_CARD_STYLE_ID;
     style.innerHTML = `
-/* ---------- 剑气光框：边框 + 内外辉 + 四角剑翎 + 斜向扫光 ---------- */
+/* ---------- 剑气光框：边框 + 内外辉 + 四角剑翎 ---------- */
+/*  ⚠ 2026 改动：原本还有一层 .dmqc-mj-aura::after 的**斜向扫光**（dmqc-mj-sweep 动画），
+    按需求"卡牌上时不时扫过的高光不要"**已删除**。想加回来就在下面重建：
+        .dmqc-mj-aura::after { content:""; position:absolute; top:-40%; bottom:-40%; left:-40%; right:-40%;
+            background: linear-gradient(115deg, rgba(140,255,225,0) 38%, rgba(210,255,245,.42) 50%, rgba(140,255,225,0) 62%);
+            background-size: 240% 100%; animation: dmqc-mj-sweep 2.6s ease-in-out infinite; }
+        @keyframes dmqc-mj-sweep { 0% { background-position: 150% 0; } 100% { background-position: -55% 0; } }
+    ⚠ 这段注释在**模板字符串里**，所以绝对不能出现反引号（会提前结束字符串）。
+    ⚠ 光框的 overflow: hidden 留着即可（原本只为裁那层扫光，留着不占开销）。*/
 .dmqc-mj-aura {
     position: absolute; top: -2px; right: -2px; bottom: -2px; left: -2px;
     border: 2px solid rgba(150, 255, 232, 0.85);
@@ -92,25 +100,10 @@ export function dmqcInjectMiaojianCardStyle() {
     background-repeat: no-repeat;
     opacity: 0.95;
 }
-/* 斜向扫光：缓慢横掠一道青白光 */
-.dmqc-mj-aura::after {
-    content: "";
-    position: absolute; top: -40%; bottom: -40%; left: -40%; right: -40%;
-    background: linear-gradient(115deg,
-        rgba(140, 255, 225, 0) 38%,
-        rgba(210, 255, 245, 0.42) 50%,
-        rgba(140, 255, 225, 0) 62%);
-    background-size: 240% 100%;
-    animation: dmqc-mj-sweep 2.6s ease-in-out infinite;
-}
 /* 只动 opacity（合成器属性），不动 filter/shadow，多张牌同时闪也不掉帧 */
 @keyframes dmqc-mj-breath {
     0%, 100% { opacity: 0.76; }
     50%      { opacity: 1; }
-}
-@keyframes dmqc-mj-sweep {
-    0%   { background-position: 150% 0; }
-    100% { background-position: -55% 0; }
 }
 .dmqc-mj-card-static { position: relative; }   /* 只有当卡牌本身不是定位元素时才补这一条 */
 
@@ -132,8 +125,7 @@ export function dmqcInjectMiaojianCardStyle() {
 
 /* 无障碍：用户开了"减少动态效果"就只留静态光框 */
 @media (prefers-reduced-motion: reduce) {
-    .dmqc-mj-aura, .dmqc-mj-aura::after, .dmqc-mj-glow { animation: none !important; }
-    .dmqc-mj-aura::after { opacity: 0.25; }
+    .dmqc-mj-aura, .dmqc-mj-glow { animation: none !important; }
 }
 `;
     document.head.appendChild(style);
@@ -195,7 +187,7 @@ function dmqcMjHandCards(player) {
 /// ⚠ 必须全量扫描而不是"只处理变化的那几张"：手牌区会整块重建 innerHTML，
 ///   重建后原来挂上去的 DOM 就没了，靠这个函数把光效补回来（所以还有定时轮询兜底）。
 /// ⚠ 收尾那一步（按 `keep` 反查所有光框）**不能省**：一张带标记的牌被打出/弃置后，
-///   卡牌**元素本身**是被搬到弃牌堆/处理区的（同一个 DOM 节点跟着走），光框也就跟着过去了；
+///   卡牌**元素本身**是被搬到弃牌堆/处理区的（同一个 DOM 节点跟着走），光效也就跟着过去了；
 ///   而前面的循环只遍历"当前手牌"，永远看不到它 ⇒ 必须在最后统一把不在 keep 里的摘掉。
 export function dmqcRefreshMiaojianCards() {
     let count = 0;

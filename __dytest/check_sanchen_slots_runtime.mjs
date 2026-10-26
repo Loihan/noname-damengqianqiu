@@ -11,10 +11,12 @@ import { dirname, join } from "node:path";
 const here = dirname(fileURLToPath(import.meta.url));
 const src = readFileSync(join(here, "..", "character", "sgz_duyu.js"), "utf8");
 
-// 只截取本文件里那段 helper（从 SGZ_DUYU_SLOT_MAX 到 sgzDuyuPickSpacey 结束），
+// 只截取本文件里那段 helper（从 SGZ_DUYU_SLOT_MAX 到 sgzDuyuCardScore 之前），
 // 用 Function 求值成真实函数对象 —— 等价于模块作用域里那份代码。
+// ⚠ 结尾标记用「函数定义名」而不是注释，避免注释被改写后整段截取失败（2026 改过一次注释踩到）。
 const start = src.indexOf("const SGZ_DUYU_SLOT_MAX");
-const end = src.indexOf("// AI 用：牌名的粗略价值");
+let end = src.indexOf("// AI 用：牌名的粗略价值");
+if (end < 0) end = src.indexOf("function sgzDuyuCardScore");
 if (start < 0 || end < 0 || end <= start) {
     console.error("找不到 helper 区段，请检查 character/sgz_duyu.js 是否被大改");
     process.exit(1);

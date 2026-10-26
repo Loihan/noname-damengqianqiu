@@ -46,7 +46,7 @@ export const huangyueyingUI = {
             var isInHand = (get.position(card) == 'h');
             
             // 只有在手牌区时才添加类名
-            if (isInHand && card.gaintag && card.gaintag.contains('sgz_xuanhe_shan')) {
+            if (isInHand && card.gaintag && card.gaintag.contains('sgz_xuanhe_tag')) {
                 card.classList.add('dream-jink-active');
                 card.classList.remove('trick-reward-active');
             } 

@@ -1,3 +1,5 @@
+import AI from "../ai/wgxd_yinianshenmo.js";
+
 export default {
     character: {
         wgxd_yinianshenmo: {
@@ -29,10 +31,7 @@ export default {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo/ren:2",
             persevereSkill: true,
             forced: true,
-            ai: {
-                maixie: true,
-                maixue_hp: true,
-            },
+            ai: AI.wgxd_renling,
             mark: true,
             marktext: "灵",
             intro: { name: "灵", content: "mark" },
@@ -56,18 +55,7 @@ export default {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo/ren:3",
             persevereSkill: true,
             enable: "phaseUse",
-            ai: {
-                // 标记小于8时最优先使用(20)，满标记后降为普通锦囊级别
-                order: function(item, player) {
-                    return player.countMark('wgxd_renling') < 8 ? 20 : 12;
-                },
-                result: {
-                    player: function(player) {
-                        if (player.countMark('wgxd_renling') < 8) return 1.5;
-                        return 1;
-                    }
-                }
-            },
+            ai: AI.wgxd_fenjie,
             filterCard: (card) => ['red', 'black'].includes(get.color(card)),
             position: "h",
             viewAs: function(cards) {
@@ -90,20 +78,7 @@ export default {
             // 衍生的技能列表（包含神、魔、觉醒）
             derivation: [ "wgxd_yinian", "wgxd_hengyu", "wgxd_shenluo",  "wgxd_xusheng", "wgxd_fenze", "wgxd_huamo","wgxd_mosha","wgxd_xuanbi", "wgxd_xinyuan", "wgxd_liuxing", "wgxd_rongshen"],
             filter: (event, player) => !player.storage.wgxd_tianze && player.countMark('wgxd_renling') >= 3,
-            ai: {
-                // 逻辑：8个立即用(30)，5-7个最后用(0.1)，小于5不产生发动欲望
-                order: function(item, player) {
-                    var m = player.countMark('wgxd_renling');
-                    if (m >= 8) return 30;
-                    if (m >= 5) return 0.1;
-                    return 0;
-                },
-                result: {
-                    player: function(player) {
-                        return player.countMark('wgxd_renling') >= 5 ? 1 : 0;
-                    }
-                }
-            },
+            ai: AI.wgxd_tianze,
             content: function() {
                 'step 0'
                 player.awakenSkill('wgxd_tianze');
@@ -228,17 +203,7 @@ export default {
             audio: "ext:大梦千秋/audio/wgxd_yinianshenmo/shen:4",
             persevereSkill: true,
             forced: true,
-            ai: {
-                // 诱导AI多出伤害牌
-                fireAttack: true,
-                result: {
-                    player: 1,
-                    // 杀的目标逻辑：态度<=0且按威胁度/状态排序（系统自动处理多目标最差的几个）
-                    target: function(player, target) {
-                        if (get.attitude(player, target) <= 0) return -1.5;
-                    }
-                }
-            },
+            ai: AI.wgxd_hengyu,
             mod: {
                 // 核心修正：在使用卡牌前增加至多两个额外目标
                 selectTarget: function(card, player, range) {
@@ -340,16 +305,7 @@ export default {
             filterTarget: (card, player, target) => target != player,
             selectTarget: [1, Infinity],
             multitarget: true,
-            ai: {
-                order: 21, // 出牌阶段最高优先级
-                result: {
-                    target: function(player, target) {
-                        // 对所有敌人发动
-                        if (get.attitude(player, target) <= 0) return -1.5;
-                        return 0;
-                    }
-                }
-            },
+            ai: AI.wgxd_fenze,
             content: function() {
                 'step 0'
                 event.targets = targets.sortBySeat();
@@ -395,18 +351,7 @@ export default {
                 player.update();
                 player.addTempSkill('wgxd_transformed_lock', 'phaseAfter');
             },
-            ai: {
-                order: 1, // 最低优先级
-                result: {
-                    player: function(player) {
-                        // 出牌阶段快结束（没有更多能用的牌）时才考虑
-                        if (player.countCards('h', function(card) {
-                            return player.getUseValue(card) > 0;
-                        }) <= 1) return 1;
-                        return 0;
-                    }
-                }
-            }
+            ai: AI.wgxd_huamo,
         },
         //====================================
         //             魔形态                     
@@ -445,14 +390,7 @@ export default {
                     player.changeHujia(2);
                 }
             },
-            ai: {
-                useShan: true,
-                effect: {
-                    target_use(card, player, target) {
-                        if (get.tag(card, "respondShan") || get.name(card) == "shandian") return [1, 2];
-                    }
-                }
-            }
+            ai: AI.wgxd_mosha,
         },
         wgxd_xuanbi: {
             persevereSkill: true,
@@ -477,15 +415,7 @@ export default {
             trigger: { player: "damageBegin3" },
             filter: (event, player) => event.source && event.source.getAttackRange() !== 1,
             content: () => { trigger.num-- },
-            ai: {
-                // 核心：无花色牌留牌价值翻倍(防止弃置)，但使用价值减半(不爱用)
-                value: function(card, player) {
-                    if (get.suit(card, player) == 'none') return get.value(card, player) * 2;
-                },
-                useful: function(card, player) {
-                    if (get.suit(card, player) == 'none') return get.useful(card, player) * 0.5;
-                }
-            }
+            ai: AI.wgxd_xinyuan,
         },
         wgxd_liuxing: {
             persevereSkill: true,
@@ -519,10 +449,7 @@ export default {
                 player.update();
                 player.addTempSkill('wgxd_transformed_lock', 'phaseAfter');
             },
-            ai: {
-                order: 25, // 最高优先级，有就变身
-                result: { player: 1 }
-            }
+            ai: AI.wgxd_rongshen,
         },
         //======== 回合转换形态限一次 =========
         wgxd_transformed_lock: { charlotte: true }

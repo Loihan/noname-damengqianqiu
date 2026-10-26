@@ -1,5 +1,8 @@
 import { lib, game, ui, get, ai, _status } from "../../noname.js";
 
+// 扩展包介绍文字（要改介绍就改这个文件）
+import { DMQC_INTRO, DMQC_INTRO_SHORT } from "./intro.js";
+
 // === 三国志武将 ===
 import sgzJiangwei from './character/sgz_jiangwei.js';
 import sgzZhugedan from './character/sgz_zhugedan.js';
@@ -17,6 +20,8 @@ import sgzGuanyu from './character/sgz_guanyu.js';
 import sgzWeiyan from './character/sgz_weiyan.js';
 import sgzDuyu from './character/sgz_duyu.js';
 import sgzSunhanhua from './character/sgz_sunhanhua.js';
+import sgzWenyang from './character/sgz_wenyang.js';
+import sgzGannin from './character/sgz_gannin.js';
 
 // === 山海经武将 ===
 import shjBaize from './character/shj_baize.js'; 
@@ -33,7 +38,7 @@ import wgxdHeyuxingzun from './character/wgxd_heyuxingzun.js';
 import wgxdYinianshenmo from './character/wgxd_yinianshenmo.js';
 
 // 分类数组定义
-const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia, sgzLuxun, sgzMachao, sgzLvbu, sgzCaomao, sgzSimazhao, sgzXiaoqiao, sgzGuanyu, sgzWeiyan, sgzDuyu, sgzSunhanhua];
+const sgzCharacters = [sgzJiangwei, sgzZhugedan, sgzZhonghui, sgzHuangyueying, sgzZhaoyun, sgzGuojia, sgzLuxun, sgzMachao, sgzLvbu, sgzCaomao, sgzSimazhao, sgzXiaoqiao, sgzGuanyu, sgzWeiyan, sgzDuyu, sgzSunhanhua, sgzWenyang, sgzGannin];
 const shjCharacters = [shjBaize, shjXiangliu, shjChaofeng, shjNvwa];
 const mfsdCharacters = [mfsdAnyuanmofa, mfsdXingyushenqi]; 
 const wgxdCharacters = [wgxdHeyuxingzun, wgxdYinianshenmo];
@@ -41,12 +46,29 @@ const wgxdCharacters = [wgxdHeyuxingzun, wgxdYinianshenmo];
 const allCharacters = [...sgzCharacters, ...shjCharacters, ...mfsdCharacters, ...wgxdCharacters];
 
 export const type = "extension";
+
+// ============================================================
+//  扩展界面里的「📖 新概念与特点」面板
+//  做法：给扩展加一个 config 条目，点开后在菜单里用 textMenu 铺长文。
+//   · 面板宽度固定 360px，内容可滚动（lib.setScroll）
+//   · 文案与样式都在 intro.js，这里只负责摆放
+// ============================================================
+/// 直接把介绍铺开成一段内联 HTML（没有二级菜单、无需点击）。
+/// ⚠ 不再做「区域内滑动」：整段直接铺开，跟随页面自身滚动。
+function dmqcIntroInline() {
+    try {
+        return `<div style="padding:4px 6px 6px;box-sizing:border-box;text-align:left;white-space:normal;word-break:break-word;">${DMQC_INTRO}</div>`;
+    } catch (e) {
+        console.error("[大梦千秋] 介绍渲染失败：", e);
+        return "（介绍加载失败，详见控制台）";
+    }
+}
 export default function () {
     return {
         name: "大梦千秋",
         content: function (config, pack) {
             // 版本标记：完全重启游戏后，控制台应输出此行（按 F12/Ctrl+Shift+I 查看）
-            console.log("[大梦千秋] 扩展已加载 v7.4（新增梦关羽/梦魏延/梦杜预/梦孙寒华）");
+            console.log("[大梦千秋] 扩展已加载 v7.5（新增梦文鸯/梦甘宁）");
 
             // 1. 设置传说品质 
             lib.arenaReady.push(function () {
@@ -121,6 +143,8 @@ export default function () {
             lib.config.threaten['sgz_guanyu'] = 119.0; 
             lib.config.threaten['sgz_weiyan'] = 119.0; 
             lib.config.threaten['sgz_duyu'] = 120.0; 
+            lib.config.threaten['sgz_wenyang'] = 121.0; 
+            lib.config.threaten['sgz_gannin'] = 120.0; 
             lib.config.threaten['shj_baize'] = 122; 
             lib.config.threaten['shj_xiangliu'] = 121; 
             lib.config.threaten['shj_chaofeng'] = 120; 
@@ -139,6 +163,11 @@ export default function () {
             // 在 precontent 里动态 import，确保它在「牌堆构建」之前完成注册；
             // 这里不 await，用 then 兜底打印错误，避免阻塞扩展加载。
             import("./card/card.js").catch(e => console.error("[大梦千秋] 神武卡牌载入失败：", e));
+
+            // === 0a. 「整理手牌」按钮的按角色定制排序（见 effect/dmqc_sortcard.js） ===
+            // 曹髦/孙寒华/吕布的标记牌置左；赵云/小乔按花色（小乔走"视为"花色）。
+            // 模块内部会自己包一层 `ui.create.system`（并在 UI 尚未就绪时轮询），所以这里同样不 await。
+            import("./effect/dmqc_sortcard.js").catch(e => console.error("[大梦千秋] 整理手牌定制排序载入失败：", e));
 
             // === 0b. 本包卡牌包**不进牌堆** ===
             // 神武只由梦杜预【三陈·神武】发动时现场造出（三陈读 lib.card 的定义 + 白名单，
@@ -191,6 +220,72 @@ export default function () {
                 };
                 setTimeout(tryLoad, 200);
             })();
+
+            // === 0d. 【矫诏】AI 调试钩子（默认静默，只在开关打开时打日志）===
+            //  用法（F12 控制台）：
+            //    dmqcZjAiDebug = true      → 之后每次"能不能发动矫诏"的判定都会打印 `[矫诏AI] …`
+            //    dmqcZjAiDebug = false     → 关掉（默认就是 false）
+            //    dmqcZjAiProbe()           → 立刻打印一次当前状态（患数 / order / 技能按钮 / 当前事件）
+            //  这么做只为定位"AI 不发动"到底卡在哪一步：白名单？order？还是技能按钮压根没建出来。
+            //  包装只旁路记录，**不改变任何返回值**。
+            try {
+                window.dmqcZjAiDebug = window.dmqcZjAiDebug || false;
+                if (lib.filter && typeof lib.filter.filterEnable === "function" && !lib.filter.filterEnable.__dmqcZj) {
+                    const origFilterEnable = lib.filter.filterEnable;
+                    const wrappedFilterEnable = function (event, player, skill) {
+                        const ret = origFilterEnable.apply(this, arguments);
+                        if (window.dmqcZjAiDebug && skill === "sgz_jiaozhao") {
+                            try {
+                                console.log(
+                                    "[矫诏AI] filterEnable → " + ret +
+                                        " | event=" + (event && event.name) +
+                                        " | type=" + (event && event.type) +
+                                        " | player=" + (player && player.name) +
+                                        " | 患=" + (player && player.countMark ? player.countMark("sgz_quanhuan_huan") : "?") +
+                                        " | 权=" + (player && player.countMark ? player.countMark("sgz_quanhuan") : "?") +
+                                        " | 已用=" + (player && get.skillCount ? get.skillCount("sgz_jiaozhao", player) : "?") +
+                                        " | order=" + (get.order ? get.order("sgz_jiaozhao") : "?") +
+                                        " | currentPhase=" + (_status && _status.currentPhase && _status.currentPhase.name)
+                                );
+                            } catch (e) { /* 日志绝不拖垮判定 */ }
+                        }
+                        return ret;
+                    };
+                    wrappedFilterEnable.__dmqcZj = true;
+                    lib.filter.filterEnable = wrappedFilterEnable;
+                }
+                window.dmqcZjAiProbe = function () {
+                    const out = {};
+                    try {
+                        const p = (game.players || []).concat(game.dead || []).find(x => x && x.hasSkill && x.hasSkill("sgz_jiaozhao"));
+                        out["钟会玩家"] = p ? p.name : "(场上没有)";
+                        if (p) {
+                            out["患(矫诏前提)"] = p.countMark("sgz_quanhuan_huan");
+                            out["权"] = p.countMark("sgz_quanhuan");
+                            out["本阶段已用矫诏次数"] = get.skillCount("sgz_jiaozhao", p);
+                            out["filterEnable(当前事件)"] = lib.filter.filterEnable(_status.event, p, "sgz_jiaozhao");
+                            out["filter()"] = (() => {
+                                try {
+                                    return lib.skill.sgz_jiaozhao.filter(_status.event, p);
+                                } catch (e) {
+                                    return "抛错：" + e.message;
+                                }
+                            })();
+                        }
+                        out["矫诏 order"] = get.order("sgz_jiaozhao");
+                        out["当前事件"] = _status.event && _status.event.name;
+                        out["事件 type"] = _status.event && _status.event.type;
+                        out["当前回合角色"] = _status.currentPhase && _status.currentPhase.name;
+                        out["技能按钮"] = ui.skills ? ui.skills.skills : "(没有按钮条)";
+                    } catch (e) {
+                        out["出错"] = e.message;
+                    }
+                    console.log("[大梦千秋] 矫诏 AI 探针 ↓↓↓", out);
+                    return out;
+                };
+            } catch (e) {
+                console.error("[大梦千秋] 安装矫诏 AI 调试钩子失败：", e);
+            }
 
             // === 1. 核心劫持：注入武将包前言 (参考飞鸿印雪逻辑) ===
             if (ui?.create?.menu) {
@@ -266,6 +361,9 @@ export default function () {
                 },
                 'sgz_duyu': {
                     cards: ['bingliang','diaohulishan','guohe','gz_guguoanbang','gz_haolingtianxia','gz_kefuzhongyuan','huogong','huoshaolianying','jiedao','jiu','juedou','lebu','lianjunshengyan','lulitongxin','nanman','sha','sha_fire','sha_thunder','shan','shandian','shuiyanqijun','shunshou','tao','taoyuan','tiesuo','wanjian','wenhe','wugu','wuxie','wuzhong','yiyi','yuanjiao','zhibi']
+                },
+                'sgz_wenyang':{
+                    cards:['bingliang','guohe','huogong','jiedao','jiu','juedou','lebu','nanman','sha','sha_fire','sha_thunder','shan','shandian','shunshou','tao','taoyuan','tiesuo','wanjian','wugu','wuxie','wuzhong']
                 }
             };
 
@@ -341,7 +439,14 @@ export default function () {
         },
 
         config: {
-           
+            // 介绍直接铺在扩展页面上（clear 行：内容一长会自动 height:auto，不需要点开）
+            //   ⚠ clear 行会把 name 塞进 <span> 里显示，所以这里直接给 HTML
+            dmqc_intro: {
+                name: dmqcIntroInline(),
+                init: "",
+                clear: true,
+                nopointer: true,
+            },
         },
         help: {},
         package: {
@@ -370,9 +475,11 @@ export default function () {
                 skill: Object.assign({}, ...allCharacters.map(char => char.skills || {})),
                 translate: Object.assign({}, ...allCharacters.map(char => char.skillTranslate || {})),
             },
-            intro: "大梦千秋扩展包",
+            // 长文在 ./intro.js 的 DMQC_INTRO（点「📖 新概念与特点」打开）；
+            // 这里只放一句话简介，太长会被这一行截断。
+            intro: DMQC_INTRO_SHORT,
             author: "Loihan",
-            version: "7.4",
+            version: "7.5",
         },
         files: { character: [], card: [], skill: [], audio: [] },
     };

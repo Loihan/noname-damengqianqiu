@@ -1,5 +1,6 @@
 // 雷殛边框特效（⚡电光/💥破字）已抽离至 effect/sgz_machao.js
 import { initLeijiThunder, removeLeijiThunder, initLeijiBoom, removeLeijiBoom } from '../effect/sgz_machao.js';
+import AI from "../ai/sgz_machao.js";
 
 export default {
     character: {
@@ -102,88 +103,7 @@ export default {
                 }
             },
             // === 核心 AI 注入：优先级与特定连招规避 ===
-            ai: {
-                respondSha: true,
-                respondShan: true,
-                useShan: true, // 【闪】能用则用
-                noe: function(card, player, target) {
-                    if (player.isDisabled(1)||player.isDisabled(2)) return 2;
-                    return 0;
-                },
-                order: function(item, player) {
-                    var evt = _status.event;
-                        if (evt.filterCard({ name: 'sha' }, player, evt)) {
-                            // 使用 storage 判断鸣踪是否已用
-                            var canMingzong = !player.storage.sgz_mingzong_used;
-                            var totalAtkHorses = game.countPlayer(p => p.countCards('e', { subtype: 'equip4' }) == 1) + 2 * game.countPlayer(p => p.countCards('e', { subtype: 'equip4' }) == 2);
-                            game.log(player, '当前全场有', totalAtkHorses, '匹进攻马');
-                            // 关键限制：全场剩 1 马且没法回收时，禁止亮起技能
-                            if (totalAtkHorses <= 1 && !canMingzong) return -5000;
-                        }
-                        return 25;
-                },
-                effect: {
-                    target: function(card, player, target, current) {
-                        // 仅处理【雷殛】转化出的【杀】
-                        if (_status.event.skill == 'sgz_leiji' || _status.event.parent?.skill == 'sgz_leiji') {
-                            var canMingzong = !player.storage.sgz_mingzong_used;
-                            var enemyHasHorse = game.hasPlayer(p => get.attitude(player, p) < 0 && p.countCards('e', { subtype: 'equip4' }) > 0);
-
-                            if (get.attitude(player, target) > 0) {
-                                // 核心条件：敌人全场没马 且 我能发动鸣踪
-                                if (!enemyHasHorse && canMingzong && target.countCards('e', { subtype: 'equip4' }) > 0) {
-                                    // [系数0, 额外分20]：告诉AI，这刀一点都不疼，而且为了送马战略大赚20分！
-                                    return [0, 20];
-                                }
-                                // 不满足战略条件时，对自己人的伤害评估设为极高负分，彻底封死误伤
-                                return 0;
-                            }
-                        }
-                    }
-                },
-                result: {
-                    // --- A. 发动欲望：资源枯竭熔断 ---
-                    player: function(player) {
-                        var evt = _status.event;
-                        if (evt.filterCard({ name: 'sha' }, player, evt)) {
-                            // 使用 storage 判断鸣踪是否已用
-                            var canMingzong = !player.storage.sgz_mingzong_used;
-                            var totalAtkHorses = game.countPlayer(p => p.countCards('e', { subtype: 'equip4' }) > 0);
-                            // 关键限制：全场剩 1 马且没法回收时，禁止亮起技能
-                            if (totalAtkHorses <= 1 && !canMingzong) return -5000;
-                        }
-                        return 1;
-                    },
-                    // --- B. 目标选择：战略自残逻辑 ---
-                    target: function(player, target) {
-                        var evt = _status.event;
-                        if (!evt.filterCard({ name: 'sha' }, player, evt)) return -get.attitude(player, target);
-                        
-                        var canMingzong = !player.storage.sgz_mingzong_used;
-                        var att = get.attitude(player, target);
-                        var enemyCount = game.countPlayer(p => get.attitude(player, p) < 0);
-                        var horseOwners = game.filterPlayer(p => p.countCards('e', { subtype: 'equip4' }) > 0);
-                        
-                        // === 【核心新增】：唯一马种保护逻辑 ===
-                        // 满足：1.敌人多于1名；2.没有鸣踪；3.目标是全场唯一的-1马拥有者
-                        if (enemyCount > 1  && !canMingzong && horseOwners.length === 1 && horseOwners.contains(target)) {
-                            // 如果目标血量处于危险线（濒死或1血），AI 为了留着这匹马以后用，强制放弃击杀
-                            // 返回 0 分，意味着 AI 宁愿不发动雷殛去杀这个残血敌人
-                            if (target.hp <= 2 || target.isDying()) return -6000;
-                        }
-
-                        if (att > 0) { // 友方或自己
-                            var enemyHasHorse = game.hasPlayer(p => get.attitude(player, p) < 0 && p.countCards('e', { subtype: 'equip4' }) > 0);
-                            // 只有满足“敌方无马”且“我有鸣踪”时，才允许杀友送马
-                            if (!enemyHasHorse && canMingzong && target.countCards('e', { subtype: 'equip4' }) > 0) {
-                                return 15; // 高优先级正分
-                            }
-                            return -200; // 否则物理熔断，绝对不杀自己人
-                        }
-                        return -att + (target.countCards('e', { subtype: 'equip4' }) ? 30 : 0);
-                    }
-                }
-            },
+            ai: AI.sgz_leiji,
             // === 响应【闪】时的目标选择：优先敌人，且敌人中优先高威胁度目标 ===
             ai2: function(target) {
                 var evt = _status.event;
@@ -342,10 +262,7 @@ export default {
             },
             usable: 1,
             group: "sgz_mingzong_reset",
-            ai:{
-                expose: 1,
-                threaten: 39,
-            },
+            ai: AI.sgz_mingzong,
             mod: {
                 // 【核心 AI 补丁】：强行让 AI 认为鸣踪锦上添花，无视对手拿马收益
                 aiResult: function(player, card, num) {
@@ -448,6 +365,7 @@ export default {
             subSkill: {
                 // 辅助：每当马超回合开始，重置标记
                 reset: {
+                    persevereSkill: true,
                     trigger: { player: "phaseBegin" },
                     forced: true, silent: true,
                     content: function() {

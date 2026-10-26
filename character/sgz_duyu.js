@@ -1,4 +1,4 @@
-// =====================================================
+﻿// =====================================================
 // 梦杜预 —— 武库 / 谏国 / 破竹 / 三陈 / 倾势（觉醒）· 灭吴
 //
 // 特效层见 effect/sgz_duyu.js：
@@ -37,6 +37,7 @@ import {
     dmqcBuildSanchenDialog,
     dmqcBuildJianguoDialog,
 } from "../effect/sgz_duyu.js";
+import AI, { helpers } from "../ai/sgz_duyu.js";
 
 // 「陈令」标记的技能名（武库产出；挂在武库上显示，便于 UI 展示）
 // 注意：标记名与 storage 键由 effect/sgz_duyu.js 统一导出（单一来源，避免与特效层漂移）；
@@ -209,7 +210,8 @@ function sgzDuyuPickSlotBonus(player, names) {
     return bonus.length ? bonus : names;
 }
 
-// AI 用：牌名的粗略价值（只用来决定"值不值得为它掉 1 点体力"）
+// 【规则侧残留】旧的粗价值表：AI 已改用 ai/sgz_duyu.js 的价值表，
+// 这个函数现在只被 __dytest 的补栏口径单测引用（保留以免破坏既有测试）。
 function sgzDuyuCardScore(name) {
     let type = "";
     try {
@@ -342,6 +344,7 @@ export default {
             audio: "ext:大梦千秋/audio/sgz_duyu:4",
             persevereSkill: true,
             forced: true,
+            ai: AI.sgz_wuku,
             // 武库本身不显示标记（否则会多出一个空壳“陈令”）；
             // “陈令”的计数与显示都由 sgz_chenling 承担。
             trigger: {
@@ -392,6 +395,7 @@ export default {
             },
             trigger: { player: "phaseDrawBegin" },
             direct: true,
+            ai: AI.sgz_jianguo,
             filter: (event, player) => !event.numFixed && sgzDuyuUnrecorded(player).length > 0,
             // async 风格：原因同【武库】（step 写法拿不到模块作用域）
             async content(event, trigger, player) {
@@ -413,7 +417,7 @@ export default {
                         `是否发动【谏国】，指定1~${maxPick}种牌名来代替摸牌？（最多失去${Math.max(0, maxPick - 1)}点体力）`
                     )
                     // AI：至少要有 3 点体力才愿意割（最多付 2 点，还留得住命）
-                    .set("ai", () => player.getHp() >= 3)
+                    .set("ai", () => helpers.jianguoShouldUse(player, card_list, maxPick))
                     .forResultBool();
                 if (!bool) {
                     return;
@@ -452,16 +456,16 @@ export default {
                 if (!chosen) {
                     // 引擎默认框：可选 1~maxPick 种
                     // AI：取最划算的 1~3 种（按体力决定取几种），其余牌给负分不选
-                    const want = Math.max(1, Math.min(maxPick, player.getHp() >= 4 ? 3 : player.getHp() >= 2 ? 2 : 1));
-                    const tops = card_list
-                        .slice(0)
-                        .sort((a, b) => sgzDuyuCardScore(b) - sgzDuyuCardScore(a))
-                        .slice(0, want);
+                    // AI：取几种（X）与取哪几种都交给 ai/sgz_duyu.js 的 helpers.jianguoPlan
+                    //   X 是随体力变化的连续函数（不再写死 1/2/3），并考虑"先摸牌后掉血"的结算顺序
+                    const plan = helpers.jianguoPlan(player, card_list, maxPick);
+                    const want = plan.count;
+                    const tops = plan.names;
                     const { bool: chose, links } = await player
                         .chooseButton([`谏国：请指定1~${maxPick}种不同的牌名`, [card_list, "vcard"]], [1, maxPick], true)
                         .set("ai", button => {
                             const name = Array.isArray(button.link) ? button.link[2] : button.link;
-                            return tops.includes(name) ? 5 : -1;
+                            return helpers.jianguoPickScore(name, tops);
                         })
                         .forResult();
                     if (!chose || !links || !links.length) {
@@ -482,6 +486,7 @@ export default {
                 // 代价：指定种数 - 1（只指定 1 种时不掉血；付满会把自己送进濒死，故选择框里会标"濒危"）
                 const cost = Math.max(0, card_names.length - 1);
                 if (cost > 0) {
+                    await player.gainMaxHp(); 
                     await player.loseHp(cost);
                 }
             },
@@ -497,9 +502,11 @@ export default {
             persevereSkill: true,
             audio: "ext:大梦千秋/audio/sgz_duyu:4",
             group: ["sgz_pozhu_mod", "sgz_pozhu_effect", "sgz_pozhu_mark"],
+            ai: AI.sgz_pozhu,
             subSkill: {
                 // ① 使用武库已记录牌名的牌：无次数和距离限制
                 mod: {
+                    persevereSkill: true,
                     mod: {
                         cardUsable: function (card, player) {
                             if (sgzDuyuRecorded(player).includes(card.name)) {
@@ -515,6 +522,7 @@ export default {
                 },
                 // ②-1 每名角色的回合开始时获得体力值个“破竹”标记，每名角色的回合结束时清空所有“破竹”标记
                 mark: {
+                    persevereSkill: true,
                     // ⚠ 这里刻意**不写 intro**：引擎判断要不要在武将牌上生成标记节点的是
                     //   `updateMark` 里的 `lib.skill[i].intro`（player.js:4328），
                     //   跟技能上的 `mark` 字段无关 —— 只写 `mark: false` 是**没有用的**，
@@ -554,6 +562,7 @@ export default {
                 // ②-2 成为武库已记录牌名或装备牌的牌的目标时：消耗1个“破竹”并回复/摸牌
                 // 注意：只消耗【破竹】自己产出的“破竹”标记，不动武库产出的“陈令”
                 effect: {
+                    persevereSkill: true,
                     trigger: { target: "useCardToTargeted" },
                     forced: true,
                     filter: function (event, player) {
@@ -610,7 +619,7 @@ export default {
             persevereSkill: true,
             enable: "phaseUse",
             // 出牌阶段不限次数（每次消耗3个“陈令”标记，由 filter 兜底）
-            ai: { expose: 1, order: 9 },
+            ai: AI.sgz_sanchen,
             filter(event, player) {
                 // 需要至少3个“陈令”标记，且武库里至少还有一种「你未装备的装备牌」
                 if (player.countMark(SGZ_DUYU_MARK_SKILL) < DMQC_SANCHEN_COST) {
@@ -721,12 +730,8 @@ export default {
                         const flat = avail.reduce((arr, o) => arr.concat(o.candidates), []);
                         const res = await player
                             .chooseButton([`【${get.translation("sgz_sanchen")}】请选择要获得的神武`, [flat, "vcard"]], 1, true)
-                            .set("ai", button => {
-                                const nm = Array.isArray(button.link) ? button.link[2] : button.link;
-                                // 优先挑“本次会额外补栏”的神武（白赚一个栏位），再按牌名价值
-                                const bonusNames = sgzDuyuPickSlotBonus(player, flat);
-                                return (bonusNames.includes(nm) ? 10 : 0) + sgzDuyuCardScore(nm) + Math.random();
-                            })
+                            // AI：强度表 + 情境修正 + 琴/鹿配对例外，全部在 ai/sgz_duyu.js
+                            .set("ai", button => helpers.sanchenShenwuScore(button, player, flat))
                             .forResult();
                         if (!res || !res.bool || !res.links || !res.links.length) {
                             return;
@@ -744,22 +749,11 @@ export default {
                                 .chooseControl(list)
                                 .set("prompt", `【${get.translation("sgz_sanchen")}】请选择要获得哪一类装备栏的装备牌`)
                                 .set("displayIndex", false)
-                                .set("ai", () => {
-                                    // AI：候选牌越多越优先；另外该栏“已满且未达 3 栏”时
-                                    // 本次会白赚一个额外装备栏，给一点加成。
-                                    let best = avail[0].slot,
-                                        bestNum = -1;
-                                    for (const o of avail) {
-                                        const bonus =
-                                            o.full && sgzDuyuSlotCapacity(player, o.slot) < SGZ_DUYU_SLOT_MAX ? 3 : 0;
-                                        const n = candidateMap[o.slot].length + bonus;
-                                        if (n > bestNum) {
-                                            bestNum = n;
-                                            best = o.slot;
-                                        }
-                                    }
-                                    return slotName[best];
-                                })
+                                // AI：栏位优先级 1 级 防具>武器>坐骑；2 级·失败 武器>防具>坐骑；2 级·成功 防具>武器>坐骑
+                                //   "已满且<3 栏"＝白赚栏位 +20；3 栏装满才转下一类（见 ai/sgz_duyu.js）
+                                .set("ai", () =>
+                                    helpers.sanchenSlotChoice(avail, candidateMap, player, shenwu, sgzDuyuQingshiFailed(player))
+                                )
                                 .forResultControl();
                         }
                         slot = (avail.find(o => o.name === control) || {}).slot;
@@ -806,6 +800,7 @@ export default {
             audio: "ext:大梦千秋/audio/sgz_duyu:4",
             persevereSkill: true,
             awakenSkill: true,
+            ai: AI.sgz_qingshi,
             skillAnimation: true,
             animationColor: "gold",
             derivation: "sgz_miewu",
@@ -919,20 +914,7 @@ export default {
                     await player.gain(cards, target, "gain2");
                 }
             },
-            ai: {
-                // 注意：原本这里与上面另写了一个 ai 字段，后者会整体覆盖前者（expose 被吃掉），
-                // 故合并为一份。
-                expose: 1,
-                order: 1000,
-                result: {
-                    target: function (player, target) {
-                        if (get.attitude(player, target) >= 0) {
-                            return 0;
-                        }
-                        return -get.threaten(target) - 2;
-                    },
-                },
-            },
+            ai: AI.sgz_miewu,
         },
 
         // ===================== 6. 破竹 · 竹节进度条（纯表现层） =====================
@@ -945,13 +927,13 @@ export default {
         sgz_wuku: "武库",
         sgz_wuku_info: "锁定技，每当你受到或造成的伤害结算后/你的准备阶段时，你获得等量/一个“陈令”标记，然后你摸等量/一张牌。",
         sgz_jianguo: "谏国",
-        sgz_jianguo_info: "摸牌阶段，你可改为指定X+1种<span style='color:#CC00FF;'>武库</span>未记录的非装备牌获得之（X不超过你的体力值），然后你失去X点体力值。",
+        sgz_jianguo_info: "摸牌阶段，你可改为指定X+1种<span style='color:#CC00FF;'>武库</span>未记录的非装备牌获得之（X不超过你的体力值），然后你增加1点体力上限并失去X点体力值。",
         sgz_pozhu: "破竹",
         sgz_pozhu_info: "锁定技，①你使用<span style='color:#CC00FF;'>武库</span>已记录牌名的牌无次数距离限制。②，每回合限X次（X为你回合开始时的体力值），当你成为<span style='color:#CC00FF;'>武库</span>已记录牌名的牌或装备牌的目标时，若你已受伤/未受伤，你回复一点体力/摸一张牌。",
         sgz_sanchen: "三陈",
         sgz_sanchen_info: "你可以移除3个“陈令”标记，然后：<br>1级：你选择一种装备栏，随机获得一张你未装备的该类型装备牌。<br>2级：你选择一件你未装备的<span style='color:#FF0000;'>神武</span>获得之。<br>当你依次法获得装备牌时，若对应类型装备栏已满，则你获得一个该类型的额外装备栏（每种装备栏数量至多为3）。",
         sgz_qingshi: "倾势",
-        sgz_qingshi_info: "使命技，①当你获得未记录的非装备牌后，<span style='color:#CC00FF;'>武库</span>记录其牌名；<br>②成功：当<span style='color:#CC00FF;'>武库</span>记录所有非装备牌名时：你获得【灭吴】，失去【谏国】。<br>③失败：当你进入濒死状态时：删除<span style='color:#CC00FF;'>武库</span>的所有记录并获得等量“陈令”标记。<br>④觉醒：你增加3点体力上限并回满体力，升级【三陈】。",
+        sgz_qingshi_info: "使命技，①当你获得未记录的非装备牌后，<span style='color:#CC00FF;'>武库</span>记录其牌名；<br>②成功：当<span style='color:#CC00FF;'>武库</span>记录所有非装备牌名时：你获得〖灭吴〗，失去〖谏国〗。<br>③失败：当你进入濒死状态时：删除<span style='color:#CC00FF;'>武库</span>的所有记录并获得等量“陈令”标记。<br>④觉醒：你增加3点体力上限并回满体力，升级〖三陈〗。",
         sgz_miewu: "灭吴",
         sgz_miewu_info: "出牌阶段限一次，你可以指定一名其他角色，令其立即死亡，然后你获得其区域内所有牌。",
         // 标记载体技能（charlotte，不在技能栏显示为可点技能）

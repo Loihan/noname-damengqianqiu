@@ -102,6 +102,48 @@ const DMQC_FX_THEMES = {
         dx: [10, 32],
         glow: "#59f0c4",
     },
+    // 梦文鸯 · 霆踪：蓝紫雷电影屑（细长条，像被劈开的电芒）
+    wenyang: {
+        count: 12,
+        colors: ["#4a9eff", "#8a7bff", "#7fd4ff", "#b47aff"],
+        size: [1.5, 3.5],
+        dur: [4.2, 7.2],
+        dy: [230, 410],
+        dx: [8, 30],
+        glow: "#7f9bff",
+        radius: "1px",
+    },
+    // 梦文鸯 · 仇决：血仇暗焰（暗红烬火，粘稠上浮）
+    wenyang_choujue: {
+        count: 10,
+        colors: ["#ff4a3a", "#c22034", "#7d1020", "#ff8a5c"],
+        size: [2, 4],
+        dur: [5.0, 8.0],
+        dy: [220, 400],
+        dx: [10, 34],
+        glow: "#ff3a2a",
+    },
+    // 梦甘宁 · 劫营：翡翠劫掠光屑（吴势力绿，上浮略快，像被掠起的碎芒）
+    gannin_jieying: {
+        count: 10,
+        colors: ["#4adf9a", "#7dffc4", "#2fd6a6", "#a8ffe6"],
+        size: [2, 4],
+        dur: [4.6, 7.6],
+        dy: [220, 400],
+        dx: [10, 32],
+        glow: "#4adf9a",
+    },
+    // 梦甘宁 · 夜魇：暗紫阴影游丝（低可见度，像潜伏在阴影中的动静）
+    gannin_yeyan: {
+        count: 12,
+        colors: ["#4a3a8a", "#2a1f5e", "#5a4aa0", "#241a4e"],
+        size: [2, 5],
+        dur: [6.0, 9.5],
+        dy: [260, 480],
+        dx: [14, 46],
+        glow: "#6a5ac8",
+        radius: "1.5px",
+    },
 };
 
 function dmqcFxRand(range) {

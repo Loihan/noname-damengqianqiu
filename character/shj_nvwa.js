@@ -1,3 +1,5 @@
+import AI, { helpers } from "../ai/shj_nvwa.js";
+
 export default {
     character: {
         // === 修改点: 更新体力、上限和技能 ===
@@ -98,20 +100,9 @@ export default {
                 globalTo: function(from, to, distance) {
                     return distance + Math.min(5, to.countCards("h", card => card.hasGaintag("eternal_wuseshi")));
                 },
-                aiOrder: function(player, card, num) {
-                    if (get.itemtype(card) == "card" && card.hasGaintag("eternal_wuseshi")) {
-                        var suits = lib.suit.slice();
-                        player.countCards("h", cardx => {
-                            if (!cardx.hasGaintag("eternal_wuseshi") || card == cardx) return;
-                            suits.remove(get.suit(cardx));
-                        });
-                        if (suits.length) return num + suits.length * 2.5;
-                    }
-                },
+                aiOrder: helpers.shj_lianshi_aiOrder,
             },
-            ai: {
-                effect: { "target_use": (card, player, target) => { if (get.type(card) == "delay") return 0.1; } },
-            },
+            ai: AI.shj_lianshi,
             subSkill: {
                 draw:{
                     trigger: {
@@ -129,6 +120,7 @@ export default {
                     },
                 },
                 beifen: {
+                    persevereSkill: true,
                     audio: 2,
                     trigger: {
                         player: ["loseAfter"],
@@ -171,6 +163,7 @@ export default {
                     },
                 },
                 restore: {
+                    persevereSkill: true,
                     audio: 2,
                     trigger: { player: "phaseZhunbeiBegin" },
                     filter: function(event, player) {
@@ -185,6 +178,7 @@ export default {
                     },
                 },
                 skip: {
+                    persevereSkill: true,
                     mark: true,
                     intro: { content: "跳过下个判定阶段" },
                 },
@@ -252,6 +246,7 @@ export default {
             },
             subSkill: {
                 damage: {
+                    persevereSkill: true,
                     trigger: { player: "damageBegin3" },
                     forced: true, charlotte: true, onremove: true,
                     content: function() {
@@ -320,6 +315,7 @@ export default {
             },
             subSkill: {
                 consume: {
+                    persevereSkill: true,
                     audio: 2,
                     trigger: { player: "shj_guiyuanAfter" },
                     forced: true,

@@ -1,5 +1,6 @@
 ﻿// 嘲风·【弧形星环阵列】UI 已抽离至 effect/shj_chaofeng.js
 import { chaofengUI } from '../effect/shj_chaofeng.js';
+import AI, { helpers } from "../ai/shj_chaofeng.js";
 
 export default {
     character: {
@@ -31,18 +32,7 @@ export default {
             enable: ["chooseToUse"],
             mod: {
                 // === 核心 AI 修正：强迫走技能转化，不准直出手牌 ===
-                aiOrder: function(player, card, num) {
-                    // 如果是真实卡牌(非转化)且是杀或锦囊
-                    if (typeof card == 'object' && !card.isSkill 
-                        && (card.name == 'sha' || get.type(card) == 'trick' )
-                        ) {
-                        // 只要惊跃还能发动(有红或有黑且未用)，就给原牌打负分，逼 AI 点技能按钮
-                        if (player.hasCard(c => get.color(c) == 'red' || (get.color(c) == 'black' && !player.storage.shj_jingyue_thunder_used), 'hes')) {
-                            return num - 50; 
-                        }
-                    }
-                    return num;
-                },
+                aiOrder: helpers.shj_jingyue_aiOrder,
                 targetInRange: function (card, player, target) {
                     if (_status.event.skill == 'shj_jingyue' && card.name == 'sha' && card.cards && card.cards.length > 0 && get.color(card.cards[0], player) == 'black') {
                         return true;
@@ -95,43 +85,13 @@ export default {
                     player.storage.shj_jingyue_thunder_used = true; // 雷杀限一次的标记
                 }
             },
-            ai: {
-                directHit_ai: true,
-                fireAttack: true, // 可造成火属性伤害
-                jiuOther: true, // 可响应【酒】
-                thunderAttack: true, // 可造成雷属性伤害
-                // === 核心 AI 修正：动态优先级阶梯 ===
-                order: function(item, player) {
-                    // 有红牌：惊跃(35) > 裂影(21)
-                    if (player.hasCard(c => get.color(c) == 'red', 'hes')) return 35;
-                    // 没红牌：裂影(21) > 惊跃(20)
-                    if (!player.storage.shj_jingyue_thunder_used && player.hasCard(c => get.color(c) == 'black', 'hes')) return 20;
-                    return 1;
-                },
-                result: { 
-                    player: function(player) {
-                        if (player.hasCard(c => get.color(c) == 'red', 'hes')) return 10;
-                        if (!player.storage.shj_jingyue_thunder_used && player.hasCard(c => get.color(c) == 'black', 'hes')) return 5;
-                        return 0;
-                    }
-                },
-                // === 核心 AI 修正：选牌偏好 (红 > 黑) ===
-                check: function(card) {
-                    var player = _status.event.player;
-                    var color = get.color(card);
-                    // 逻辑：只要手里还有红牌，黑牌评分直接给 -100 (绝对不选)
-                    if (player.hasCard(c => get.color(c) == 'red', 'hes')) {
-                        return (color == 'red') ? (150 - get.value(card)) : -100;
-                    }
-                    // 没红牌了，黑牌才亮起
-                    return (color == 'black') ? (100 - get.value(card)) : 0;
-                }
-            },
+            ai: AI.shj_jingyue,
             // group 关联所有子技能
             group: ["shj_jingyue_unlimited", "shj_jingyue_damage", "shj_jingyue_reset", "shj_jingyue_directhit", "shj_jingyue_gain_mark"],
             subSkill: {
                 // 火杀不计次数
                 unlimited: {
+                    persevereSkill: true,
                     trigger: { player: "useCard1" },
                     forced: true,
                     popup: false,
@@ -151,6 +111,7 @@ export default {
                 },
                 // 雷杀伤害+1
                 damage: {
+                    persevereSkill: true,
                     trigger: { source: "damageBegin1" },
                     forced: true,
                     popup: false,
@@ -163,6 +124,7 @@ export default {
                 },
                 // 距离-X 的 mod
                 range: {
+                    persevereSkill: true,
                     mod: {
                         globalFrom: function(from, to, distance) {
                             return distance - (from.storage.shj_jingyue_range_count || 0);
@@ -171,6 +133,7 @@ export default {
                 },
                 // 回合开始时重置所有状态
                 reset: {
+                    persevereSkill: true,
                     trigger: { player: "phaseBegin" },
                     silent: true,
                     forced: true,
@@ -182,6 +145,7 @@ export default {
                 },
                 // 雷杀不可响应
                 directhit: {
+                    persevereSkill: true,
                     trigger: { player: "shaBegin" },
                     forced: true,
                     popup: false,
@@ -194,6 +158,7 @@ export default {
                 },
                 // 【新增】造成伤害后的效果
                 gain_mark: {
+                    persevereSkill: true,
                     trigger: { source: "damageEnd" },
                     forced: true,
                     filter: function(event, player) {
@@ -242,25 +207,9 @@ export default {
                 return player.countMark('shj_jingyue') > 0;
             },
             mod:{
-                aiOrder: function(player, card, num) {
-                    if(card.name == 'jiu'&& card.color == 'black' && player.countCards("h") > 1
-                        && !player.hasCard(c => get.color(c) == 'red') 
-                        && player.hasCard(c => get.color(c) == 'black')
-                        && !player.storage.shj_jingyue_thunder_used
-                ) return 9999;
-                }
+                aiOrder: helpers.shj_lieying_aiOrder,
             },
-            ai: {
-                // 优先级 21，精准卡在红(35)之后，黑(20)之前
-                order: 21,
-                result: {
-                    player: function(player) {
-                        // 确保 AI 认为在出黑杀前开裂影是正收益
-                        if (!player.hasCard(c => get.color(c) == 'red', 'hes') && player.hasCard(c => get.color(c) == 'black', 'hes')) return 1;
-                        return 0;
-                    }
-                }
-            },
+            ai: AI.shj_lieying,
             content: function() {
                 'step 0'
                 var max_num = player.countMark('shj_jingyue');
@@ -321,6 +270,7 @@ export default {
         },
         // === 技能4: 【睥睨】===
         shj_pini: {
+            persevereSkill: true,
             audio: "ext:大梦千秋/audio/shj_chaofeng:5",
             trigger: { target: "useCardToTargeted" },
             forced: true,

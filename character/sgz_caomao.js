@@ -1,5 +1,6 @@
-// 绂嶆笂主题选择框 + 潜龙火焰特效已抽离至 effect/sgz_caomao.js
+﻿// 绂嶆笂主题选择框 + 潜龙火焰特效已抽离至 effect/sgz_caomao.js
 import { dmqcBuildFuyuanDialog, qianlongUI } from '../effect/sgz_caomao.js';
+import AI, { helpers } from "../ai/sgz_caomao.js";
 
 // ============================================================
 //  梦曹髦 · 【倾讨】的「决进特效」播放器（可复用）
@@ -281,61 +282,18 @@ export default {
                                 }
                             }
                         },
-                        aiUseful: function(player, card, num) {
-                            // 安全检测标签
-                            var isQianlong = (card.gaintag && card.gaintag.contains('sgz_caomao_shaTag'));
-                            // 兼容转化牌内部的实体牌检测
-                            if (!isQianlong && card.cards) isQianlong = card.cards.some(c => c.gaintag && c.gaintag.contains('sgz_caomao_shaTag'));
-
-                            if (isQianlong) {
-                                // === 核心逻辑修复：响应环节降权 ===
-                                // 如果当前处于“打出/响应”事件（如被杀、决斗、南蛮、倾讨死斗）
-                                // 我们给它一个极低的保底分数（0.01），确保它排在所有普通【杀】（约5分）的后面
-                                if (_status.event.name == 'chooseToRespond' || _status.event.openedBySkill) {
-                                    return 0.01;
-                                }
-                                // 出牌阶段主动使用时，稍微降低优先级
-                                return num - 2; 
-                            }
-                        },
-                        aiValue: function(player, card, num) {
-                            if (card.hasGaintag('sgz_caomao_shaTag')) return num+100;
-                        },
+                        aiUseful: helpers.sgz_fuyuan_xiaoguo_aiUseful,
+                        aiValue: helpers.sgz_fuyuan_xiaoguo_aiValue,
                         effect: function(card, player, target) {
                             if (target.hasSkill('sgz_fuyuan_xiaoguo') && get.tag(card, 'damage')) {
                                 // 如果司马昭(曹髦)还有发动机会，且体力上限安全，认为受伤是 5 分收益
                                 if (target.maxHp > 1 && target.getStat().skill.sgz_fuyuan_xiaoguo < 2) {
-                                    return [1, 4]; // 1系数(不痛) + 4分额外收益
+                                    return [1, 2]; // 卖血收益封顶 [1,2]（原 [1,4]，系数=1 表示"不痛"，+2 是小赚）
                                 }
                             }
                         }
                     },
-                    ai: {
-                        maixie_defend: true,
-                        expose: 1,
-                        threaten: 12,
-                        maixue:true,
-                        order: function(item, player) {
-                            // 只要体力上限 > 1 且有标记可以叠，优先级设定为最高 (20)
-                            // 确保在出任何牌（如无中生有15）之前先发动缚渊
-                            if (player.maxHp > 1) return 200;
-                            return -10;
-                        },
-                        result: {
-                            player: function(player) {
-                                // 如果能触发被动的自残（受伤触发），告诉AI这是好事
-                                if (_status.event.name == 'damage' && player.maxHp > 1) return 50;
-                                return 1;
-                                if (player.maxHp == 1) return -1;
-                            }
-                        },
-                        effect: {
-                            target:function(card, player, target) {
-                                if (get.tag(card, 'damage') && target.maxHp > 1 && target.getStat().skill.sgz_fuyuan_xiaoguo < 2) 
-                                    return [1, 3];
-                            }
-                        }
-                    },
+                    ai: AI.sgz_fuyuan_xiaoguo,
                     hideIntro: true,
                     prompt: "【缚渊】：是否发动“缚渊”选择一名其他角色施加权能？",
                     filter: function(event, player) {
@@ -496,68 +454,8 @@ export default {
                         }
 
                         // 6. 弹出选项框（本地人类玩家使用专属“帝诏·权能”主题选择框，其余场景回退引擎默认框）
-                        const fuyuanAi = function(button) {
-                            const player = get.player();
-                            const parent = _status.event.getParent();
-                            const trig = parent._trigger; // 获取触发源事件
-                            
-                            // --- 安全判定：只有在受到伤害触发时，才有 isCounter 和 isSource ---
-                            let isCounter = false;
-                            let isSource = false;
-                            
-                            if (trig && trig.name == 'damage') {
-                                isCounter = (_status.currentPhase != player); // 是否在回合外
-                                isSource = (target == trig.source);          // 目标是否为伤害来源
-                            }
-
-                            const optId = button.link;
-
-                            // --- 核心：反击状态下，选项5（秉尊）拥有统治级权重 ---
-                            if (isCounter && isSource && optId === "opt5") {
-                                return 2000; // 极高分，确保反击时必选
-                            }
-
-                            // --- 使用明确的权重梯度，解决“按顺序选”的问题 ---
-                            // 优先级排序：绝敕(4) > 诰封(3) > 秉尊(5) > 潜谋(2) > 放逐(1)
-                            
-                            if (optId === "opt4") { 
-                                // 绝敕（禁疗）：永久且强力。对神赵云、华佗或残血敌人分值极大
-                                let s = 150;
-                                game.log('4');
-                                if (target.hasSkillTag('recover') || target.hasSkillTag('maixue') || target.hp <= 2) s += 100;
-                                if (target.name.indexOf('zhaoyun') != -1) s += 300;
-                                return s;
-                            } 
-                            
-                            if (optId === "opt3") {
-                                // 诰封（得牌弃一）：永久且克制过牌。对郭嘉、月英等有效
-                                let s = 130;
-                                if (target.hasSkillTag('draw') || target.hasSkillTag('maixue')) s += 100;
-                                return s;
-                            } 
-                            
-                            if (optId === "opt5") {
-                                // 秉尊（减伤/偷牌）：永久且克制高输出
-                                let s = 110;
-                                if (target.hasSkillTag('damageSource') || target.countCards('h', 'sha') >= 2) s += 100;
-                                return s;
-                            } 
-                            
-                            if (optId === "opt2") {
-                                // 潜谋（封手牌）：非永久。手牌越多分越高
-                                return 30 + (target.countCards('h') * 15);
-                            } 
-                            
-                            if (optId === "opt1") {
-                                // 放逐（封装备/判定）：非永久。装备越多分越高
-                                let s = 40;
-                                s += (target.countCards('e') * 30);
-                                if (target.hasSkillTag('rejudge')) s -= 200; // 绝对不要给张角司马懿送判定牌
-                                return s;
-                            }
-                            
-                            return 1; // 兜底保底分
-                        };
+                        // AI 的选项评分已搬进 ai/sgz_caomao.js（helpers.sgz_fuyuan_optionValue）
+                        const fuyuanAi = button => helpers.sgz_fuyuan_optionValue(button, target);
                         let res_choice;
                         if (player.isMine() && !game.online && !_status.auto && !_status.video) {
                             // 专属“帝诏·权能”主题选择框
@@ -698,53 +596,7 @@ export default {
 
             intro: { content: 'limited' },
             // 修改 sgz_qingtao 的 ai 块
-            ai: { 
-                expose: 1,
-                order: 19, 
-                threaten:3,
-                result: {
-                    player: 100,
-                    target: function(player, target) {
-                        if (get.attitude(player, target) > 0) return -2;
-
-                        // --- 1. 统一权力值计算 ---
-                        var power = (target.maxHp * 10) + (get.threaten(target));
-
-                        var enemiesCount = game.countPlayer(p => p != player && get.attitude(player, p) <= 0);
-
-                        // --- 2. 状态避让：如果对方有任何缚渊状态，大幅降低倾讨欲望 ---
-                        // 理由：有状态的说明正在被 fuyuan 叠层，留着白嫖更划算
-                        var fuyuanCount = 0;
-                        if (target.hasSkill('sgz_fuyuan_gaofeng')) fuyuanCount++;
-                        if (target.hasSkill('sgz_fuyuan_juechi')) fuyuanCount++;
-                        if (target.hasSkill('sgz_fuyuan_bingzun')) fuyuanCount++;
-                        if (target.getCards('j').length > 0) fuyuanCount++;
-                        
-                        // 每一个状态扣掉 500 分，确保有状态的人评分极低
-                        var statusPenalty = fuyuanCount * 500;
-
-                        // --- 3. 排序确认：是否是第一强 ---
-                        var enemies = game.filterPlayer(p => get.attitude(player, p) <= 0).sort((a, b) => {
-                            return ((b.maxHp * 10) + get.threaten(b)) - ((a.maxHp * 10) + get.threaten(a));
-                        });
-
-                        // --- 4. 斩杀安全评估 ---
-                        var myShas = player.countCards('h', 'sha');
-                        var hisShas = target.countCards('h', 'sha');
-                        if (hisShas > myShas) return 0; 
-
-                        if(enemiesCount == 1) return -999;
-
-                        // --- 5. 最终评分 ---
-                        var finalScore = power - statusPenalty;
-                        
-                        // 如果是第一强敌人，额外加成
-                        if (target == enemies[0]) finalScore += 1000;
-
-                        return -finalScore; // result.target 返回负数表示打击
-                    }
-                }
-            },
+            ai: AI.sgz_qingtao,
             filter: function(event, player) {
                 return !player.storage.sgz_qingtao;
             },
@@ -771,6 +623,7 @@ export default {
             subSkill: {
                 // 实际结算 + 【决进特效】都在这里
                 effect: {
+                    persevereSkill: true,
                     // 子技能本身不单独结算，由上面的空壳拉起
                     sub: true,
                     // ⚠ 与手杀曹髦的决进同款：直接挂 contentBefore 播特效
@@ -884,10 +737,7 @@ export default {
             trigger: {
                 player: "useCard1",
             },
-            ai:{
-                maixie_hp: true, // 优先回血
-                threaten:1.6,
-            },
+            ai: AI.sgz_tengyuan,
             onremove: function(player) {
                 // 【腾渊】结束 → 立绘还原为「枭龙破渊」
                 //   ⚠ 不再写死 `setBackgroundImage('.../sgz_caomao.jpg')`；改走换肤入口。
@@ -934,7 +784,17 @@ export default {
     },
     skillTranslate: {
         sgz_fuyuan: "缚渊",
-        sgz_fuyuan_info: "每轮开始时/你受到伤害时（每回合限两次）/出牌阶段限两次，若你的体力上限大于1，你可以转化1点体力上限为护甲并获得一张“潜龙”【杀】（无花色点数且不计入手牌上限），然后选择一名其他角色，若有选项能对其造成效果，你选择一个可选项令其执行：<br>①放逐：废除所有装备栏并补齐判定区的【乐不思蜀】、【兵粮寸断】和【闪电】；<br>②潜谋：将当前所有手牌标记为“潜谋”，这些牌明置且不可被使用、打出或弃置；<br>③诰封：获得牌时弃置一张牌；<br>④绝敕：回复体力时失去一点体力；<br>⑤秉尊：造成伤害时，伤害-1并且梦曹髦摸一张牌。<br>若其已处于上述所有状态，你视为对其发动【倾讨】并且结算后“倾讨”视为未发动过。",
+        sgz_fuyuan_info: 
+            "<span style='color:#FF0000;'><strong>择令技</strong></span>，每轮开始时/你受到伤害时（每回合限两次）/出牌阶段限两次，" +
+            "若你的体力上限大于1，你可以转化1点体力上限为护甲并获得一张“潜龙”【杀】（无花色点数且不计入手牌上限），然后选择一名其他角色择令：" +
+            "<br><span style='color:#00FF00;'>律令</span>：你选择一项令其执行：" +
+                "<br>①放逐：废除所有装备栏并补齐判定区的【乐不思蜀】、【兵粮寸断】和【闪电】；" +
+                "<br>②潜谋：将当前所有手牌标记为“潜谋”，这些牌明置且不可被使用、打出或弃置；" +
+                "<br>③诰封：获得牌时弃置一张牌；" +
+                "<br>④绝敕：回复体力时失去一点体力；" +
+                "<br>⑤秉尊：造成的伤害-1并且梦曹髦摸一张牌。" +
+            "<br><span style='color:#00FF00;'>禁择</span>：无法对其造成影响的律令禁择。" +
+            "<br><span style='color:#00FF00;'>强决</span>：你视为对其发动〖倾讨〗。",
         "sgz_caomao_shaTag": "潜龙",
         "sgz_fuyuan_tag": "潜谋",
         "sgz_fuyuan_mark": "潜谋",
@@ -946,7 +806,10 @@ export default {
         "sgz_fuyuan_bingzun": "秉尊",
         sgz_fuyuan_bingzun_info:"造成伤害时，伤害-1并且梦曹髦摸一张牌",
         sgz_qingtao: "倾讨",
-        sgz_qingtao_info: "限定技，你本轮获得技能【腾渊】，你可以选择一名其他角色，移除其所有“缚渊”的负面效果、移除其判定区所有牌并恢复所有装备栏，然后你与其执行<span style='color:#FF4500;'>致死</span>的【决斗】效果，胜者<span style='color:#FFFF00;'>夺取</span>败者的体力状态（至多夺取5点体力上限）与所有牌并获得一个额外的回合。",
+        sgz_qingtao_info: 
+            "①<span style='color:#FF0000;'><strong>昂扬技</strong></span>，你本轮获得技能〖腾渊〗，你选择一名其他角色，移除其所有“缚渊”的负面效果、移除其判定区所有牌并恢复所有装备栏，" +
+            "然后你与其执行<span style='color:#FF4500;'>致死</span>的【决斗】效果，胜者<span style='color:#FFFF00;'>夺取</span>败者的体力状态（至多夺取5点体力上限）与所有牌并获得一个额外的回合。" +
+            "②<span style='color:#00FF00;'>昂扬</span>：当〖缚渊〗强决结算后。",
         sgz_tengyuan: "腾渊",
         sgz_tengyuan_info:"锁定技，①你使用“潜龙”【杀】无次数距离限制；②当你使用【杀】时，若你未/已受伤则增加一点体力上限/回复一点体力；当你使用其他牌时摸一张牌。",
         sgz_caomao_qianlong_ui:"特效"

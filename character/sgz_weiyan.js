@@ -1,4 +1,4 @@
-// =====================================================
+﻿// =====================================================
 // 梦魏延 —— 壮誓 / 竭伐（觉醒·竭燃） / 破扼 / 檄残
 //
 // 素材约定（配音待补，路径已按本包规范预置）：
@@ -236,6 +236,8 @@ async function sgzPoeUseSha(player, num) {
     sgzPoeExitBatch(player, batch);
 }
 
+import AI, { helpers } from "../ai/sgz_weiyan.js";
+
 export default {
     character: {
         // 梦魏延：蜀势力，男性，4/6 分布（开局即已损失2点体力）
@@ -293,6 +295,7 @@ export default {
             // 时机：每名角色的「准备阶段」（原为回合开始时）
             //   放在准备阶段可以保证：壮誓自己摸牌改出杀期间，无论摸牌还是失去牌
             //   都不会再弹破扼的转杀询问，只有壮誓摸的那些牌会触发破扼①
+            ai: AI.sgz_zhuangshi,
             trigger: { global: "phaseZhunbeiBegin" },
             filter(event, player) {
                 return player.getHp() > 1;
@@ -340,18 +343,8 @@ export default {
                         .set("choiceList", choiceList)
                         .set("displayIndex", false)
                         .set("choice", "0")
-                        .set("ai", () => {
-                            const player = get.player();
-                            if (player.hp < 2) {
-                                return "0";
-                            }
-                            const enemies = game.countPlayer(current => get.attitude(player, current) < 0);
-                            if (!enemies) {
-                                return "0";
-                            }
-                            const num = Math.min(enemies + 1, player.hp - 1);
-                            return num > 0 ? String(num) : "0";
-                        })
+                        // AI：觉醒前"扣满能稳杀一个人"才发动；觉醒后始终扣满（见 ai/sgz_weiyan.js）
+                        .set("ai", () => helpers.zhuangshiChoice(get.player()))
                         .forResultControl();
                 }
 
@@ -396,6 +389,7 @@ export default {
         //   子技能 hurt  —— 锁定技，①当你造成伤害时，你弃置一张牌。
         //   子技能 awaken—— ②当你杀死一名角色时，更换武将牌，获得技能【竭燃】，然后竭伐失效。
         sgz_jiefa: {
+            ai: AI.sgz_jiefa,
             // 音效：竭伐弃牌语音 sgz_jiefa1~4（击杀觉醒另有 sgz_jiefa_juexing1~4，见 awaken 子技能）
             audio: "ext:大梦千秋/audio/sgz_weiyan:4",
             persevereSkill: true,
@@ -443,6 +437,9 @@ export default {
                                     .chooseToDiscard("he", true)
                                     .set("prompt", `【${get.translation("sgz_jiefa")}】弃置一张牌`)
                                     //.set("prompt2", "锁定技：你造成伤害后须弃置一张牌；无牌可弃则跳过");
+                                
+                                player.changeHujia(-1);
+                                player.recover(1);
                             } finally {
                                 player._sgz_jiefa_discarding = false;
                             }
@@ -507,6 +504,7 @@ export default {
             audio:"ext:大梦千秋/audio/sgz_weiyan:6",
             persevereSkill: true,
             group: ["sgz_poe_draw", "sgz_poe_lose", "sgz_poe_reset"],
+            ai: AI.sgz_poe,
             mod: {
                 // 破扼杀：无距离限制
                 targetInRange(card, player, target) {
@@ -557,16 +555,8 @@ export default {
                                 `【${get.translation("sgz_poe")}】取消摸${get.cnNumber(num)}张牌，改为使用${get.cnNumber(num)}张无距离次数限制的【杀】`,
                                 //"取消之"
                             )
-                            .set("ai", () => {
-                                const player = get.player();
-                                if (player.hp < 2) {
-                                    return false;
-                                }
-                                if (!game.hasPlayer(current => get.attitude(player, current) < 0)) {
-                                    return false;
-                                }
-                                return true;
-                            })
+                            // AI：破扼**始终发动**（收益极高）；觉醒前连队友都算可打目标
+                            .set("ai", () => helpers.poeShouldUse(get.player()))
                             .forResultBool();
                         event.result = { bool: !!bool, cost_data: num };
                     },
@@ -615,13 +605,7 @@ export default {
                                 get.prompt("sgz_poe", player),
                                 `视为使用${get.cnNumber(num)}张无次数距离限制的【杀】`
                             )
-                            .set("ai", () => {
-                                const player = get.player();
-                                if (!game.hasPlayer(current => get.attitude(player, current) < 0)) {
-                                    return false;
-                                }
-                                return true;
-                            })
+                            .set("ai", () => helpers.poeShouldUse(get.player()))
                             .forResultBool();
                         event.result = { bool: !!bool, cost_data: num };
                     },
@@ -666,6 +650,7 @@ export default {
 
         // ===================== 4. 檄残 =====================
         sgz_xican: {
+            ai: AI.sgz_xican,
             // 音效：觉醒前 sgz_xican1~2，觉醒后 sgz_xican_achieve1~4
             audio: "ext:大梦千秋/audio/sgz_weiyan:6",
             persevereSkill: true,
@@ -754,6 +739,7 @@ export default {
 
         // ===================== 衍生技：竭燃 =====================
         sgz_jieran: {
+            ai: AI.sgz_jieran,
             // 音效：sgz_jieran1~3（竭燃仅在觉醒后持有）
             audio:"ext:大梦千秋/audio/sgz_weiyan:3",
             persevereSkill: true,
@@ -780,13 +766,7 @@ export default {
                         `回复${get.cnNumber(num)}点体力`,
                     ])
                     .set("displayIndex", false)
-                    .set("ai", () => {
-                        const player = get.player();
-                        if (player.isDamaged() && player.hp <= 2) {
-                            return "回复";
-                        }
-                        return "上限";
-                    })
+                    .set("ai", () => helpers.jieranOption(get.player(), num))
                     .forResultControl();
                 if (control == "上限") {
                     await player.gainMaxHp(num);
@@ -802,7 +782,7 @@ export default {
                         // chooseToDiscard 自身会执行弃置（非 chooseonly 时），此处不要再 modedDiscard 一次
                         await player
                             .chooseToDiscard("he", [0, Infinity], `【${get.translation("sgz_jieran")}】弃置任意张牌`)
-                            .set("ai", () => 0)
+                            .set("ai", card => helpers.jieranDiscardScore(card))
                             .forResult();
                     } finally {
                         player._sgz_jieran_losing = false;
@@ -829,11 +809,11 @@ export default {
         sgz_zhuangshi: "壮誓",
         sgz_zhuangshi_info: "每名角色的准备阶段开始时，你可以失去任意点体力（不超过当前体力）并摸等量张牌。",
         sgz_jiefa: "竭伐",
-        sgz_jiefa_info: "使命技，①当你造成的伤害结算后你弃置一张牌（不触发破扼）。②成功：当你击杀一名角色后，你增加一点体力上限并获得技能【竭燃】。",
+        sgz_jiefa_info: "使命技，①当你造成的伤害结算后你弃置一张牌（不触发破扼）、失去1点护甲并回复1点体力。②成功：当你击杀一名角色后，你增加一点体力上限并获得技能〖竭燃〗。",
         sgz_jieran: "竭燃",
         sgz_jieran_info: "你造成的伤害结算后，你选择一项：1.增加等量点体力上限；2.回复等量点体力（体力已满时不可选）。然后若你是于本回合首次造成伤害，你可以弃置任意张牌。",
         sgz_poe: "破扼",
-        sgz_poe_info: "①当你于出牌阶段内摸牌时，你可以改为使用等量张无距离次数限制的【杀】（因【壮誓】摸牌时无视时机）；②当你于回合外失去牌时，你可以视为使用等量张无距离次数限制的【杀】（因【竭燃】失去牌时无视时机）。",
+        sgz_poe_info: "①当你于出牌阶段内摸牌时（因〖壮誓〗摸牌时无视时机），你可以改为使用等量张无距离次数限制的【杀】。②当你于回合外失去牌时（因〖竭燃〗失去牌时无视时机），你可以视为使用等量张无距离次数限制的【杀】。",
         sgz_xican: "檄残",
         sgz_xican_info: "当你即将对一名其他角色造成伤害时，根据其已损失体力值与体力值执行对应效果：<br>①已损失体力值为1：你获得其一张牌；<br>②已损失体力值为2：此伤害+1；<br>③已损失体力值为3或更多：此伤害+1且你获得其一张牌；<br>④其体力值为2：其不可响应此牌；<br>⑤其体力值为1：此伤害+1。",
     },

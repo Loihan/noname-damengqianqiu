@@ -1,5 +1,61 @@
-// 九伐天殇 UI 已抽离至 effect/sgz_jiangwei.js
+﻿// 九伐天殇 UI 已抽离至 effect/sgz_jiangwei.js
 import { jiangweiUI } from '../effect/sgz_jiangwei.js';
+import AI, { helpers } from "../ai/sgz_jiangwei.js";
+
+const JIUFA_MAX = 9;
+/// 蓄力点（承汉标记）所在技能；标记名 = 技能名
+const CHENGHAN = "sgz_chenghan";
+/// 衍生技能门槛表：[蓄力点数, 技能名]（按点数从小到大）—— 由【承汉】② 授予
+const CHENGHAN_DERIVED = [[1, "sgz_xinran"], [3, "sgz_zhuri"], [5, "sgz_juejin"], [7, "sgz_guju"], [9, "sgz_youming"]];
+
+/// 是否 2 级（已发动过【幽明】：幽明免死时挂上的 `sgz_youming_die`）
+function sgzJiufaIsLevelTwo(player) {
+    return player.hasSkill("sgz_youming_die");
+}
+
+/// 加蓄力点（【承汉】的标记）：**上限 9**，且 gain<=0 时不调用 addMark
+/// ⚠ 引擎 `addMark(i, num)` 里有 `if (!num) num = 1;`（player.js:4257-4259），
+///   满 9 时 `9-9=0` 直接传进去会变成 +1 ⇒ 必须自己先判断。
+function sgzChenghanGainMarks(player, num) {
+    const gain = Math.min(num, JIUFA_MAX - player.countMark(CHENGHAN));
+    if (gain <= 0) return 0;
+    player.addMark(CHENGHAN, gain);
+    // 刷新【九伐天殇】进度条
+    if (player.hasSkill("sgz_jiangwei_ui")) {
+        lib.skill.sgz_jiangwei_ui.updateUI(player);
+    }
+    return gain;
+}
+
+/// 【承汉】② 按当前蓄力点授予衍生技能；蓄力点满 9 时顺带触发「敕剑伏波」形态切换
+function sgzChenghanSyncDerived(player) {
+    if (!player.hasSkill(CHENGHAN)) return; // 已失去【承汉】（发动幽明后）→ ② 不再生效
+    const marks = player.countMark(CHENGHAN);
+    const add = CHENGHAN_DERIVED.filter(([need, skill]) => marks >= need && !player.hasSkill(skill)).map(([, skill]) => skill);
+    if (add.length) player.addSkill(add);
+    // ⚠ 换皮已经不在这里了：2026 需求把「自动换皮」的时机改成了**发动【幽明】**
+    //   （见【幽明】content 里的 `dmqcApplySwapRules(player, "sgz_youming")`）。
+    //   蓄力点满 9 只负责授予【幽明】，不再切形态。
+}
+
+/// 选一名可拼点的其他角色（没有则返回 null）
+async function sgzJiufaChooseTarget(player) {
+    // 场上没有任何可拼点目标时直接返回（描述里的「选择一名其他角色拼点」无法执行）
+    const has = game.hasPlayer(function (cur) {
+        return cur !== player && player.canCompare(cur);
+    });
+    if (!has) return null;
+    const result = await player
+        .chooseTarget("九伐：请选择一名其他角色进行拼点", true, function (card, p, target) {
+            return target !== p && p.canCompare(target);
+        })
+        // 目标选择的 AI 在 ai/sgz_jiangwei.js（AI 只允许有一个来源）
+        .set("ai", function (target) {
+            return helpers.sgzJiufaTargetAI(player, target);
+        })
+        .forResult();
+    return (result && result.targets && result.targets[0]) || null;
+}
 
 export default {
     character: {
@@ -8,7 +64,7 @@ export default {
             group:"shu", 
             hp:4,
             maxHp:9, 
-            skills:["sgz_jiufa","sgz_jiangwei_ui",], 
+            skills:["sgz_chenghan","sgz_jiufa","sgz_jiangwei_ui"],
             img:"extension/大梦千秋/image/sgz_jiangwei.png",
             dieAudios:["ext:大梦千秋/audio/sgz_jiangwei/die.mp3","ext:大梦千秋/audio/sgz_jiangwei/ShenJiangWei_Dead.mp3"], 
             names:"姜|维",
@@ -25,125 +81,91 @@ export default {
         //====================================
         sgz_jiufa: {
             audio: "ext:大梦千秋/audio/sgz_jiangwei:6",
+            // 项目约定：所有武将技能都要有 persevereSkill（持恒技，技能不被无效化）
             persevereSkill: true,
+            forced: true,
+            derivation: ["sgz_chenghan", "sgz_xinran", "sgz_zhuri", "sgz_juejin", "sgz_guju", "sgz_youming", "sgz_fuming"],
+            trigger: { global: "phaseBegin" },
+            ai: AI.sgz_jiufa,
+            // ===== 九伐（拆分后：只管「摸牌 + 拼点 + 加体力上限 + 视为使用杀」）=====
+            //  描述：每名角色回合开始时，你将手牌摸至体力上限并选择一名其他角色拼点，
+            //        若你赢，你增加X点体力上限并视为对其使用：
+            //          1级：X张火【杀】；2级：X+4张神【杀】（X为点数差）
+            //  ⚠ 蓄力点（标记）与衍生技能已经不在这里了 —— 见【承汉】。
+            //  ⚠ 用 async 而不是 `'step N'` 写法：step 写法会被 StepCompiler 丢进 eval 重新求值，
+            //    那里面拿不到本文件的模块级常量/函数（`sgzJiufaChooseTarget` / `sgzJiufaIsLevelTwo`）。
+            async content(event, trigger, player) {
+                // ① 手牌摸至体力上限
+                if (player.countCards("h") < player.maxHp) {
+                    await player.drawTo(player.maxHp);
+                }
+
+                // ② 选择拼点目标
+                const target = await sgzJiufaChooseTarget(player);
+                if (!target) {
+                    game.log(player, "场上没有可拼点的目标，", "#g【九伐】", "失效");
+                    return;
+                }
+
+                // ③ 拼点
+                player.logSkill("sgz_jiufa", target);
+                const result = await player.chooseToCompare(target).forResult();
+                if (!result || !result.bool) return; // 没赢 → 本回合到此为止
+
+                // X = 点数差；1级用 X 张火杀、2级用 X+4 张神杀
+                const level2 = sgzJiufaIsLevelTwo(player);
+                const x = Math.max(0, result.num1 - result.num2);
+                const shaCount = level2 ? x + 4 : x;
+
+                // ④ 增加 X 点体力上限
+                if (x > 0) {
+                    await player.gainMaxHp(x);
+                }
+
+                // ⑤ 视为对目标使用 shaCount 张【杀】（1级火杀 / 2级神杀）
+                if (shaCount > 0) {
+                    const nature = level2 ? "kami" : "fire";
+                    player.addSkill("sgz_jiufa_sha");
+                    try {
+                        for (let i = 0; i < shaCount && target.isAlive(); i++) {
+                            await player.useCard({ name: "sha", nature: nature }, target, false, "sgz_jiufa_sha");
+                        }
+                    } finally {
+                        player.removeSkill("sgz_jiufa_sha");
+                    }
+                }
+            },
+        },
+
+        // ====================================================
+        //  承汉（从原九伐里拆出来的「蓄力 / 衍生技能」部分）
+        // ====================================================
+        sgz_chenghan: {
+            persevereSkill: true,
+            audio:0,
             forced: true,
             mark: true,
             marktext: "伐",
             intro: {
-                name: "九伐",
+                name: "承汉",
                 content: "mark",
             },
-            derivation: ["sgz_xinran", "sgz_zhuri", "sgz_juejin", "sgz_guju", "sgz_youming","sgz_fuming"],
-            trigger: { global: "phaseBegin" },
-            ai:{
-                expose: 1,
-                threaten: 9,
-                fireAttack: true, 
+            ai: AI.sgz_chenghan,
+            // 描述：蓄力技（0/9），当你拼点赢时，你获得点数差个蓄力点。
+            //       根据你的蓄力点数视为拥有：1薪燃 3逐日 5绝烬 7孤炬 9幽明
+            // ⚠ 与旧版的关键差别：**任何拼点赢都给蓄力点**（不止九伐那一次），
+            //   因为走的是引擎的 `chooseToCompareAfter` 时机。
+            trigger: { player: "chooseToCompareAfter" },
+            filter(event, player) {
+                // 拼点赢：result.bool 为 true（含被强制判赢的情况）
+                return !!(event.result && event.result.bool && event.player === player);
             },
-            content: function() {
-                'step 0'
-                //摸牌
-                if(player.countCards('h') < player.maxHp) player.drawTo(player.maxHp);
-                //判断拼点及其后续效果是否失效
-                if (player.countMark('sgz_jiufa') >= 9 && !player.hasSkill('sgz_youming_die')) {
-                    event.finish();
-                }
-                'step 1'
-                //判断是否有可以拼点的目标
-                var can_compare_target_exists = game.hasPlayer(function(current) {
-                    return player.canCompare(current) && current != player;
-                });
-                //选择拼点目标
-                if (can_compare_target_exists) {
-                    player.chooseTarget('九伐：请选择一名其他角色进行拼点', true, function(card, player, target){
-                        return target != player && player.canCompare(target);
-                    }).set('ai', function(target){
-                        return -get.attitude(_status.event.player, target);
-                    });
-                } else {
-                    game.log('场上没有可以拼点的目标，【九伐】失效');
-                    event.finish();
-                }
-                'step 2'
-                if (result.bool && result.targets) {
-                    var target = result.targets[0];
-                    event.target = target;
-
-                    player.logSkill('sgz_jiufa', target);
-
-                    player.chooseToCompare(target);
-                } else {
-                    event.finish();
-                }
-                'step 3'
-                //拼点赢结果
-                if (result.bool) {
-                    //拼点差值
-                    event.diff = result.num1 - result.num2;
-                    //若发动幽明，拼点差值+4
-                    if(player.hasSkill('sgz_youming_die'))event.diff+=4;
-                    //获得标记，最多9个
-                    player.addMark('sgz_jiufa', Math.min(event.diff, 9-player.countMark('sgz_jiufa')));
-                    //刷新特效UI
-                    if (player.hasSkill('sgz_jiangwei_ui')) {
-                        lib.skill.sgz_jiangwei_ui.updateUI(player);
-                    }
-                    //若没有发动幽明，增加体力上限
-                    if(!player.hasSkill('sgz_youming_die'))player.gainMaxHp(event.diff);
-                    player.addSkill('sgz_jiufa_sha');
-                } else {
-                    event.finish();
-                }
-                'step 4'
-                //循环杀
-                if (player.hasSkill('sgz_jiufa_sha') && event.diff > 0 && event.target.isAlive()) {
-                    //若没有发动幽明，使用火杀
-                    if (!player.hasSkill('sgz_youming_die')) {
-                        player.useCard({ name: "sha", nature: "fire" }, event.target, false, 'sgz_jiufa_sha');
-                    }else{
-                        //若发动幽明，使用神杀
-                        player.useCard({ name: "sha", nature: "kami" }, event.target, false, 'sgz_jiufa_sha');
-                    }
-                    event.diff--;
-                    if (event.diff > 0) {
-                        event.goto(4); // 继续循环使用火杀
-                    } else {
-                        player.removeSkill('sgz_jiufa_sha');
-                    }
-                }
-                'step 5'
-                var num = player.countMark('sgz_jiufa');
-                var skills_to_add = [];
-                //若没有发动幽明，添加其他技能
-                if (!player.hasSkill('sgz_youming_die')) {
-                    if (num >= 1 && !player.hasSkill('sgz_xinran')) skills_to_add.push('sgz_xinran');  
-                    if (num >= 3 && !player.hasSkill('sgz_zhuri')) skills_to_add.push('sgz_zhuri');
-                    if (num >= 5 && !player.hasSkill('sgz_juejin')) skills_to_add.push('sgz_juejin');
-                    if (num >= 7 && !player.hasSkill('sgz_guju')) skills_to_add.push('sgz_guju');
-                    if (num >= 9 && !player.hasSkill('sgz_youming')) {
-                        skills_to_add.push('sgz_youming');
-                        // 【伐达 9 的形态切换】
-                        // ⚠ 这里**不再**直接 setBackgroundImage('.../sgz_jiangwei_9.png')：
-                        //   那行会把立绘写死成静态图，正是「动皮没能切成敕剑伏波」的原因
-                        //   （写死的图会覆盖/绕过动皮体系）。
-                        // 现在交给 skin.js 第 8 节的规则分流：
-                        //   · 当前是动皮「炽剑补天」→ 切换到动皮「敕剑伏波」
-                        //   · 当前是原皮等静态皮肤 → 切换到静态「敕剑伏波(静)」
-                        //     （该静态图就是原来的 sgz_jiangwei_9.png，已放进
-                        //       skin/image/sgz_jiangwei/敕剑伏波(静).jpg 并加入皮肤列表）
-                        // 用 setTimeout 让出当前事件帧，避免在技能结算中途改皮肤引发重绘异常。
-                        setTimeout(function () {
-                            try {
-                                if (typeof window.dmqcApplySwapRules === "function") {
-                                    window.dmqcApplySwapRules(player, "sgz_jiufa");
-                                }
-                            } catch (e) {}
-                        }, 0);
-                    }
-                }
-                if (skills_to_add.length) {
-                    player.addSkill(skills_to_add);
-                }
+            async content(event, trigger, player) {
+                // X = 点数差（拼点赢 ⇒ num1 > num2）
+                const diff = Math.max(0, (trigger.result.num1 || 0) - (trigger.result.num2 || 0));
+                if (diff > 0) sgzChenghanGainMarks(player, diff);
+                // ② 按蓄力点授予衍生技能（9 点时给【幽明】并切形态）
+                sgzChenghanSyncDerived(player);
             },
         },
         // 临时技能，用于正确触发视为使用杀
@@ -173,10 +195,7 @@ export default {
             persevereSkill: true,
             trigger: { global: "phaseZhunbeiBegin" },
             direct: true,
-            ai: {
-                viewHandcard: true,
-                guanxing: true,
-            },
+            ai: AI.sgz_zhuri,
             content: function() {
                 'step 0'
                 // 询问发动
@@ -248,22 +267,7 @@ export default {
                 return player.canCompare(target);
             },
             // === 核心 AI 逻辑 ===
-            ai: {
-                order: 9, // 在孤炬之后执行，利用孤炬偷来的大牌进行拼点
-                result: {
-                    target: function(player, target) {
-                        if (get.attitude(player, target) >= 0) return 0;
-                        return -get.threaten(target) - 2;
-                    },
-                    player: function(player) {
-                        // AI 评估：手里点数大的牌越多，发动欲望越强
-                        var hs = player.getCards('h');
-                        if (hs.length < 2) return 0;
-                        var bigCards = hs.filter(c => get.number(c) >= 9).length;
-                        return bigCards >= (hs.length / 2) ? 1 : 0;
-                    }
-                }
-            },
+            ai: AI.sgz_juejin,
             
             content: function() {
                 'step 0'
@@ -300,17 +304,7 @@ export default {
             filterTarget: function(card, player, target) {
                 return target != player;
             },
-            ai: {
-                order: 10, // 出牌阶段非常靠前，先换牌，再根据换来的牌决定后续操作
-                result: {
-                    target: function(player, target) {
-                        if (get.attitude(player, target) >= 0) return 0;
-                        if (target.maxHp-player.countCards('h') > 10) return 0;
-                        // 目标威胁越大，AI越想去拆他的牌
-                        return -get.threaten(target);
-                    }
-                }
-            },
+            ai: AI.sgz_guju,
             content: function() {
                 'step 0'
                 var num_to_draw = target.maxHp - target.countCards('h');
@@ -385,14 +379,7 @@ export default {
                     return current != player;
                 });
             },
-            ai:{
-                maixue:false,
-                //effect: {
-                //    target: function(card, player, target) {
-                //        if (player.countCards("h") + player.maxHp >= 14&&player.hp==1) return [1,9];
-                //    }
-                //}
-            },
+            ai: AI.sgz_youming,
             content: function() {
                 'step 0'
                 player.chooseBool(get.prompt('sgz_youming'), '是否发动【幽明】获得“复汉”回合？').set('ai', () => {
@@ -417,6 +404,7 @@ export default {
                     var target = result.targets[0];
                     player.awakenSkill('sgz_youming');
                     trigger.cancel(); // 取消濒死
+
                     
                     // 摸牌并记录目标
                     player.draw(player.maxHp);
@@ -427,8 +415,36 @@ export default {
                     target.addSkill('sgz_chouchou');
      
                     player.removeSkill(['sgz_xinran','sgz_zhuri','sgz_juejin','sgz_guju']);
+                    // 需求：幽明发动后**失去【承汉】**，但右侧能量条要**保持满格**。
+                    //   · 先把标记补满（理论上到 9 才会拿到幽明，这里兜底）
+                    //   · removeSkill 只 `unmarkSkill`（去掉徽标），**不会删 storage**
+                    //     （noname/library/element/player.js:10508，只有 `onremove:"storage"` 才删）
+                    //     ⇒ 蓄力点数还在，能量条依旧满。
+                    player.storage.sgz_chenghan = 9;
+                    player.removeSkill('sgz_chenghan');
+                    if (player.hasSkill('sgz_jiangwei_ui')) lib.skill.sgz_jiangwei_ui.updateUI(player);
             
                     game.playAudio(`../extension/大梦千秋/audio/sgz_jiangwei/sgz_youming${[1,2,3].randomGet()}.mp3`);
+
+                    // 需求（2026）：**发动限定技【幽明】= 自动换皮**的时机（原来判的是“伐达 9”）。
+                    //   · 走皮肤规则表的「技能驱动」分支（skin.js 8 节：`skill: "sgz_youming"`），
+                    //     由它按动态/静态分流换成「敕剑伏波」/「敕剑伏波(静)」。
+                    //   · ⚠ 放在这里、并用 setTimeout 延后一拍：
+                    //       此刻还在 `dying` 事件里（`trigger.cancel()` 刚取消濒死），
+                    //       立刻改立绘容易和濒死/换立绘的重绘撞车，所以让出当前帧再切。
+                    //   · ⚠ 判定「是否拥有幽明」不能只靠 `player.hasSkill`：
+                    //       上面刚 `awakenSkill('sgz_youming')`，它会把技能 `disableSkill`，
+                    //       而 `game.filterSkills` 会过滤掉 disabledSkills ⇒ hasSkill 变 false。
+                    //       skin.js 里 `dmqcPlayerOwnsSkill()` 已经把「已觉醒」算作拥有。
+                    [0, 300].forEach(function (delay) {
+                        setTimeout(function () {
+                            try {
+                                if (typeof window.dmqcApplySwapRules === 'function') {
+                                    window.dmqcApplySwapRules(player, 'sgz_youming');
+                                }
+                            } catch (e) {}
+                        }, delay);
+                    });
                 }
             },
         },
@@ -517,7 +533,18 @@ export default {
                     }
                     "step 5"
                     //最终：姜维回复至上限后立即死亡（为了修复死亡特效循环的关键：先重置体力和状态）
-                    player.removeSkill('sgz_fuming'); 
+                    // ⚠ 按需求（2026）：【复明】走**觉醒**语义（觉醒技那样「觉醒失效」），
+                    //   不是「失去技能」。两者差别（引擎 player.js:10240 `awakenSkill`）：
+                    //     · `awakenSkill(x)`：技能仍在技能栏里（显示为已觉醒），
+                    //        写 `awakenedSkills`、`storage[x] = true`，并用 `disableSkill(x + "_awake", x)`
+                    //        把它**禁用**（触发器不再响应）⇒ 这就是「觉醒失效」；
+                    //     · `removeSkill(x)`：技能从技能栏里彻底消失 ⇒ 那才是「失去」。
+                    //   ⚠ 这一行同时覆盖「成功」和「失败」两条分支：
+                    //      成功 → step0 里 `isFinalCard` 判真 → `event.goto(1)`；
+                    //      失败 → step0 里 `isTurnEnd` 判真 → `event.goto(1)`；
+                    //      （濒死那一条在 step0 就 `event.finish()` 返回了，不会走到这里）
+                    //   所以两分支都是「觉醒失效」，不再区分。
+                    player.awakenSkill('sgz_fuming');
                     player.recover(player.maxHp - player.hp); 
                     "step 6"
                     player.die(); // 满血死亡，系统会正确处理此事件并清除所有濒死监听
@@ -574,8 +601,17 @@ export default {
         sgz_jiangwei_ui: jiangweiUI,
     },
     skillTranslate: {
+        sgz_chenghan: "承汉",
+        sgz_chenghan_info:
+            "<span style='color:#FF0000;'><strong>蓄力技</strong></span>（0/9），" +
+            "①<span style='color:#00FF00;'>蓄力</span>：当你拼点赢时，你获得X个蓄力点（X为点数差）。" +
+            "<br>②根据你的蓄力点数视为拥有以下技能：1:〖薪燃〗 3：〖逐日〗 5：〖绝烬〗 7：〖孤炬〗 9：〖幽明〗。",
         sgz_jiufa: "九伐",
-        sgz_jiufa_info: "蓄力技（0/9），①每名角色回合开始时，你将手牌摸至体力上限：<br><span style='color:#FF4500;font-weight:bold;'>1级</span>：若蓄力点未满，你选择一名其他角色拼点：若你赢，你增加X点体力上限、获得X个蓄力点并视为对其使用X张火【杀】。<br><span style='color:#FF4500;font-weight:bold;'>2级</span>：你选择一名其他角色拼点，若你赢，你视为对其使用X+4张神【杀】（X为点数差）。<br>②若你未发动过【幽明】，根据你的蓄力点数量，你视为拥有以下技能：1：【薪燃】 3：【逐日】 5：【绝烬】 7：【孤炬】 9：【幽明】。",
+        sgz_jiufa_info:
+            "锁定技，每名角色回合开始时，你将手牌摸至体力上限并选择一名其他角色拼点，若你赢，你增加X点体力上限并视为对其使用：" +
+            "<br><span style='color:#FF4500;font-weight:bold;'>1级</span>：X张火【杀】；" +
+            "<br><span style='color:#FF4500;font-weight:bold;'>2级</span>：X+4张神【杀】。",
+        
         //衍生技能
         sgz_xinran: "薪燃",//传子龙将军之力
         sgz_xinran_info: "锁定技。当你进入濒死状态时，若你的体力上限不为1，则你减少1点体力上限，若此时你的体力上限大于/不大于9，你摸一/两张牌并将体力回复至一/两点。",
@@ -586,9 +622,12 @@ export default {
         sgz_guju: "孤炬",//承玄德先帝之仁
         sgz_guju_info: "出牌阶段限一次。你可以选择一名其他角色，令其将手牌摸至其体力上限。然后，你观看其手牌，并可以用任意张你的手牌交换其等量的手牌。",
         sgz_youming: "幽明",//复伯约匡汉之明
-        sgz_youming_info: "限定技，当你进入濒死状态时，你可以令一名其他角色获得“仇雠”标记并取消你的濒死结算，然后你摸体力上限数张牌，升级【九伐】，获得【复明】。",
+        sgz_youming_info: "限定技，当你进入濒死状态时，你可以令一名其他角色获得“仇雠”标记并取消你的濒死结算，然后你摸体力上限数张牌，升级〖九伐〗，失去〖承汉〗，获得〖复明〗。",
         sgz_fuming: "复明",
-        sgz_fuming_info: "使命技，①取消你的所有濒死结算。你使用手牌只能指定自己和“仇雠”且无次数距离限制。<br>②成功：当你对“仇雠”累计使用9张牌时，其立即死亡，你将所有牌交给一名其他角色（其增加1点体力上限并回复9点体力），然后你立即死亡。<br>③失败：你的出牌阶段结束时，你立即死亡。",
+        sgz_fuming_info: 
+            "使命技，①取消你的所有濒死结算。你使用手牌只能指定自己和“仇雠”且无次数距离限制。" +
+            "<br>②<span style='color:#00FF00;'>成功</span>：当你对“仇雠”累计使用9张牌时，其立即死亡，你将所有牌交给一名其他角色，其增加1点体力上限并回复9点体力，然后你立即死亡。" +
+            "<br>③<span style='color:#00FF00;'>失败</span>：你的出牌阶段结束时，你立即死亡。",
     },
     characterTaici:{
         "sgz_jiufa":{order: 1,content:"汉贼岂能两相立，长驱河洛王业安！/雄关高岭壮英姿，一腔热血谱汉风!/残兵盘据雄关险，独梁力支大厦倾！/谋伐布划方寸内，驰马试剑天地间！/从丞相之重托，剑指雍凉!/尊先主之遗志，举兵北伐!"},

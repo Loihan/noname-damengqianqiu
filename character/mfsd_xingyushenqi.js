@@ -1,5 +1,6 @@
 // 寰宇星图 UI 已抽离至 effect/mfsd_xingyushenqi.js
 import { huanyuInit, huanyuUpdateUI } from '../effect/mfsd_xingyushenqi.js';
+import AI from "../ai/mfsd_xingyushenqi.js";
 
 export default {
     character: {
@@ -44,7 +45,7 @@ export default {
                     return "总数：" + total + "<br>" + str;
                 }
             },
-            ai:{threaten:999, },
+            // ⚠ 这里原本还有一份 ai（被后面那份整份覆盖、从未生效）→ 已记入 ai/mfsd_xingyushenqi.js 的注释
             init: function(player) {
                 if (!player.storage.mfsd_shisu) player.storage.mfsd_shisu = {};
             },
@@ -126,57 +127,11 @@ export default {
                 }
             },
                             // === 核心修正3：AI与系统标签映射 ===
-            ai: {
-                respondSha: true,
-                respondShan: true,
-                save: true,
-                respondWuxie: true,
-                skillTagFilter: function(player, tag) {
-                    var storage = player.storage.mfsd_shisu;
-                    if (!storage) return false;
-                    var name;
-                    switch (tag) {
-                        case 'respondSha': name = 'sha'; break;
-                        case 'respondShan': name = 'shan'; break;
-                        case 'save': name = 'tao'; break;
-                        case 'respondWuxie': name = 'wuxie'; break;
-                    }
-                    if (name && storage[name] > 0) return true;
-                    return false;
-                },
-                // === AI核心逻辑2：动态优先级控制 ===
-                order: function(item, player) {
-                    player = player || _status.event.player;
-                    if (!player || !player.storage || !player.storage.mfsd_shisu) return 0;
-                    
-                    var storage = player.storage.mfsd_shisu;
-                    var maxOrder = 0;
-                    for (var i in storage) {
-                        if (storage[i] > 0) {
-                            var vcard = { name: i };
-                            // 修正：使用 get.useful(vcard)
-                            if (get.useful(vcard) > 0) {
-                                var ord = get.order(vcard, player);
-                                if (ord > maxOrder) maxOrder = ord;
-                            }
-                        }
-                    }
-                    return maxOrder > 0 ? maxOrder - 0.01 : 0;
-                },
-                result: { 
-                    player: function(player) {
-                        // 只有当时溯里有“当前有使用价值”的牌时，AI才会有发动欲望
-                        var storage = player.storage.mfsd_shisu;
-                        for (var i in storage) {
-                            if (storage[i] > 0 && player.getUseValue({ name: i }) > 0) return 1;
-                        }
-                        return 0;
-                    }
-                }
-            },
+            ai: AI.mfsd_shisu,
             group: ["mfsd_shisu_record"],
             subSkill: {
                 record: {
+                    persevereSkill: true,
                     trigger: { global: ["useCard", "discard"] },
                     forced: true,
                     silent: true,
@@ -311,10 +266,7 @@ export default {
                 player.awakenSkill('mfsd_chuangjie');
                 player.insertPhase();
             },
-            ai: {
-                order: 12, // 高优先级（低于崩界13）
-                result: { player: 1 }
-            },
+            ai: AI.mfsd_chuangjie,
             intro: { content: 'limited' }
         },
         // --- 2. 盾界 ---
@@ -330,18 +282,7 @@ export default {
                 player.awakenSkill('mfsd_dunjie');
                 player.addTempSkill('mfsd_dunjie_effect', {player:'phaseBegin'});
             },
-            ai: {
-                order: 10,
-                result: {
-                    player: function(player) {
-                        // 逻辑：如果本回合发过创/穹/绝，就不发动
-                        if (player.hasHistory('useSkill', function(evt){
-                            return ['mfsd_chuangjie', 'mfsd_qiongjie', 'mfsd_juejie'].contains(evt.skill);
-                        })) return 0;
-                        return 1;
-                    }
-                }
-            },
+            ai: AI.mfsd_dunjie,
             intro: { content: 'limited' },
             subSkill: {
                 effect: {
@@ -425,18 +366,7 @@ export default {
                 player.awakenSkill('mfsd_qiongjie');
                 player.addTempSkill('mfsd_qiongjie_effect', {player:'phaseBegin'});
             },
-            ai: {
-                order: 9,
-                result: {
-                    player: function(player) {
-                        // 逻辑：如果本回合发过创/盾/绝，就不发动
-                        if (player.hasHistory('useSkill', function(evt){
-                            return ['mfsd_chuangjie', 'mfsd_dunjie', 'mfsd_juejie'].contains(evt.skill);
-                        })) return 0;
-                        return 1;
-                    }
-                }
-            },
+            ai: AI.mfsd_qiongjie,
             intro: { content: 'limited' },
             subSkill: {
                 // === 核心修正: 严格模仿【帷幕】的 mod 结构 ===
@@ -471,7 +401,7 @@ export default {
             skillAnimation: true,
             animationColor: 'soil',
             direct: true,
-            ai:{expose: 1,},
+            ai: AI.mfsd_panjie,
             filter: function(event, player) {
                 return event.source && event.source.countCards('hej') > 0;
             },
@@ -521,16 +451,7 @@ export default {
                 player.addTempSkill('mfsd_nuojie_cleanup', {player:'phaseBegin'});
                 player.addTempSkill('mfsd_nuojie_buff', {player:'phaseBegin'});
             },
-            ai: {
-                order: 13, // 最高优先级
-                result: {
-                    player: function(player) {
-                        // 逻辑：只有同时拥有诺、谎才发动
-                        if (player.hasSkill('mfsd_nuojie') && player.hasSkill('mfsd_huangjie')) return 1;
-                        return 0;
-                    }
-                }
-            },
+            ai: AI.mfsd_nuojie,
             intro: { name: "制裁", content: "诺界：阻止其他角色的回复" }
         },
             mfsd_nuojie_effect: {
@@ -585,7 +506,7 @@ export default {
                 // 可以选择任何人，包括自己
                 return true;
             },
-            ai:{expose: 1.0,},
+            // ⚠ 这里原本还有一份 ai（被后面那份整份覆盖、从未生效）→ 已记入 ai/mfsd_xingyushenqi.js 的注释
             selectTarget: [1, Infinity], 
             multitarget: true,
             content: function() {
@@ -610,16 +531,7 @@ export default {
                 event.num++;
                 event.goto(1);
             },
-            ai: {
-                order: 11, // 优先级低于创界12
-                result: {
-                    target: function(player, target) {
-                        // 逻辑：对敌人使用
-                        if (get.attitude(player, target) <= 0) return -1;
-                        return 0;
-                    }
-                }
-            },
+            ai: AI.mfsd_juejie,
             intro: { content: 'limited' }
         },
         // --- 8. 崩界 ---
@@ -636,18 +548,7 @@ export default {
                 player.awakenSkill('mfsd_bengjie');
                 target.die();
             },
-            ai: {
-                expose: 1,
-                threaten: 100,
-                order: 14, // 高于创界12
-                result: {
-                    target: function(player, target) {
-                        if (get.attitude(player, target) > 0) return 0;
-                        // 逻辑：对威胁度最高的敌人（通过增加权重实现）
-                        return -20 - (get.threaten(target) || 1);
-                    }
-                }
-            },
+            ai: AI.mfsd_bengjie,
             intro: { content: 'limited' }
         },
         // --- 9. 谎界 ---
@@ -668,16 +569,7 @@ export default {
                 // c. 为自己添加“回合结束时清理”的扳机，它也会自动消失
                 player.addTempSkill('mfsd_huangjie_cleanup', 'phaseAfter');
             },
-            ai: {
-                order: 13, // 同诺界最高
-                result: {
-                    player: function(player) {
-                        // 逻辑：只有同时拥有诺、谎才发动
-                        if (player.hasSkill('mfsd_nuojie') && player.hasSkill('mfsd_huangjie')) return 1;
-                        return 0;
-                    }
-                }
-            },
+            ai: AI.mfsd_huangjie,
             intro: { content: 'limited' }
         },
             // a. 只对发动者生效的buff

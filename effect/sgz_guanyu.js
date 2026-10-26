@@ -18,7 +18,7 @@ const dmqcMengrenStyleId = 'dmqc_mengren_style';
 const dmqcMengrenEffectMap = {
     wushen: { seal: '武', motto: '丹心化刃 · 神威破阵', accent: '#f0b64f' },
     wuhun: { seal: '魂', motto: '鬼影缠刃 · 索命无息', accent: '#b06aff' },
-    loseall: { seal: '殒', motto: '血债血偿 · 断其生机', accent: '#ff4d4d' },
+    loseall: { seal: '殒', motto: '血偿索命 · 断其生机', accent: '#ff4d4d' },
     healall: { seal: '愈', motto: '以命续命 · 起死回生', accent: '#4fd6a0' },
 };
 const dmqcMengrenCostMap = {

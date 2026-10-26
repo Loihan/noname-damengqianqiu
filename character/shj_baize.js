@@ -1,5 +1,6 @@
 ﻿// 神器边框 UI 已抽离至 effect/shj_baize.js
 import { baizeUI } from '../effect/shj_baize.js';
+import AI from "../ai/shj_baize.js";
 
 export default {
     character: {
@@ -167,6 +168,7 @@ export default {
             subSkill: {
                 // === 核心修正点: 为 mod 子技能添加了正确的结构 ===
                 mod: {
+                    persevereSkill: true,
                     // 这个子技能现在是一个正确的技能对象, 它包含一个 mod 属性
                     mod: {
                         cardUsable: function(card, player) {
@@ -184,6 +186,7 @@ export default {
                     }
                 },
                 effect: {
+                    persevereSkill: true,
                     trigger: { target: "useCardToTargeted" },
                     forced: true,
                     filter: function(event, player) {
@@ -206,89 +209,12 @@ export default {
             audio: "ext:大梦千秋/audio/shj_baize:3",
             persevereSkill: true,
             enable: "phaseUse",
-            ai: {expose: 1,},
+            // ⚠ 这里原本还有一份 ai（被后面那份整份覆盖、从未生效）→ 已记入 ai/shj_baize.js 的注释
             usable: 1,
             filter(event, player) {
                 return player.countMark('shj_zhaorui') > 0;
             },
-            ai: {
-                order: function(item, player) {
-                    var marks = player.countMark('shj_zhaorui');
-
-                    // 已觉醒更激进
-                    var bonus = player.storage.shj_dongxu_awaken? 4: 0;
-
-                    // 偶数优先级极高
-                    if (marks % 2 == 0) {
-                        var value = 3+bonus;
-                        var enemyNum = 0;
-                        game.countPlayer(function(current){
-                            enemyNum++;
-                            if (get.attitude(player,current) < 0 && !current.isLinked()) {
-                                value += 1;
-                            }
-                        });
-                        if( enemyNum + 3 + bonus == value) {return 0;}
-                        return value;
-                    }
-
-                    // 奇数情况
-                    var linkedEnemies = 0;
-                    game.countPlayer(function(current){
-                        if (get.attitude(player,current) < 0 && current.isLinked()) {
-                            linkedEnemies++;
-                        }
-                    });
-                    // 连环多则提高奇数价值
-                    return linkedEnemies * 2 ;
-                },
-                result: {
-                    player: function(player) {
-                    var marks = player.countMark('shj_zhaorui');
-                    var value = 1;
-                    // ===== 偶数收益 =====
-                    if (marks % 2 == 0) {
-                        game.countPlayer(function(current){
-                            if (get.attitude(player,current) < 0 && !current.isLinked()) {
-                                value += 2.5;
-                                // 高威胁角色
-                                value += get.threaten(current);
-                            }
-                        });
-                    }
-                    // ===== 奇数收益 =====
-                    else {
-                        game.countPlayer(function(current){
-                            if (get.attitude(player,current) < 0) {
-                                value += 1;
-                                // 连环目标雷伤收益高
-                                if (current.isLinked()) {
-                                    value += 3;
-                                }
-                                // 残血斩杀
-                                if (current.hp <= 1) {
-                                    value += 2;
-                                }
-                            }
-                        });
-                    }
-                    // 标记越多越想开
-                    value += Math.min(marks,6)-5;
-                    game.countPlayer(function(current){
-                            if (get.attitude(player,current) < 0) {
-                                value += 1;
-                            }});
-                    return value;
-                    }
-                },
-                threaten: function(player,target){
-                    var marks =
-                    player.countMark('shj_zhaorui');
-                    // 偶数时威慑极高
-                    if (marks % 2 == 0) {return 4;}
-                    return 2.5;
-                }
-            },
+            ai: AI.shj_pixie,
 
             content: function () {
                 'step 0';
@@ -384,12 +310,7 @@ export default {
                 player.removeMark('shj_zhaorui', 5);
                 player.draw(5);
             },
-            ai: {
-                order: 1,
-                result: {
-                    player: 1,
-                }
-            }
+            ai: AI.shj_lingyou,
         },
         shj_dongxu: {
             audio: "ext:大梦千秋/audio/shj_baize:2",
@@ -441,7 +362,7 @@ export default {
             usable: 1,
             skillAnimation: true,
             animationColor: "gold",
-            ai: {expose: 1,},
+            // ⚠ 这里原本还有一份 ai（被后面那份整份覆盖、从未生效）→ 已记入 ai/shj_baize.js 的注释
             filterTarget: (card, player, target) => target != player,
             content: function() {
                 'step 0'
@@ -453,16 +374,7 @@ export default {
                    player.gain(cards, target, 'gain2');
                 }
             },
-            ai: {
-                order: 1000,
-                result: {
-                    target: function(player, target) {
-                        if (get.attitude(player, target) >= 0) return 0;
-                        // 优先打击威胁值最高的目标
-                        return -get.threaten(target) - 2;
-                    },
-                }
-            },
+            ai: AI.shj_zhen_e,
         },
         // === 神器边框特效（实现见 effect/shj_baize.js） ===
         shj_baize_ui: baizeUI,

@@ -1,3 +1,5 @@
+import AI from "../ai/shj_xiangliu.js";
+
  export default {
     character: {
         // === 修改点: 在最后一个数组中加入 "des:" 简介 ===
@@ -21,7 +23,7 @@
             persevereSkill: true,
             trigger: { player: "phaseZhunbeiBegin" },
             direct: true,
-            ai: {expose: 1,},
+            ai: AI.shj_huiyan,
             content: function() {
                 'step 0'
                 var num_targets = Math.min(player.maxHp, game.countPlayer());
@@ -43,6 +45,7 @@
             group: ["shj_huiyan_damage", "shj_huiyan_losehp"],
             subSkill: {
                 damage: {
+                    persevereSkill: true,
                     trigger: { global: "damageEnd" },
                     forced: true,
                     filter(event, player) {
@@ -56,6 +59,7 @@
                     }
                 },
                 losehp: {
+                    persevereSkill: true,
                     trigger: { global: "phaseBegin" },
                     forced: true,
                     filter(event, player) {
@@ -109,17 +113,11 @@
                     return num;
                 }
             },
-            ai: {
-                maixie: true, // 标记为卖血技
-                effect: {
-                    target: function(card, player, target) {
-                            if (get.attitude(player, target) <= 0) return [1,1];
-                    }
-                }
-            },
+            ai: AI.shj_mingzhai,
             group: ["shj_mingzhai_end", "shj_mingzhai_damaged"],
             subSkill: {
                 end: {
+                    persevereSkill: true,
                     trigger: { player: "phaseJieshuBegin" },
                     forced: true,
                     content: function() {
@@ -141,6 +139,7 @@
                     }
                 },
                 damaged: {
+                    persevereSkill: true,
                     trigger: { player: "damageEnd" },
                     forced: true,
                     filter: (event, player) => event.source && event.source != player,
@@ -158,9 +157,10 @@
             persevereSkill: true,
             audio: "ext:大梦千秋/audio/shj_xiangliu:5",
             group: ["shj_qishou_damage", "shj_qishou_lastcard"],
-            ai: {expose: 1,},
+            ai: AI.shj_qishou,
             subSkill: {
                 damage: {
+                    persevereSkill: true,
                     trigger: { source: "damageBegin1" },
                     direct: true,
                     filter(event, player) {
@@ -186,6 +186,7 @@
                     }
                 },
                 lastcard: {
+                    persevereSkill: true,
                     trigger: { global: "loseEnd" },
                     direct: true,
                     filter(event, player) {
@@ -228,6 +229,7 @@
             subSkill: {
                 // 子技能1: 负责濒死效果，并包含所有特效
                 dying: {
+                    persevereSkill: true,
                     audio: "ext:大梦千秋/audio/shj_xiangliu:4",
                     // 特效只在这里定义，不会影响其他子技能
                     skillAnimation: true,
@@ -293,6 +295,7 @@
                 },
                 // 子技能2: 负责摸牌效果，没有任何特效
                 draw: {
+                    persevereSkill: true,
                     audio: "ext:大梦千秋/audio/shj_xiangliu:4", // 可以有自己的音效
                     trigger: { player: "loseEnd" },
                     frequent: true, // 设为frequent，使其自动发动，不打扰玩家

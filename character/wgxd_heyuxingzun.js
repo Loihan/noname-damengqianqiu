@@ -1,5 +1,6 @@
 ﻿// 卡牌特效已抽离至 effect/wgxd_heyuxingzun.js
 import { heyuxingzunUI } from '../effect/wgxd_heyuxingzun.js';
+import AI, { helpers } from "../ai/wgxd_heyuxingzun.js";
 
 export default {
     character: {
@@ -47,6 +48,7 @@ export default {
             group: ['wgxd_jianzhen_recast'],
             subSkill: {
                 recast: {
+                    persevereSkill: true,
                     audio: 'wgxd_jianzhen',
                     trigger: {
                         player: 'gainEnd',
@@ -94,37 +96,15 @@ export default {
                     if (card.cards && card.cards.some(i => i.gaintag && i.gaintag.contains('wgxd_qixia_jian'))) return Infinity;
                 },
                 // === AI核心逻辑：带标记的牌优先级极高且保留价值极低 ===
-                aiOrder: function(player, card, num) {
-                    // 修复点：增加安全性检查，防止对非对象或非实体牌操作
-                    if (typeof card == 'object' && card.gaintag && card.gaintag.contains('wgxd_qixia_jian')) {
-                        return num + 50;
-                    }
-                },
-                aiValue: function(player, card, num) {
-                    // 修复点：使用底层包含判断
-                    if (typeof card == 'object' && card.gaintag && card.gaintag.contains('wgxd_qixia_jian')) {
-                        return 0.1;
-                    }
-                },
+                aiOrder: helpers.wgxd_qixia_aiOrder,
+                aiValue: helpers.wgxd_qixia_aiValue,
             },
             // === AI核心逻辑：卖血收益认知 ===
-            ai: {
-                maixie: true,
-                effect: {
-                    target: function(card, player, target) {
-                        // 如果“剑”还没满，受到伤害是有收益的（换取标记和摸牌）
-                        if (get.tag(card, 'damage') && target.countCards('h', i => i.hasGaintag('wgxd_qixia_jian')) < 3) {
-                            return [1, 2]; 
-                        }
-                        if (get.tag(card, 'damage') && target.countCards('h', i => i.hasGaintag('wgxd_qixia_jian')) >= 3) {
-                            return [1, 1]; 
-                        }
-                    }
-                }
-            },
+            ai: AI.wgxd_qixia,
             group: ['wgxd_qixia_lose', 'wgxd_qixia_damage'],
             subSkill: {
                 lose: {
+                    persevereSkill: true,
                     audio: "ext:大梦千秋/audio/wgxd_heyuxingzun:7",
                     trigger: {
                         player: 'loseBegin',
@@ -138,6 +118,7 @@ export default {
                     },
                 },
                 damage: {
+                    persevereSkill: true,
                     audio: 'wgxd_qixia',
                     trigger: {
                         player: 'damageAfter',
@@ -211,6 +192,7 @@ export default {
             group: ['wgxd_jianyun_jian'],
             subSkill: {
                 jian: {
+                    persevereSkill: true,
                     audio: "ext:大梦千秋/audio/wgxd_heyuxingzun:3",
                     trigger: {
                         player: 'useCard2',

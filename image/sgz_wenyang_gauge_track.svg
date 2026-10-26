@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 260" width="44" height="260" preserveAspectRatio="none">
+  <!-- 梦文鸯 · 霆踪 进度条底纹：一管雷能柱的内壁（纯质感纹理，不画电荷节点——节点由 CSS 绘制，
+       这样任意标记数下节点与填充的高度都精确对齐） -->
+  <defs>
+    <linearGradient id="wyGaugeBody" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#04060f"/>
+      <stop offset="0.18" stop-color="#0a1130"/>
+      <stop offset="0.5" stop-color="#0d1438"/>
+      <stop offset="0.82" stop-color="#090f28"/>
+      <stop offset="1" stop-color="#04060f"/>
+    </linearGradient>
+    <linearGradient id="wyGaugeEdge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#6f9dff" stop-opacity="0.1"/>
+      <stop offset="0.5" stop-color="#a46bff" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#6f9dff" stop-opacity="0.1"/>
+    </linearGradient>
+    <linearGradient id="wyGaugeRim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4a2fd0" stop-opacity="0.14"/>
+      <stop offset="0.5" stop-color="#8a7bff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#4a2fd0" stop-opacity="0.14"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="44" height="260" fill="url(#wyGaugeBody)"/>
+
+  <!-- 雷能纵纹：疏密不等的电芒细线 -->
+  <g stroke="#6f9dff" stroke-opacity="0.12" stroke-width="0.6">
+    <path d="M7 0 V260 M12 0 V260 M18 0 V260 M25 0 V260 M31 0 V260 M37 0 V260"/>
+  </g>
+  <!-- 中心主电芒（蓝紫交替） -->
+  <g stroke="#a46bff" stroke-opacity="0.16" stroke-width="0.7">
+    <path d="M22 0 L19 40 L24 44 L17 92 L25 96 L15 148 L26 152 L13 210 L24 214 L18 260"/>
+  </g>
+  <g stroke="#d9ecff" stroke-opacity="0.06" stroke-width="0.5">
+    <path d="M22 0 V260"/>
+  </g>
+
+  <!-- 管壁内的电晕结点（只做质感，不参与刻度） -->
+  <g fill="none" stroke="#8fb9ff" stroke-opacity="0.14" stroke-width="0.8">
+    <circle cx="22" cy="37" r="3"/>
+    <circle cx="13" cy="110" r="2.2"/>
+    <circle cx="29" cy="175" r="2.6"/>
+    <circle cx="20" cy="236" r="2.2"/>
+  </g>
+
+  <!-- 内壁两侧高光：制造"雷能柱中空"的立体感 -->
+  <rect x="0" y="0" width="3" height="260" fill="url(#wyGaugeEdge)"/>
+  <rect x="41" y="0" width="3" height="260" fill="url(#wyGaugeEdge)"/>
+  <!-- 上下两端的束电环 -->
+  <rect x="0" y="0" width="44" height="3" fill="url(#wyGaugeRim)"/>
+  <rect x="0" y="257" width="44" height="3" fill="url(#wyGaugeRim)"/>
+  <rect x="0" y="0" width="44" height="260" fill="none" stroke="#8a7bff" stroke-opacity="0.32" stroke-width="1"/>
+</svg>

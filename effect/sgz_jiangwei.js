@@ -544,7 +544,7 @@ export const jiangweiUI = {
         updateUI: function(player) {
             var ui = player.jiangweiUI;
             if (!ui) return;
-            var marks = player.countMark('sgz_jiufa') || 0;
+            var marks = player.countMark('sgz_chenghan') || 0;
             // ===== 能量高度 =====
             var percent = (marks / 9) * 100;
             ui.energy.style.height = percent + '%';

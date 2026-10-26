@@ -1,4 +1,4 @@
-// =====================================================
+﻿// =====================================================
 // 梦小乔  —— 灵籁 / 弦律 / 五音
 // 说明：
 // 1. 花色统一使用 5 种："heart"(宫)、"diamond"(商)、"club"(徵)、"spade"(羽)、"none"(角/无色)。
@@ -10,6 +10,7 @@
 //    也不会在获得牌时造成卡死。
 // =====================================================
 import { dmqcBuildWuyinSuitDialog, wuyinRecordUI, wuyinRefresh } from '../effect/sgz_xiaoqiao.js';
+import AI, { helpers } from "../ai/sgz_xiaoqiao.js";
 
 const SUITS = ["heart", "diamond", "club", "spade", "none"]; // 五种花色
 const SUIT_KEY = { heart: "gong", diamond: "shang", club: "zheng", spade: "yu", none: "jiao" };
@@ -64,7 +65,7 @@ async function wuyinEffect(player, suit, boost) {
             player,
             "五音·宫：令一名角色回复" + value + "点体力并获得" + value + "点护甲",
             (c, p, t) => t.isAlive(),
-            t => get.attitude(player, t)
+            t => helpers.sgz_wuyin_targetScore("heart", t, player, value)
         );
         if (target) {
             await target.recover(value);
@@ -76,7 +77,7 @@ async function wuyinEffect(player, suit, boost) {
             player,
             "五音·商：令一名角色受到" + value + "点伤害并失去" + value + "点体力",
             (c, p, t) => t.isAlive(),
-            t => -get.attitude(player, t)
+            t => helpers.sgz_wuyin_targetScore("diamond", t, player, value)
         );
         if (target) {
             await target.damage(value, player);
@@ -88,7 +89,7 @@ async function wuyinEffect(player, suit, boost) {
             player,
             "五音·角：令一名角色减少" + value + "点体力上限",
             (c, p, t) => t.isAlive(),
-            t => -get.attitude(player, t)
+            t => helpers.sgz_wuyin_targetScore("none", t, player, value)
         );
         if (target) {
             await target.loseMaxHp(value);
@@ -101,7 +102,7 @@ async function wuyinEffect(player, suit, boost) {
                 player,
                 "五音·徵：令一名角色弃置" + n + "张牌",
                 (c, p, t) => t.isAlive() && t.countCards("he") > 0,
-                t => -get.attitude(player, t)
+                t => helpers.sgz_wuyin_targetScore("club", t, player, value)
             );
             if (target) {
                 const a = Math.min(n, target.countCards("he"));
@@ -115,7 +116,7 @@ async function wuyinEffect(player, suit, boost) {
             player,
             "五音·羽：令一名角色摸" + n + "张牌后弃置" + n + "张牌",
             (c, p, t) => t.isAlive(),
-            t => -get.attitude(player, t)
+            t => helpers.sgz_wuyin_targetScore("spade", t, player, value)
         );
         if (target) {
             await target.draw(n);
@@ -154,6 +155,8 @@ export default {
     skills: {
         // ===================== 灵籁 =====================
         sgz_linglai: {
+            ai: AI.sgz_linglai,
+            persevereSkill: true,
             audio:0,
             forced: true,
             trigger: { player: "gainAfter" },
@@ -200,6 +203,8 @@ export default {
 
         // ===================== 弦律 =====================
         sgz_xianlv: {
+            ai: AI.sgz_xianlv,
+            persevereSkill: true,
             audio:"ext:大梦千秋/audio/sgz_xiaoqiao:2",
             forced: true,
             trigger: { player: "damageBegin" },
@@ -269,28 +274,31 @@ export default {
 
         // ===================== 五音 =====================
         sgz_wuyin: {
-            audio:"ext:大梦千秋/audio/sgz_xiaoqiao:12",
+            persevereSkill: true,
+            mod: {
+                // AI：留牌价值 —— 能出的牌才是好牌（闪/无懈/次数用完的杀最低）
+                aiValue: function (card, player, num) {
+                    return helpers.sgz_wuyin_keepValue(card, player, num);
+                },
+                // 装备政策：有装备就顶上；低价值先上、诸葛连弩永不顶
+                aiOrder: function (card, player, num) {
+                    return helpers.sgz_wuyin_equipOrder(card, player, num);
+                },
+                // 使用价值：同栏已有装备时也照样顶（诸葛连弩除外）
+                aiUseful: function (card, player, num) {
+                    return helpers.sgz_wuyin_equipUseful(card, player, num);
+                },
+            },
+            audio:"ext:大梦千秋/audio/sgz_xiaoqiao:9",
             // ① 主动技：出牌阶段限一次，令下一张你使用的牌选择其花色（视为该花色）
             enable: "phaseUse",
             usable: 1,
-            ai: {
-                order: 6,
-                result: {
-                    player: function (player) {
-                        return 2;
-                    },
-                },
-            },
+            ai: AI.sgz_wuyin,
             async content(event, trigger, player) {
                 // ① 选择下一个花色（本地人类用主题五角星选择框，其余回退引擎默认框）
+                // AI：凑 4 连 > 凑 4 不同 > 按价值（见 ai/sgz_xiaoqiao.js）
                 var aiFn = function (button) {
-                    var suit = button.link;
-                    if (suit == "heart") return player.isDamaged() ? 9 : 3;
-                    if (suit == "diamond") return 8;
-                    if (suit == "none") return 7;   // 无色 = 减少体力上限
-                    if (suit == "spade") return 6;
-                    if (suit == "club") return 5;   // 梅花 = 弃置牌
-                    return 1;
+                    return helpers.sgz_wuyin_suitScore(button, player);
                 };
                 var res;
                 if (player.isMine() && !game.online && !_status.auto && !_status.video) {
@@ -318,6 +326,7 @@ export default {
 
         // 五音 ②③ 使用牌时结算+记录（独立技能，确保触发）
         sgz_wuyin_effects: {
+            persevereSkill: true,
             charlotte: true,
             trigger: { player: "useCard1" },
             forced: true,
@@ -334,6 +343,7 @@ export default {
             subSkill: {
                 // 出牌阶段结束：若已指定“下一张”花色但未使用，则清除
                 clean: {
+                    persevereSkill: true,
                     trigger: { player: "phaseUseAfter" },
                     forced: true,
                     silent: true,
@@ -413,10 +423,30 @@ export default {
         sgz_linglai: "灵籁",
         sgz_linglai_info: "锁定技，当你获得牌时，你将本次获得的牌的花色视为你已有手牌中数量最少的一种花色（最少不唯一则选择其中随机一种）。",
         sgz_xianlv: "弦律",
-        sgz_xianlv_info: "锁定技，当你即将受到伤害时依次执行以下效果：①若你的手牌数与体力值之差大于1，你将手牌调整至体力数并将此伤害转移给一名其他角色；②将你所有手牌的花色随机视为一种可视为花色并删除此花色，删除所有花色后重置。",
+        sgz_xianlv_info: 
+            "锁定技，当你即将受到伤害时依次执行以下效果：" +
+            "①若你的手牌数与体力值之差大于1，你将手牌调整至体力数并将此伤害转移给一名其他角色；" +
+            "②将你所有手牌的花色随机视为一种可视为花色并删除此花色，删除所有花色后重置。",
         "sgz_xianlv_bg": "韵",
         sgz_wuyin: "五音",
-        sgz_wuyin_info: "①<span style='color:#00FF00;'>变</span>：出牌阶段限一次，选择一种花色，视为你于此阶段下一张使用的牌的实际花色；②<span style='color:#00FF00;'>弦</span>：你使用牌时须选择一名角色，其根据花色执行音韵效果并记录至五音谱；③<span style='color:#00FF00;'>律</span>：当五音谱记录变化时，你根据最近4次音韵执行对应效果。<br><span style='color:#00FF00;'>弦效果</span>：音韵变量初始均为1;<br>宫·♥️：回复A点体力并获得A点护甲；<br>商·♦️：受到B点伤害并失去B点体力；<br>角·无色：减少C点体力上限；<br>徵·♣️：弃置2D张牌；<br>羽·♠️：摸3E张牌后弃置3E张牌。<br><span style='color:#00FF00;'>律效果</span>：若最近4次音韵记录：<br>1.均不相同：执行一次变量+1的最近一次音韵的弦效果；<br>2.有相同且不完全相同：摸一张牌；<br>3.完全相同：增加一点体力上限，该音韵变量永久+1。",
+        sgz_wuyin_info: 
+            "①<span style='color:#00FF00;'>变</span>：" +
+                "出牌阶段限一次，选择一种花色，视为你于此阶段下一张使用的牌的实际花色；" +
+            "②<span style='color:#00FF00;'>弦</span>：" +
+                "你使用牌时须选择一名角色，其根据花色执行音韵效果并记录至〖五音谱〗；" +
+            "③<span style='color:#00FF00;'>律</span>：" +
+                "当〖五音谱〗记录变化时，你根据最近4次音韵执行对应效果。" +
+            "<br><span style='color:#00FF00;'>弦效果</span>：音韵变量初始均为1；" +
+                "<br>宫·♥️：回复A点体力并获得A点护甲；" +
+                "<br>商·♦️：受到B点伤害并失去B点体力；" +
+                "<br>角·无色：减少C点体力上限；" +
+                "<br>徵·♣️：弃置2D张牌；" +
+                "<br>羽·♠️：摸3E张牌后弃置3E张牌。" +
+            "<br><span style='color:#00FF00;'>律效果</span>：若最近4次音韵记录：" +
+                "<br>1.均不相同：执行一次变量+1的最近一次音韵的弦效果；" +
+                "<br>2.有相同且不完全相同：摸一张牌；" +
+                "<br>3.完全相同：增加一点体力上限，该音韵变量永久+1。",
+
         "sgz_wuyin_jilu": "五音·用牌记录",
         "sgz_wuyin_jilu_bg": "音",
         sgz_wuyin_effects: "五音·律",

@@ -1,5 +1,6 @@
-// 业火残响 UI 已抽离至 effect/sgz_luxun.js
+﻿// 业火残响 UI 已抽离至 effect/sgz_luxun.js
 import { luxunUI, dmqcFenmieDialogTheme } from '../effect/sgz_luxun.js';
+import AI, { helpers } from "../ai/sgz_luxun.js";
 
 export default {
     character: {
@@ -32,32 +33,12 @@ export default {
             },
             // === 核心 AI 注入：驱动连招意识 ===
             mod: {
-                aiOrder: function(player, card, num) {
-                    // 只有拥有标记时才启动连招诱导
-                    if (player.countMark('sgz_qujian') > 0) {
-                        const history = player.getHistory('useCard');
-                        const lastEntry = history.length > 0 ? history[history.length - 1] : null;
-                        const hasSha = player.hasCard(c => c.name == 'sha', 'h');
-                        const hasTrick = player.hasCard(c => get.type2(c) == 'trick', 'h');
-
-                        // 情况 A：刚刚出过【杀】，现在必须立刻出锦囊来完成连招
-                        if (lastEntry && lastEntry.card.name == 'sha' && get.type2(card) == 'trick') {
-                            return 16; // 优先级 16：超越焚灭(15)，绝对首选
-                        }
-
-                        // 情况 B：还没出【杀】，但手里有连招组件
-                        if ((!lastEntry || lastEntry.card.name != 'sha') && hasSha && hasTrick) {
-                            // 提升【杀】的优先级，使其在所有锦囊之前打出
-                            if (card.name == 'sha') return 14; 
-                            // 压低【锦囊】的优先级，防止它破坏连招顺序
-                            if (get.type2(card) == 'trick') return 2;
-                        }
-                    }
-                }
+                aiOrder: helpers.sgz_qujian_aiOrder,
             },
             group: ["sgz_qujian_combo", "sgz_qujian_setup", "sgz_qujian_cleanup"],
             subSkill: {
                 setup: {
+                    persevereSkill: true,
                     trigger: { player: "phaseBegin" },
                     forced: true,
                     silent: true,
@@ -69,6 +50,7 @@ export default {
                     }
                 },
                 combo: {
+                    persevereSkill: true,
                     forced: true,
                     trigger: { player: "useCard" },
                     filter: function(event, player) {
@@ -102,6 +84,7 @@ export default {
                     }
                 },
                 cleanup: {
+                    persevereSkill: true,
                     trigger: { player: ["phaseUseAfter", "phaseAfter"] },
                     forced: true,
                     silent: true,
@@ -114,6 +97,7 @@ export default {
                     }
                 },
                 addsha: {
+                    persevereSkill: true,
                     onremove: function(player) {
                         delete player.storage.sgz_qujian_addsha_count;
                     },
@@ -132,12 +116,11 @@ export default {
             audio: "ext:大梦千秋/audio/sgz_luxun:2",
             forced: true,
             persevereSkill: true,
-            ai:{
-                noh: true, // 没有手牌时正收益
-            },
+            ai: AI.sgz_lianying,
             group: ["sgz_lianying_draw", "sgz_lianying_hscap", "sgz_lianying_reset"],
             subSkill: {
                 draw: {
+                    persevereSkill: true,
                     trigger: { player: "phaseDrawBegin" },
                     forced: true,
                     content: function () {
@@ -146,9 +129,11 @@ export default {
                     },
                 },
                 hscap: {
+                    persevereSkill: true,
                     mod: { maxHandcard: (player, num) => num + game.countPlayer() }
                 },
                 reset: {
+                    persevereSkill: true,
                     trigger: { player: "loseAfter" },
                     forced: true,
                     filter: function(event, player) {
@@ -181,8 +166,14 @@ export default {
                 player.storage._taohui_active = true; // 新增：标记正在发动
                 player.logSkill('sgz_taohui');
                 player.removeSkill('sgz_taohui_mark');
-                // 切换为战斗形态原画
-                player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun_taohui.jpg');
+                // 切换到 ③「烈焰炽魂」（需求：发动【韬晦】后 → ③）
+                //   ⚠ 走动皮切换；没装十周年UI / 没有动皮数据时，函数内部会退回原来那张静皮
+                //     （skin/image/sgz_luxun/烈焰炽魂.jpg，本包已复制进来），行为不变。
+                if (typeof window.dmqcApplyLuxunSkin === "function") {
+                    window.dmqcApplyLuxunSkin(player, 3);
+                } else {
+                    player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun_taohui.jpg');
+                }
                 
                 player.gainMaxHp(1);
                 player.recover(1 - player.hp);
@@ -351,6 +342,7 @@ export default {
                     }
                 },
                 refresh: {
+                    persevereSkill: true,
                     trigger: { global: "roundStart" },
                     forced: true,
                     silent: true,
@@ -362,8 +354,13 @@ export default {
                         // 安全网：新回合清除可能残留的「发动中」标记并重拨能量条
                         delete player.storage._taohui_active;
                         if (player.dmqcRefreshLunxBar) player.dmqcRefreshLunxBar();
-                        // 换回常态原画
-                        player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun.jpg');
+                        // 每轮开始 → ①「蛇年清明」（需求；与 skin.js 里 sgz_dmqc_skin_swap 的 roundStart 分支同一目的，
+                        //  两边都调同一个函数，谁先跑都不会打架）
+                        if (typeof window.dmqcApplyLuxunSkin === "function") {
+                            window.dmqcApplyLuxunSkin(player, 1);
+                        } else {
+                            player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun.jpg');
+                        }
                     }
                 }
             }
@@ -400,17 +397,18 @@ export default {
             filterTarget: function(card, player, target) {
                 return target != player;
             },
-            ai:{
-                expose: 1,
-                fireAttack: true, // 可造成火属性伤害
-                directHit_ai: true, // 可强中
-            },
+            // ⚠ 这里原本还有一份 ai（被后面那份整份覆盖、从未生效）→ 已记入 ai/sgz_luxun.js 的注释
             selectTarget: [1, Infinity],
             multitarget: true,
             multiline: true,
             async content(event, trigger, player) {
                 player.addTempSkill(event.name + "_draw", "phaseAfter");
-                player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun_fenmie.jpg');
+                // 切换到 ②「烈火炽天」（需求：发动【焚灭】后 → ②，并保持到本轮结束/下轮开始）
+                if (typeof window.dmqcApplyLuxunSkin === "function") {
+                    window.dmqcApplyLuxunSkin(player, 2);
+                } else {
+                    player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun_fenmie.jpg');
+                }
                 let { targets } = event;
                 
                 // 1. 初始摸牌
@@ -502,22 +500,9 @@ export default {
                         cards: cards,
                         targets: targets,
                         position: "he",
-                        // --- 核心 AI 逻辑优化 ---
-                        ai1: function(card) {
-                            const player = get.player();
-                            // 关键：如果已经选了这种花色的牌，就不再选第二张（每种花色只弃一张）
-                            if (ui.selected.cards.some(c => get.suit(c, player) == get.suit(card, player))) return 0;
-                            // 检查是否有对应的敌人目标可以被这张牌打到
-                            const suit = get.suit(card, player);
-                            const hasEnemy = _status.event.targets.some((t, index) => {
-                                return get.attitude(player, t) < 0 && get.suit(_status.event.cards[index], t) == suit;
-                            });
-                            if (!hasEnemy) return 0;
-                            return 15 - get.value(card);
-                        },
-                        ai2: function(target) {
-                            return -get.attitude(_status.event.player, target);
-                        }
+                        // --- AI：花色命中敌人就弃、每种花色一张（见 ai/sgz_luxun.js 的 helpers）---
+                        ai1: helpers.sgz_fenmie_cardScore,
+                        ai2: helpers.sgz_fenmie_targetScore,
                     }).set("noconfirm", true); // 隐藏引擎原生取消/确认栏，改用主题框内按钮
                     // 为每个目标叠加特大号花色标签（颜色随花色）
                     nextx.set("targetprompt2", (nextx.targetprompt2 || []).concat([
@@ -560,7 +545,9 @@ export default {
                         break; 
                     }
                 }
-                player.node.avatar.setBackgroundImage('extension/大梦千秋/image/sgz_luxun.jpg');
+                // ⚠ 这里原来有一句「换回常态原画」，已按需求**删除**：
+                //   发动【焚灭】后应当保持 ②「烈火炽天」直到**下一轮开始**
+                //   （下一轮开始时由 sgz_dmqc_skin_swap / sgz_taohui_refresh 切回 ①「蛇年清明」）。
                 player.removeSkill(event.name + "_draw");
             },
             subSkill: {
@@ -580,27 +567,29 @@ export default {
                     },
                 },
             },
-            ai: {
-                // 提升使用优先级，出牌阶段一进来就用
-                order: 15,
-                fireAttack: true, // 可造成火属性伤害
-                result: { 
-                    player: function(player) {
-                        // 场上敌人越多，且有牌可抓，收益越高
-                        return game.countPlayer(t => get.attitude(player, t) < 0) > 0 ? 1 : 0;
-                    }
-                }
-            }
+            ai: AI.sgz_fenmie,
         },
         // === 陆逊专属：【业火残响】极高质感 UI ===
         // === 陆逊专属：【业火残响】UI（实现见 effect/sgz_luxun.js） ===
         sgz_luxun_ui: luxunUI,
     },
     skillTranslate: {
-        sgz_qujian: "驱剑", sgz_qujian_info: "锁定技，<span style='color:#FF0000;'><strong>连招技</strong></span>（杀+锦囊牌），出牌阶段限X次（X为你回合开始时的体力数），横置至多一名角色，摸场上已横置角色数张牌且本回合你使用【杀】的额定次数+1，然后你失去一点体力。",
-        sgz_lianying: "连营", sgz_lianying_info: "锁定技，①摸牌阶段你多摸X张牌，你的手牌上限+X。②当你失去最后一张手牌时，你摸至X张牌。（X为场上人数）",
-        sgz_taohui: "韬晦", sgz_taohui_info: "<span style='color:#FF0000;'><strong>战场技</strong></span>，每轮限一次，当你进入濒死状态时，你增加1点体力上限并回复至1点体力。<br><span style='color:#00FF00;'>战流</span>：亮出牌堆顶的一张牌并根据其花色执行对应效果：♥️：回复一点体力；♣️：横置1~3名未横置角色；♦️/♠️：视为使用一张无距离限制的火/雷【杀】。<br><span style='color:#00FF00;'>战间</span>：防止你的濒死结算；<br><span style='color:#00FF00;'>退战</span>：当战流不可被执行时，你回复体力至体力上限。",
-        sgz_fenmie: "焚灭", sgz_fenmie_info: "<span style='color:#FF0000;'><strong>战场技</strong></span>，出牌阶段限一次，你可以选择任意名其他角色参战并摸等量的牌。<br><span style='color:#00FF00;'>战流</span>：①参战角色同时展示一张手牌；②你可以弃置任意张相同花色的牌或退战；③你对所有对应花色的参战角色各造成1点火焰伤害。<br><span style='color:#00FF00;'>战间</span>：每当你失去牌时便摸等量的牌。<br><span style='color:#00FF00;'>退战</span>：当一名角色角色防止了该火焰伤害。",
+        sgz_qujian: "驱剑", 
+        sgz_qujian_info: "锁定技，<span style='color:#FF0000;'><strong>连招技</strong></span>（杀+锦囊牌），出牌阶段限X次（X为你回合开始时的体力数），横置至多一名角色，摸场上已横置角色数张牌且本回合你使用【杀】的额定次数+1，然后你失去一点体力。",
+        sgz_lianying: "连营", 
+        sgz_lianying_info: "锁定技，①摸牌阶段你多摸X张牌，你的手牌上限+X。②当你失去最后一张手牌时，你摸至X张牌。（X为场上人数）",
+        sgz_taohui: "韬晦", 
+        sgz_taohui_info: 
+            "<span style='color:#FF0000;'><strong>战场技</strong></span>，锁定技，每轮限一次，当你进入濒死状态时，你增加1点体力上限并回复至1点体力。" +
+            "<br><span style='color:#00FF00;'>战流</span>：亮出牌堆顶的一张牌并根据其花色执行对应效果：♥️：回复一点体力；♣️：横置1~3名未横置角色；♦️/♠️：视为使用一张无距离限制的火/雷【杀】。" +
+            "<br><span style='color:#00FF00;'>战间</span>：防止你的濒死结算；" +
+            "<br><span style='color:#00FF00;'>退战</span>：当战流不可被执行时，你回复体力至体力上限。",
+        sgz_fenmie: "焚灭", 
+        sgz_fenmie_info: 
+            "<span style='color:#FF0000;'><strong>战场技</strong></span>，出牌阶段限一次，你可以选择任意名其他角色参战并摸等量的牌。" +
+            "<br><span style='color:#00FF00;'>战流</span>：①参战角色同时展示一张手牌；②你可以弃置任意张相同花色的牌或退战；③你对所有对应花色的参战角色各造成1点火焰伤害。" +
+            "<br><span style='color:#00FF00;'>战间</span>：每当你失去牌时便摸等量的牌。" +
+            "<br><span style='color:#00FF00;'>退战</span>：当一名角色角色防止了该火焰伤害。",
     },
     characterTaici: {
         "sgz_qujian": { order: 1, content: "何日试青锋，匣中长剑夜夜鸣。/江东山河甫定，正乃用武之时。" },

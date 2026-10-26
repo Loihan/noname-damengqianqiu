@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 //  梦吕布 · sgz_lvbu
 //  技能结构约定：每个技能 = 一个“空壳大技能”（存放音频等展示资源），
 //  实际效果由大技能 subSkill 内的子技能承担（按描述序号①②③划分），
@@ -51,6 +51,7 @@ export default {
         // ③ 当一名其他角色即将死亡时，你增加X点体力上限、蓄力点上限和蓄力点（X为其手牌中“炁”标记的牌数+1）。
         // ============================================================
         sgz_shiqi: {
+            persevereSkill: true,
             // TODO 音频占位：噬炁发动语音（用户后续对接改名）
             audio: "ext:大梦千秋/audio/sgz_lvbu:9",
             init: function(player) {
@@ -61,6 +62,7 @@ export default {
             subSkill: {
                 // ---- ① 额外回合 + 标记炁（触发于“即将开始回合的角色”的上家回合结束，即该角色回合即将开始的唯一插队时机） ----
                 turn: {
+                    persevereSkill: true,
                     trigger: { global: "phaseEnd" },
                     // 每轮限一次 & 存活
                     filter: function(event, player) {
@@ -95,12 +97,21 @@ export default {
                             .set("ai", () => {
                                 var X = sgzLvbuNextPlayer();
                                 if (!X) return 0;
-                                // 与上方 cost 保持一致：无手牌的目标不发动（标不出“炁”）
+                                // 无手牌的目标不发动（标不出“炁”）
                                 if (X.countCards("h") == 0) return 0;
-                                if (get.attitude(player, X) < 0 && (X.countCards("he") > 0 || X.countCards("h") > 0)) {
-                                    return 1;
+                                // 目标分类：敌人（态度<0）/ 未知者（态度=0）/ 友方（>0）
+                                var att = get.attitude(player, X);
+                                if (att > 0) return 0; // 友方不发动
+                                if (att == 0) {
+                                    // 未知身份者：只有"场上没有明确敌人"时才允许（有敌人就优先打敌人）
+                                    var hasEnemy = game.hasPlayer(function (p) {
+                                        return p != player && get.attitude(player, p) < 0;
+                                    });
+                                    if (hasEnemy) return 0;
                                 }
-                                return 0;
+                                // 已经有“炁”的人：基本不考虑（再标一次收益极低）
+                                if (X.countCards("h", c => c.hasGaintag && c.hasGaintag("sgz_qi")) > 0) return 0;
+                                return 1 + Math.max(0, 5 - (X.hp || 0)) * 0.2; // 越残越优先
                             })
                             .forResult();
                     },
@@ -142,6 +153,7 @@ export default {
                 },
                 // ---- 受伤重置：受到伤害后，噬炁本轮视为未发动过（并恢复“可发动”提醒标记） ----
                 damage: {
+                    persevereSkill: true,
                     trigger: { player: "damage" },
                     forced: true,
                     silent: true,
@@ -156,6 +168,7 @@ export default {
                 },
                 // ---- “可发动”提醒标记（mark 徽标）：有它=噬炁本轮可用（发动后移除，受伤/新一轮开始时恢复） ----
                 ready: {
+                    persevereSkill: true,
                     mark: true,
                     marktext: "噬炁",
                     intro: {
@@ -166,18 +179,23 @@ export default {
                 },
                 // ---- 每轮/每回合开始时恢复“可发动”标记 ----
                 upkeep: {
+                    persevereSkill: true,
                     trigger: { global: ["roundStart"], player: ["phaseBegin", "enterGame"] },
                     forced: true,
                     silent: true,
                     content: function() {
                         // 本轮未发动过（或已跨轮）即可就绪
                         if (player.storage.sgz_shiqi_round !== game.roundNumber) {
+                            // ⚠ 修复：addMark 的第三个参数 false 表示"不要自动 markSkill"，
+                            //   所以每轮开始恢复时徽标不会回来（用户实测）。这里补一次显式显示。
                             if (player.countMark("sgz_shiqi_ready") <= 0) player.addMark("sgz_shiqi_ready", 1, false);
+                            player.markSkill("sgz_shiqi_ready");
                         }
                     },
                 },
                 // ---- ③ 当一名其他角色即将死亡时，你增加X点体力上限、蓄力点上限和蓄力点（X为其手牌中“炁”标记的牌数+1） ----
                 die: {
+                    persevereSkill: true,
                     trigger: { global: "dieBefore" },
                     forced: true,
                     silent: true,
@@ -205,6 +223,7 @@ export default {
         // ② 使用杀时：消耗任意点蓄力点执行等量选项：1.伤害+1；2.不可被响应；3.额外指定至多两个目标；4.造成伤害回复等量体力。
         // ============================================================
         sgz_zhenlie: {
+            persevereSkill: true,
             audio: "ext:大梦千秋/audio/sgz_lvbu:7",
             chargeSkill: 4, // 蓄力点上限 4（噬炁③可再增）
             init: function(player) {
@@ -229,8 +248,9 @@ export default {
             },
             group: ["sgz_zhenlie_hunt", "sgz_zhenlie_enhance", "sgz_zhenlie_noshan", "sgz_zhenlie_heal", "sgz_zhenlie_free", "sgz_zhenlie_optsreset"],
             subSkill: {
-                // ---- ① 造成伤害：+1蓄力点 + 夺牌 +（条件满足时）获得“镇猎”杀 ----
+                // ---- ① 蓄力：造成伤害后 —— 获得其「炁」；其没有「炁」则获得一张「镇猎」杀 ----
                 hunt: {
+                    persevereSkill: true,
                     trigger: { source: "damage" },
                     forced: true,
                     filter: function(event, player) {
@@ -239,46 +259,30 @@ export default {
                     async content(event, trigger, player) {
                         game.playAudio(`../extension/大梦千秋/audio/sgz_lvbu/sgz_zhenlie${[1,2,3,4].randomGet()}.mp3`);
                         var X = trigger.player;
-                        // ① 获得1点蓄力点
+                        // 蓄力：获得 1 点蓄力点（蓄力技的默认值 1）
                         player.addCharge(1);
-                        // ② 夺牌：有“炁”→随机获得其一张“炁”；无炁且手牌数>体力 → 获得其一张手牌；否则无法获得
+                        // 获得其「炁」；若其没有「炁」，则获得一张「镇猎」杀（花色点数随机）
                         var qiPool = X.getCards("h", c => c.hasGaintag && c.hasGaintag("sgz_qi"));
                         if (qiPool.length) {
                             var got = qiPool.randomGet();
                             await player.gain(got, "gain2");
                             game.log(player, "获得了", X, "的一张“炁”");
-                        } else if (X.countCards("h") > X.hp) {
-                            var pool = X.getCards("h");
-                            var got = pool.randomGet();
-                            await player.gain(got, "gain2");
-                            game.log(player, "获得了", X, "的一张手牌");
                         } else {
-                            game.log(player, "未获得", X, "的牌（无“炁”且手牌数不大于体力）");
-                        }
-                        // ③ 镇猎杀：手牌中“镇猎”杀点数之和 < 体力上限时，获得一张点数=最大镇猎杀点数+1（此处已修改为镇猎杀点数之和+1）、花色随机的镇猎杀
-                        var zhenLieList = player.getCards("h", c => (c.storage && c.storage.sgz_zhenlie_sha) || (c.hasGaintag && c.hasGaintag("sgz_zhenlie_sha")));
-                        var sum = 0, maxP = 0;
-                        zhenLieList.forEach(function(c) {
-                            var n = typeof c.number == "number" ? c.number : 0;
-                            sum += n;
-                            if (n > maxP) maxP = n;
-                        });
-                        if (sum < player.maxHp) {
-                            var point = Math.min(sum + 1, 13);
                             var suit = ["spade", "heart", "club", "diamond"].randomGet();
+                            var point = Math.ceil(Math.random() * 13);
                             var zhenlieSha = game.createCard("sha", suit, point);
                             zhenlieSha.addGaintag("sgz_zhenlie_sha"); // 卡面“镇猎”标签
                             if (!zhenlieSha.storage) zhenlieSha.storage = {};
-                            zhenlieSha.storage.sgz_zhenlie_sha = true; // 官方“手戾”同款牌标记，供 mod 识别
+                            // 官方“手戾”同款牌标记，供 mod / 排序 / 特效识别
+                            zhenlieSha.storage.sgz_zhenlie_sha = true;
                             await player.gain(zhenlieSha, "gain2");
-                            game.log(player, "获得了一张", "#g【镇猎】杀", "（点数", get.cnNumber(point), "）");
-                        } else {
-                            game.log(player, "手牌中“镇猎”杀点数之和已达体力上限，本次未获得【镇猎】杀");
+                            game.log(player, "获得了一张", "#g【镇猎】杀", "（", get.cnNumber(point), "点，花色点数随机）");
                         }
                     },
                 },
                 // ---- ③ 使用杀：选择选项（每回合每项限一次，四项全用后刷新） ----
                 enhance: {
+                    persevereSkill: true,
                     trigger: { player: "useCard1" },
                     filter: function(event, player) {
                         return event.card && event.card.name == "sha" && player.countCharge() > 0;
@@ -322,40 +326,23 @@ export default {
                                 result = { bool: false };
                             }
                         } else {
-                            // AI：按收益打分，取正分且不超过上限的项
-                            var picked = [];
-                            var scored = list
-                                .map(function (opt) {
-                                    var score = 0;
-                                    var t = trigger;
-                                    switch (opt.key) {
-                                        case "伤害+1":
-                                            (t.targets || []).forEach(function (tar) {
-                                                score += get.damageEffect(tar, player, player);
-                                            });
-                                            break;
-                                        case "额外目标":
-                                            var candidates = game.filterPlayer(function (tar) {
-                                                return (
-                                                    !t.targets.includes(tar) &&
-                                                    lib.filter.targetEnabled2(t.card, player, tar) &&
-                                                    lib.filter.targetInRange(t.card, player, tar)
-                                                );
-                                            });
-                                            score = candidates.length ? Math.max.apply(Math, candidates.map(function (x) { return get.effect(x, t.card, player, player); })) : 0;
-                                            break;
-                                        case "回复体力":
-                                            score = player.hp < player.maxHp ? 3 : 0;
-                                            break;
-                                    }
-                                    return { key: opt.key, score: score };
-                                })
-                                .sort(function (a, b) {
-                                    return b.score - a.score;
+                            // AI：固定优先级 —— 必中 > 多目标 > 加伤 > 吸血；
+                            //   有能量就必选，能多选就按顺序多选（不按分数取舍）
+                            var PRIORITY = ["不可响应", "额外目标", "伤害+1", "回复体力"];
+                            // 「额外目标」只有在真存在合法第二目标时才纳入（单人残局别白花蓄力）
+                            var extraTargets = game.filterPlayer(function (tar) {
+                                return (
+                                    !(trigger.targets || []).includes(tar) &&
+                                    lib.filter.targetEnabled2(trigger.card, player, tar) &&
+                                    lib.filter.targetInRange(trigger.card, player, tar)
+                                );
+                            });
+                            var picked = PRIORITY.filter(function (key) {
+                                if (key == "额外目标" && extraTargets.length == 0) return false;
+                                return list.some(function (o) {
+                                    return o.key === key;
                                 });
-                            for (var i = 0; i < scored.length && picked.length < max; i++) {
-                                if (scored[i].score > 0) picked.push(scored[i].key);
-                            }
+                            }).slice(0, max);
                             result = picked.length ? { bool: true, links: picked } : { bool: false };
                         }
                         if (!result.bool || !result.links || !result.links.length) {
@@ -431,6 +418,7 @@ export default {
                 },
                 // ---- ③辅助：吕布回合开始重置“选项使用记录”（每回合每项限一次） ----
                 optsreset: {
+                    persevereSkill: true,
                     trigger: { player: "phaseBegin" },
                     forced: true,
                     silent: true,
@@ -440,6 +428,7 @@ export default {
                 },
                 // ---- ③选项2辅助：此杀不可被响应（直接命中） ----
                 noshan: {
+                    persevereSkill: true,
                     charlotte: true,
                     onremove: function(player) {
                         delete player.storage.sgz_zhenlie_noshan;
@@ -460,6 +449,7 @@ export default {
                 },
                 // ---- ③选项4辅助：本杀造成伤害后回复等量体力 ----
                 heal: {
+                    persevereSkill: true,
                     charlotte: true,
                     onremove: function(player) {
                         delete player.storage.sgz_zhenlie_heal;
@@ -483,6 +473,7 @@ export default {
                 },
                 // ---- 镇猎杀不计入次数（补偿已计数） ----
                 free: {
+                    persevereSkill: true,
                     trigger: { player: "useCard" },
                     forced: true,
                     silent: true,
@@ -506,6 +497,7 @@ export default {
         // 顶层独立技能，仅由噬炁①通过 addSkill 挂到“被噬炁的角色”身上（仿曹髦“潜谋”结构），
         // 吕布自身永不持有，故不会误触发在吕布身上。
         sgz_shiqi_qi: {
+            persevereSkill: true,
             charlotte: true, // 角色死亡/移除时自动清理
             mark: true,
             marktext: "炁",
@@ -581,9 +573,17 @@ export default {
         "sgz_qi": "炁", // gaintag 卡面文字（被噬炁标记的手牌显示“炁”字）
         "sgz_zhenlie_sha": "镇猎", // 镇猎杀卡面标签
         sgz_shiqi: "噬炁",
-        sgz_shiqi_info: "①<span style='color:#FF0000;'><strong>昂扬技</strong></span>，一名没有被“噬炁”过的有手牌的其他角色的回合开始前（首轮一号位除外），你可以执行一个额外回合。若如此做，其收回其装备区的所有牌并将手牌标记为“炁”。<span style='color:#00FF00;'>昂扬</span>：当你受到伤害时。②被“噬炁”指定过的角色失去其手牌里的所有“炁”时，其立即死亡。③当一名其他角色即将死亡时，你增加X点体力上限、蓄力点上限和蓄力点（X为其手牌中“炁”标记的牌数+1）。",
+        sgz_shiqi_info: 
+            "①<span style='color:#FF0000;'><strong>昂扬技</strong></span>，一名有手牌的其他角色的回合开始前（首轮一号位除外），你可以执行一个额外回合。若如此做，其收回其装备区的所有牌并将手牌标记为“炁”。" +
+            "<span style='color:#00FF00;'>昂扬</span>：当你受到伤害时/每轮开始时。" +
+            "②被“噬炁”指定过的角色失去其手牌里的所有“炁”时，其立即死亡。" +
+            "③当一名其他角色即将死亡时，你增加X点体力上限、蓄力点上限和蓄力点（X为其手牌中“炁”标记的牌数+1）。",
         sgz_zhenlie: "镇猎",
-        sgz_zhenlie_info: "<span style='color:#FF0000;'><strong>蓄力技</strong></span>（1/4），①<span style='color:#00FF00;'>蓄力</span>：当你对一名其他角色造成伤害时：<br>1.若其有“炁”，你获得其一张“炁”。<br>2.若其没有“炁”且手牌数大于体力值，你获得其一张手牌。<br>3.若你手牌中“镇猎”杀的点数之和小于你的体力上限，你获得一张“镇猎”杀（花色随机，点数为你手牌中“镇猎”杀点数之和+1）。<br>②当你使用杀时，你可以消耗任意蓄力点执行等量选项（每回合每项限一次，无可选项时所有选项视为未选择过）：1.令此杀伤害+1；2.不可被响应；3.额外指定至多两个目标；4.若此杀造成伤害你回复等量体力。",
+        sgz_zhenlie_info: 
+            "<span style='color:#FF0000;'><strong>蓄力技</strong></span>（1/4），" +
+            "①<span style='color:#00FF00;'>蓄力</span>：当你对一名其他角色造成伤害时，若其有”炁”则你获得其一张“炁”，否则你获得一张“镇猎”杀（无次数限制）。" +
+            "<br>②当你使用杀时，你可以消耗任意蓄力点选择等量项执行（本回合被选择过的选项不可被选择直到所有选项均被选择过）：" +
+                "1.令此杀伤害+1；2.不可被响应；3.额外指定至多两个目标；4.若此杀造成伤害你回复等量体力。",
         sgz_lvbu_ui: "特效",
     },
     characterTaici: {

@@ -1,5 +1,6 @@
 ﻿// 【拗纬】万象影光特效已抽离至 effect/sgz_simazhao.js
 import { woweiUI } from '../effect/sgz_simazhao.js';
+import AI, { helpers } from "../ai/sgz_simazhao.js";
 
 export default {
     character: {
@@ -36,6 +37,7 @@ export default {
             ],
             subSkill: {
                 xsha: {
+                    persevereSkill: true,
                     // 支持出牌阶段使用和被动响应
                     enable: ["chooseToUse", "chooseToRespond"],
                     filterCard: function(card, player) {
@@ -50,25 +52,16 @@ export default {
                         return player.countCards('hs', 'binglinchengxiax') > 0;
                     },
                     prompt: "将一张【兵临城下】当做【杀】使用或打出",
-                    check: function(card) { return 1; },
+                    check: helpers.sgz_wowei_xsha_check,
                     content: function() {
                         var player = _status.event.player; 
                         if(!player.hasSkill('sgz_tunyue'))game.playAudio(`../extension/大梦千秋/audio/sgz_simazhao/sgz_wowei${[1,2].randomGet()}.mp3`);
                         else game.playAudio(`../extension/大梦千秋/audio/sgz_simazhao/sgz_wowei${[3,4].randomGet()}.mp3`);
                     },
-                    ai: {
-                        respondSha: true,
-                        // 告知 AI：我有这些牌，可以用来响应
-                        skillTagFilter: function(player, tag) {
-                            if (tag == 'respondSha') {
-                                return player.countCards('hs', 'binglinchengxiax') > 0;
-                            }
-                        },
-                        order: 15,
-                        result: { player: 1 }
-                    }
+                    ai: AI.sgz_wowei_xsha,
                 },
                 setup: {
+                    persevereSkill: true,
                     trigger: { global: "gameStart" },
                     forced: true,
                     content: function() {
@@ -86,6 +79,7 @@ export default {
                     }
                 },
                 draw: {
+                    persevereSkill: true,
                     trigger: { player: "useCard" },
                     forced: true,
                     filter: function(event, player) {
@@ -99,6 +93,7 @@ export default {
                     }
                 },
                 cancel: {
+                    persevereSkill: true,
                     trigger: { global: "useCard" },
                     direct: true, // 关键：跳过“是否发动斡维”的第一层询问
                     // 这里不加 forced: true，改为询问玩家，符合“你可以”的描述
@@ -132,6 +127,7 @@ export default {
                     }
                 },
                 mod: {
+                    persevereSkill: true,
                     mod: {
                         // 1. 虚空牌不计上限
                         ignoredHandcard: function(card, player) {
@@ -148,6 +144,7 @@ export default {
                 },
                 // 响应使用时的卡牌替换逻辑（确保打出的是真牌）
                 fake: {
+                    persevereSkill: true,
                     trigger: { player: "useCardBefore" },
                     forced: true,
                     priority: 20,
@@ -235,7 +232,7 @@ export default {
                     },
                 },
             },
-            ai: { threaten: 6 }
+            ai: AI.sgz_maiyao,
         },
             sgz_maiyao_mark: {
                 charlotte: true, // 彻底隐藏技能，仅显示标记
@@ -366,19 +363,7 @@ export default {
                     }
                 }
             },
-            ai: {
-                order: 1,
-                result: {
-                    player: function(player) {
-                        // 敌人上限总和远高于司马昭时发动
-                        var enemyMax = 0;
-                        game.countPlayer(p => {
-                            if (get.attitude(player, p) < 0) enemyMax += (p.maxHp - player.maxHp + 1);
-                        });
-                        return enemyMax > 3 ? 1 : 0;
-                    }
-                }
-            }
+            ai: AI.sgz_yazhou,
         },
         // === 5. 覆焘    
         sgz_futao: {
@@ -484,10 +469,7 @@ export default {
                     game.log(player, '锁定目标已亡，【吞月】归寂，【覆焘】【压昼】感应天机重新亮起');
                 }
             },
-            ai: {
-                directHit_ai: true,
-                fireAttack: true
-            }
+            ai: AI.sgz_tunyue,
         },
     },
     skillTranslate: {

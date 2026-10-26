@@ -1,3 +1,5 @@
+﻿import AI, { helpers } from "../ai/sgz_zhugedan.js";
+
 export default {
     character: {
         sgz_zhugedan: {
@@ -5,7 +7,7 @@ export default {
             group:"wei", 
             hp:6, 
             maxHp:9,
-            skills:["sgz_dingpan", "sgz_fani", "sgz_fenyu", "sgz_kunzhu", "sgz_gujue"], 
+            skills:["sgz_dingpan", "sgz_fani", "sgz_fenyu", "sgz_gujue"], 
             img:"extension/大梦千秋/image/sgz_zhugedan.png", 
             dieAudios:["ext:大梦千秋/audio/sgz_zhugedan/die.mp3"],
             names:"诸葛|诞",
@@ -32,49 +34,18 @@ export default {
             },
             selectTarget: 1,
             // === 核心 AI 注入：优先级与策略分配 ===
-            ai: {
-                // 【核心修改】：根据场上标记情况动态调整顺序
-                order: function(item, player) {
-                    // 1. 如果场上还有敌人没挂上标记，则定叛的优先级为最高 (100)
-                    if (game.hasPlayer(function(current){
-                        return current != player && get.attitude(player, current) < 4 && !current.hasSkill("sgz_dingpan_pan");
-                    })) {
-                        return 100; 
-                    }
-                    // 2. 如果全场敌人都已经挂了标记，定叛优先级降为最低 (1)，确保在出完杀后再补刀
-                    return 1;
-                },
-                result: {
-                    player: function(player, target) {
-                        if (player.maxHp <= 1) return 0;
-                        if (get.attitude(player, target)>=4)return 0;
-                        return 5; // 欺骗主公 AI，使其认为减上限收益很高
-                    },
-                    target: function(player, target) {
-                        var att = get.attitude(player, target);
-                        // 目标 1：优先给没有标记的敌人挂标记
-                        if (!target.hasSkill("sgz_dingpan_pan")) {
-                            if (att < 4) return -10; 
-                        } 
-                        // 目标 2：如果已经有标记了，收益评分稍微降低，让位给“挂标记”动作
-                        else if (att < 0) {
-                            return -5; 
-                        }
-                        return 0;
-                    }
-                }
-            },
+            ai: AI.sgz_dingpan,
             content: function() {
                 "step 0"
                 if (!player.storage.sgz_dingpan_targets) player.storage.sgz_dingpan_targets = [];
                 player.storage.sgz_dingpan_targets.push(target);
-                
-                var extra = 1 ;//消耗了体力
-                if(player.maxHp > player.hp) extra = 0;
-                
+
+                // 「是否因这次减上限而掉了体力」：满血时 loseMaxHp 会连带把体力压下来 ⇒ 额外奖励 1
+                //   ⚠ 必须在 loseMaxHp 之前算
+                //event.extra = 1;
+                //if (player.maxHp > player.hp) event.extra = 0;
+
                 player.loseMaxHp();
-                player.changeHujia( 1 + extra ); 
-                player.draw(extra);
                 game.playAudio('../extension/大梦千秋/audio/sgz_zhugedan/sgz_dingpan.mp3');
                 "step 1"
                 // 检测子技能注入的标记名
@@ -82,13 +53,21 @@ export default {
                     target.loseMaxHp();
                 } else {
                     target.loseMaxHp();
-                    target.changeGroup("dingpan_pan");
+                    //target.changeGroup("dingpan_pan");
                     target.addSkill("sgz_dingpan_pan");
                 }
+                // ⚠⚠ 这里必须用 `event.extra`，**不能**用 `extra`：
+                //   `"step N"` 写法会被 StepCompiler 拆成**一个个独立函数**
+                //   （GameEvent/compilers/StepCompiler.js:81 packStep —— 每个 step 一个 new Function），
+                //   所以 step 0 里的 `var extra` 在 step 1 里**根本不存在** ⇒ `ReferenceError: extra is not defined`。
+                //   跨步骤要共享的值一律挂在 `event` 上（引擎自己也是这么做的）。
+                player.changeHujia(1);
+                player.draw();
             },
             group: "sgz_dingpan_cleanup",
             subSkill: {
                 cleanup: {
+                    persevereSkill: true,
                     trigger: { player: "phaseUseAfter" },
                     forced: true,
                     silent: true,
@@ -97,6 +76,7 @@ export default {
                     }
                 },
                 pan: {
+                    persevereSkill: true,
                     sub: true,
                     mark: true,
                     marktext: "叛军",
@@ -115,22 +95,10 @@ export default {
             // === 核心 AI 劫持：改变 AI 对锦囊和装备的世界观 ===
             mod: {
                 // A. 价值评估：锦囊牌和核心装备被视为顶级资源
-                aiValue: function(player, card, num) {
-                    if (card.name == 'zhuge') return 1000;     // 连弩：神器
-                    if (card.name == 'qinglong') return num + 20; 
-                    if (card.name == 'guanshi') return num + 10;
-                    
-                    // 只要是锦囊，赋予极高保留价值，防止被弃置
-                    if (get.type(card) == 'trick') return num + 100;
-                },
+                aiValue: helpers.sgz_fani_aiValue,
                 
                 // B. 使用意愿：消除 AI 的顾虑，实现“无脑用”
-                aiUseful: function(player, card, num) {
-                    if (card.name == 'zhuge') return 1000;
-                    // 锦囊牌即便在常规判定中收益为负（如五谷救了敌人），在这里也被视为绝对有用
-                    if (get.type(card) == 'trick') return 150;
-                    if (card.name == 'jiu') return 9;
-                },
+                aiUseful: helpers.sgz_fani_aiUseful,
                 
                 // C. 收益重写 (关键点)：强行让 AI 认为锦囊总是正收益
                 aiResult: function(player, card, num) {
@@ -158,14 +126,7 @@ export default {
                 },
 
                 // E. 出牌优先级：锦囊必须排在最前面使用
-                aiOrder: function(player, card, num) {
-                    // 权重设为 15，确保在定叛(12)之后，但在普通杀(3)和普通顺手之前
-                    if (get.type(card) == 'trick') return 99;
-                    // 核心装备的装配优先级也提高
-                    if (['zhuge', 'qinglong', 'guanshi'].contains(card.name)) return 98;
-                    if (card.name == 'jiu') return 96;
-                    if (card.name == 'sha') return 95;
-                },
+                aiOrder: helpers.sgz_fani_aiOrder,
 
                 // 距离逻辑保留
                 targetInRange: function(card, player, target) {
@@ -175,6 +136,7 @@ export default {
             group: ["sgz_fani_range", "sgz_fani_target", "sgz_fani_draw", "sgz_fani_damage"],
             subSkill: {
                 range: {
+                    persevereSkill: true,
                     sub: true,
                     mod: {
                         targetInRange: function(card, player, target) {
@@ -183,6 +145,7 @@ export default {
                     },
                 },
                 target: {
+                    persevereSkill: true,
                     sub: true,
                     trigger: { player: "useCardBegin" },
                     forced: true,
@@ -200,17 +163,26 @@ export default {
                     },
                 },
                 draw: {
+                    persevereSkill: true,
                     sub: true,
-                    trigger: { player: "useCardToPlayered" },
+                    // ③「你每对一名“叛军”使用牌时便摸一张牌。」
+                    // ⚠ 需求（2026）：**一张牌只结算一次**，按「本次使用牌的目标里有几个叛军」一次性摸。
+                    //   原来的写法挂在 `useCardToPlayered`（每个目标各触发一次）+ `player.draw()`
+                    //   ⇒ 打 3 个叛军就是「摸1、摸1、摸1」三次分开展示。
+                    //   改成挂在 `useCard`（**每张牌只触发一次**），一次 `draw(叛军数)`。
+                    trigger: { player: "useCard" },
                     forced: true,
                     filter: function(event, player) {
-                        return event.target.hasSkill("sgz_dingpan_pan");
+                        // `event.targets` 是本次使用牌的最终目标列表
+                        return (event.targets || []).some(target => target.hasSkill("sgz_dingpan_pan"));
                     },
                     content: function() {
-                        player.draw();
+                        const panCount = (trigger.targets || []).filter(target => target.hasSkill("sgz_dingpan_pan")).length;
+                        if (panCount > 0) player.draw(panCount);
                     },
                 },
                 damage: {
+                    persevereSkill: true,
                     sub: true,
                     trigger: { source: "damageBegin" },
                     forced: true,
@@ -271,82 +243,100 @@ export default {
             }
         },
         // === 4. 困诛  ===
-        sgz_kunzhu: {
-            audio: "ext:大梦千秋/audio/sgz_zhugedan:4",
+        // === 4. 孤决（原【困诛】+【孤绝】合并）===
+        //  需求（2026）：做成一个**空壳大技能**，父技能不写任何逻辑，
+        //  三条效果分别落在三个子技能里（引擎注册成 sgz_gujue_xxx）：
+        //    ① 困诛 · 不可被响应 → `sgz_gujue_buke`
+        //    ② 困诛 · 成为叛军牌的目标摸牌 → `sgz_gujue_draw`
+        //    ③ 孤绝 · 结束阶段减上限/护甲/摸牌 → `sgz_gujue_end`
+        //  ⚠ 子技能必须同时写进 `group`，否则玩家只是「注册」了技能但**并不拥有**；
+        //     `subSkill` 只负责注册 id / 译名。
+        sgz_gujue: {
+            audio: "ext:大梦千秋/audio/sgz_zhugedan:7",
             persevereSkill: true,
             forced: true,
-            trigger: { player: "useCard1" }, 
-            filter: function(event, player) {
-                var panCount = game.countPlayer(p => p.hasSkill("sgz_dingpan_pan"));
-                return panCount > player.maxHp;
-            },
-            content: function() {
-                trigger.directHit = game.filterPlayer(p => p != player);
-                player.logSkill("sgz_kunzhu");
-                game.playAudio('../extension/大梦千秋/audio/sgz_zhugedan/sgz_kunzhu.mp3');
-            },
-            group: ["sgz_kunzhu_draw"],
+            ai: AI.sgz_gujue,
+            group: ["sgz_gujue_buke", "sgz_gujue_draw", "sgz_gujue_end"],
             subSkill: {
+                // ① 若你的体力上限 ≤ X，你使用的牌不可被响应（X = 场上叛军数）
+                buke: {
+                    persevereSkill: true,
+                    sub: true,
+                    trigger: { player: "useCard1" },
+                    forced: true,
+                    filter: function (event, player) {
+                        const pan = game.countPlayer(p => p.hasSkill("sgz_dingpan_pan"));
+                        return pan > 0 && player.maxHp <= pan;
+                    },
+                    content: function () {
+                        // 「不可被响应」在引擎里是两件事：
+                        //   · `directHit`：目标不能出【闪】/【杀】响应
+                        //     （杀、南蛮、万箭等牌都会看它，sp.js:575 还会 `.includes(player)`）
+                        //   · `nowuxie` ：不能被【无懈可击】响应
+                        //     （无懈询问时读 `event.getParent().nowuxie`，standard.js:4323）
+                        trigger.directHit = game.filterPlayer(p => p !== player);
+                        trigger.nowuxie = true;
+                        game.playAudio(`../extension/大梦千秋/audio/sgz_zhugedan/sgz_gujue${[1,2].randomGet()}.mp3`);
+                    },
+                },
+                // ② 当你成为“叛军”使用牌的目标时摸 1 张牌
                 draw: {
+                    persevereSkill: true,
                     sub: true,
                     audio: "ext:大梦千秋/audio/sgz_zhugedan:4",
                     trigger: { target: "useCardToTargeted" },
                     forced: true,
-                    filter: function(event, player) {
-                        return event.player.hasSkill("sgz_dingpan_pan");
+                    filter: function (event, player) {
+                        return !!(event.player && event.player.hasSkill("sgz_dingpan_pan"));
                     },
-                    content: function() {
+                    content: function () {
                         player.draw();
+                        game.playAudio(`../extension/大梦千秋/audio/sgz_zhugedan/sgz_gujue${[3,4].randomGet()}.mp3`);
                     },
                 },
-            }
+                // ③ 你的结束阶段：减少 X 点体力上限（除第一轮外），然后获得 X 点护甲并摸 X 张牌
+                end: {
+                    persevereSkill: true,
+                    sub: true,
+                    trigger: { player: "phaseJieshuBegin" },
+                    forced: true,
+                    filter: function (event, player) {
+                        return game.countPlayer(p => p.hasSkill("sgz_dingpan_pan")) > 0;
+                    },
+                    content: function () {
+                        const x = game.countPlayer(p => p.hasSkill("sgz_dingpan_pan"));
+                        // X 在同一函数里算一次就用，跨步骤才需要挂 event（这里刻意不用 step）
+                        game.playAudio(`../extension/大梦千秋/audio/sgz_zhugedan/sgz_gujue${[5,6,7].randomGet()}.mp3`);
+                        if (game.roundNumber > 1) player.loseMaxHp(x);
+                        player.changeHujia(x);
+                        player.draw(x);
+                    },
+                },
+            },
         },
-        // === 5. 孤绝  ===
-        sgz_gujue: {
-            audio: "ext:大梦千秋/audio/sgz_zhugedan:3",
-            persevereSkill: true,
-            forced: true,
-            trigger: { player: "phaseJieshuBegin" },
-            ai:{
-                halfneg:true,
-            },
-            filter: function(event, player) {
-                // 排除第一轮
-                //if (game.roundNumber <= 1) return false;
-                return game.countPlayer(p => p.hasSkill("sgz_dingpan_pan")) > 0;
-            },
-            content: function() {
-                "step 0"
-                var x = game.countPlayer(p => p.hasSkill("sgz_dingpan_pan"));
-                event.countX = x;
-                player.logSkill("sgz_gujue");
-                game.playAudio('../extension/大梦千秋/audio/sgz_zhugedan/sgz_gujue.mp3');
-                
-                if (game.roundNumber > 1) player.loseMaxHp(x);
-                player.changeHujia(x);
-                "step 1"
-                player.draw(event.countX);
-            }
-        }
     },
     skillTranslate: {
         sgz_dingpan: "定叛",
-        sgz_dingpan_info: "出牌阶段每名角色限一次，你可以减少1点体力上限并获得1点护甲（若你因此减少了体力，你额外获得1点护甲并摸1张牌），令一名其他角色减少1点体力上限，然后若其没有“叛军”标记则获得一个“叛军”标记。",
+        sgz_dingpan_info: "出牌阶段每名其他角色限一次，令你与一名其他角色各减少1点体力上限并令其成为“叛军”，然后你获得1点护甲并摸1张牌。",
         sgz_fani: "伐逆",
-        sgz_fani_info: "锁定技，①你的【杀】无距离限制。②当你使用【杀】时，若场上存在“叛军”则将目标更改为所有“叛军”。③你每对一名“叛军”使用牌时便摸一张牌。④你对“叛军”即将造成的伤害改为令其减少等量的体力上限。",
+        sgz_fani_info: 
+            "锁定技，①你的【杀】无距离限制。<br>" +
+            "②当你使用【杀】时，若场上存在“叛军”则将目标更改为所有“叛军”。<br>" +
+            "②你使用牌时摸目标中“叛军”数张牌。<br>" +
+            "④你对“叛军”即将造成的伤害改为令其减少等量的体力上限。",
         sgz_fenyu: "焚玉",
-        sgz_fenyu_info: "锁定技。当一名“叛军”死亡时，你摸两张牌并增加3点体力上限。然后你于当前回合结束后获得一个额外的回合（此效果可累加）。",
-        sgz_kunzhu: "困诛",
-        sgz_kunzhu_info: "锁定技。①若场上“叛军”数大于你的体力上限，你使用的牌不可被响应。②当你成为“叛军”使用牌的目标时摸一张牌。",
-        sgz_gujue: "孤绝",
-        sgz_gujue_info: "锁定技，你的结束阶段开始时，你减少X点体力上限（除第一轮外），然后获得X点护甲并摸X张牌（X为场上“叛军”数）。",
+        sgz_fenyu_info: "锁定技。当一名“叛军”死亡时，你摸2张牌、增加3点体力上限并获得1个回合。",
+        sgz_gujue: "孤决",
+        sgz_gujue_info:
+            "锁定技，①若你的体力上限≤X，你使用的牌不可被响应。" +
+            "②当你成为“叛军”使用牌的目标时摸1张牌。" +
+            "③你的结束阶段，你减少X点体力上限（除第一轮外），然后获得X点护甲并摸X张牌（X为场上“叛军”数）。",
     },
     characterTaici:{
         "sgz_dingpan":{order: 1,content:"守护之獒，虽无龙鳞虎爪，亦可保家国太平！/诞必镇卫四境，以全大魏之江水！/观中原魏旗凋零，唯淮南独树义帜！/诞愿效方邵，为国之爪牙！/念先王之祀，当举义伐之！"},
         "sgz_fani":{order: 2,content:"蒋、焦二子，安敢如此！/文钦竖子，吾必杀之！/人生百年，死国可乎！/敌势虽盛，犹可稳镇众军！/建不世之业，留金石之功！/诞不忍乌云蔽日，必置乱臣于死地！"},
         "sgz_fenyu":{order: 3,content:"只求，玉石俱焚！/义照淮流，身报国恩！/本将军誓与寿春共存亡！"},
-        "sgz_kunzhu":{order: 4,content:"天子之臣，当以社稷为务，清君侧之贼！/非威不利，非势不行！/诞在一日，乱臣贼子便休想有安生之时！/斯人已逝，余者奋威！"},
-        "sgz_gujue":{order: 5,content:"若无后援，不知胜战可否！/诞能得诸位死力，无憾矣！/世受魏恩，岂可欲以社稷输人！"},
+        "sgz_gujue":{order: 4,content:"天子之臣，当以社稷为务，清君侧之贼！/诞在一日，乱臣贼子便休想有安生之时！/非威不利，非势不行！/斯人已逝，余者奋威！/若无后援，不知胜战可否！/诞能得诸位死力，无憾矣！/世受魏恩，岂可欲以社稷输人！"},
         "die":{content:"士皆死战，只惜贼势难挡..."},
     }
 };

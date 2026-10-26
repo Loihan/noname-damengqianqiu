@@ -1,5 +1,6 @@
 ﻿// 劫掠能量条 UI 已抽离至 effect/sgz_zhaoyun.js
 import { zhaoyunUI } from '../effect/sgz_zhaoyun.js';
+import AI, { helpers } from "../ai/sgz_zhaoyun.js";
 
 export default {
     character: {
@@ -40,53 +41,12 @@ export default {
                 "sgz_guzhi_limit" 
             ],
             // === 核心 AI 注入一：价值体系与收益偏移 ===
-            ai: {
-                maixie: true,
-                // 一、价值重定向：濒死时所有牌价值强制设为 0，平时死保红桃
-                value: function(card, player) {
-                    if (_status.event.name == 'dying' || _status.dying) return 0.1; 
-                    var suit = get.suit(card, player);
-                    if (suit == 'heart') return 45;   // 平时死保红桃
-                    if (suit == 'diamond') return 40; 
-                    return get.value(card);
-                },
-                // 五、收益认知偏移：诱导卖血
-                effect: {
-                    target: function(card, player, target) {
-                        if (get.tag(card, 'damage') || get.tag(card, 'losehp')) {
-                            if (player == target || get.attitude(player, target) <= 0) {
-                                if (target.countCards('h', {suit: 'heart'}) > 0) return [1,2];
-                            }
-                        }
-                    }
-                }
-            },
+            ai: AI.sgz_guzhi,
             mod: {
                 // 二、禁疗逻辑：平时不吃桃；濒死时若手里有红桃，优先走龙霄转化，而非直接吞普通桃
-                aiOrder: function(player, card, num) {
-                    if (get.tag(card, 'recover')) {
-                        if (player.isDying()) {
-                            // 有红桃 → 把普通桃次序压后，逼 AI 优先用龙霄把红桃变成桃（保真桃、只死保红桃）
-                            if (player.countCards('h', { suit: 'heart' }) > 0) return -60;
-                            return 1000;
-                        }
-                        if (player.hp >= 1) return -100;
-                    }
-                    return num;
-                },
+                aiOrder: helpers.sgz_guzhi_aiOrder,
                 // ① 【最高优先级】有红桃且非濒死：赵云知道此时卖血是赚的 → 尽量不做防御响应，主动吃伤害
-                aiUseful: function(player, card, num) {
-                    if (player.countCards('h', { suit: 'heart' }) > 0 && !player.isDying()) {
-                        // 被杀/万箭：不闪避
-                        if (card && card.name == 'shan') return -8;
-                        // 南蛮/决斗：不出杀响应，主动扣血（卖血是赚的）
-                        if (card && card.name == 'sha' &&
-                            _status.event && _status.event.name == 'chooseToRespond') {
-                            return -8;
-                        }
-                    }
-                    return num;
-                },
+                aiUseful: helpers.sgz_guzhi_aiUseful,
             },
             init: function(player) {
                 if (player.maxHp > 7) {
@@ -100,6 +60,7 @@ export default {
             subSkill: {
                 // 1. 开局及模式加成锁定
                 start: {
+                    persevereSkill: true,
                     trigger: { 
                         global: ["gameStart", "gameDrawBefore"],
                         player: "enterGame" 
@@ -124,6 +85,7 @@ export default {
 
                 // 2. 手牌上限 MOD
                 hscap: { 
+                    persevereSkill: true,
                     mod: { 
                         maxHandcard: function(player, num) {
                             return num + player.maxHp;
@@ -133,6 +95,7 @@ export default {
 
                 // 3. 濒死/脱离濒死即时补牌
                 draw: {
+                    persevereSkill: true,
                     trigger: { player: ["dying", "dyingEnd"] },
                     forced: true,
                     filter(event, player) {
@@ -149,6 +112,7 @@ export default {
 
                 // 4. 【核心新增】：持续补牌效果（参考伤逝逻辑）
                 shangshi: {
+                    persevereSkill: true,
                     trigger: {
                         player: ["loseAfter", "changeHp", "gainMaxHpAfter", "loseMaxHpAfter"],
                         global: ["equipAfter", "addJudgeAfter", "gainAfter", "loseAsyncAfter", "addToExpansionAfter"]
@@ -170,15 +134,12 @@ export default {
                     content: function() {
                         player.drawTo(2);
                     },
-                    ai: {
-                        noh: true,
-                        freeSha: true,
-                        freeShan: true
-                    }
+                    ai: AI.sgz_guzhi_shangshi,
                 },
 
                 // 5. 体力锁定 1
                 hplock: {
+                    persevereSkill: true,
                     trigger: { player: "changeHp" },
                     forced: true,
                     silent: true,
@@ -194,6 +155,7 @@ export default {
 
                 // 6. 体力上限锁定 7
                 maxhplock: {
+                    persevereSkill: true,
                     trigger: { 
                         player: ["gainMaxHpAfter", "changeHp", "phaseBefore"],
                         global: ["gameDrawBefore","phaseBegin"]
@@ -211,6 +173,7 @@ export default {
                 },
                 // 7. 【核心新增】：伤害上限限制
                 limit: {
+                    persevereSkill: true,
                     // 使用 damageBegin4 时机，此时伤害数值已被大部分技能增加完毕，最适合截断上限
                     trigger: { player: "damageBegin4" },
                     forced: true,
@@ -247,149 +210,14 @@ export default {
                         return Infinity;
                     }
                 },
-                aiOrder(player, card, num) {
-                    if (num <= 0 || !player.isPhaseUsing() || player.needsToDiscard() < 2) {
-                        return num;
-                    }
-                    let suit = get.suit(card, player);
-                    if (suit === "heart") {
-                        return num - 3.6;
-                    }
-                },
-                aiValue(player, card, num) {
-                    if (num <= 0) {
-                        return num;
-                    }
-                    let suit = get.suit(card, player);
-                    if (suit === "heart") {
-                        return num + 3.6;
-                    }   
-                    if (suit === "spade") {
-                        return num + 1;
-                    }
-                    if (suit === "diamond") {
-                        return num + 1.8;
-                    }
-                },
-                aiUseful(player, card, num) {
-                    if (num <= 0) {
-                        return num;
-                    }
-                    let suit = get.suit(card, player);
-                    if (suit === "heart") {
-                        return num + 3;
-                    }
-                    if (suit === "diamond") {
-                        return num + 1;
-                    }
-                    if (suit === "spade") {
-                        return num + 1;
-                    }
-                },
+                aiOrder: helpers.sgz_longxiao_aiOrder,
+                aiValue: helpers.sgz_longxiao_aiValue,
+                aiUseful: helpers.sgz_longxiao_aiUseful,
             },
-            ai: {
-                directHit_ai: true, 
-                fireAttack: true, 
-                order: function(item, player) {
-                    // 方片→火杀（无距离次数限制、不占次数）：使用优先级必须高于一切原卡牌
-                    if (player.countCards('hes', {suit: 'diamond'}) > 0) return 130;
-                    // 濒死且有红桃：龙霄转化救桃优先级拉满
-                    if (player.isDying() && player.countCards('hes', {suit: 'heart'}) > 0) return 200;
-                    // 有 3 张梅花：关键时刻转闪闪避
-                    if (player.countCards('hes', {suit: 'club'}) >= 3) return 90;
-                    // 其余情况也优先用龙霄转化（而非直接打出原牌）
-                    return 60;
-                },
-                save: true,
-                respondSha: true, respondShan: true, respondWuxie: true,
-                skillTagFilter: function(player, tag) {
-                    var map = { save: 'heart', respondSha: 'diamond', respondShan: 'club', respondWuxie: 'spade' };
-                    if (map[tag] && player.countCards('hes', { suit: map[tag] }) > 0) return true;
-                },
-                // 【核心修复】：在计算救命收益时，返回断层高分 2000
-                save: function(card, player, target) {
-                    if (player.countCards('hes', {suit: 'heart'}) > 0) return 2000;
-                    return 0;
-                },
-                result: {
-                    player: function(player) {
-                        // 极大化出牌欲望：只要能印火杀，欲望值 1000
-                        if (_status.currentPhase == player && player.countCards('hes', {suit: 'diamond'})) return 1000;
-                        return 1;
-                    }
-                },
-                // 诱导卖血：不拦截伤害锦囊
-                onWuxie: function(card, player, target) {
-                    if (target == player && get.tag(card, 'damage') && player.hasCard(c => get.suit(c) == 'heart', 'h')) return 0;
-                }
-            },
+            // ⚠ 这里原本还有一份 ai（被后面那份整份覆盖、从未生效）→ 已记入 ai/sgz_zhaoyun.js 的注释
 
             // === 核心 AI 注入：龙霄转化选牌逻辑（优先多张，3→2→1） ===
-            check: function(card) {
-                var player = _status.event.player;
-                var suit = get.suit(card, player);
-                var evt = _status.event;
-                var selected = ui.selected.cards.length;
-
-                // 寻找当前濒死角色
-                var dying = evt.dying || (evt.getParent && evt.getParent().dying) || (_status.dying && _status.dying[0]);
-
-                // ———— 红桃：转化桃（救自己/队友，按缺口定张数） ————
-                if (suit == 'heart') {
-                    var target = dying;
-                    if (!target || get.itemtype(target) !== 'player') return 0;
-                    var att = get.attitude(player, target);
-                    if (att <= 0) return 0;   // 不救敌人
-
-                    if (target == player) {
-                        // 救自己：缺口越大张数越多
-                        if (target.hp <= -2) return (selected < 3 ? 5000 : 0);
-                        if (target.hp == -1) return (selected < 2 ? 5000 : 0);
-                        return (selected < 1 ? 5000 : 0);
-                    }
-                    // 救队友：按队友缺口（需求3）
-                    if (target.hp == 0) return (selected < 1 ? 3000 : 0);      // 0血：1张
-                    if (target.hp == -1) return (selected < 2 ? 3600 : 0);     // -1血：2张
-                    if (target.hp <= -2) {
-                        // 更低：高价值队友才用3张救，否则放弃
-                        if (att > 2 && selected < 3) return 4200;
-                        return 0;
-                    }
-                    return 0;
-                }
-
-                // ———— 方块：转化火杀（无距离次数限制） ————
-                if (suit == 'diamond') {
-                    // 出牌阶段主动火杀：尽量用满（3>2>1）
-                    if (evt.name == 'chooseToUse' || _status.currentPhase == player) {
-                        return (selected < 3 ? 240 : 0);
-                    }
-                    // 响应阶段：有红桃时不出杀响应（主动卖血扣血），否则才用方块响应
-                    if (player.countCards('h', {suit: 'heart'}) > 0 && !player.isDying()) {
-                        return 0;
-                    }
-                    return (selected < 1 ? 180 : 0);
-                }
-
-                // ———— 梅花：当闪 ————
-                if (suit == 'club') {
-                    // 需求4：手里有3张梅花时，即使有红桃也转化3张梅花来闪避
-                    if (selected < 3 && player.countCards('h', {suit: 'club'}) >= 3) {
-                        return 260;
-                    }
-                    // 其余：配合“有红桃不闪避”，无红桃才用梅花当闪（优先3张）
-                    if (player.countCards('h', {suit: 'heart'}) > 0 && !player.isDying()) return 0;
-                    return (selected < 3 ? 70 : 0);
-                }
-
-                // ———— 黑桃：当无懈可击 ————
-                if (suit == 'spade') {
-                    // 黑桃当无懈通常总是赚，优先多张（3>2>1）
-                    return (selected < 3 ? 90 : 0);
-                }
-
-                return 0;
-            },
+            check: helpers.sgz_longxiao_check,
 
             hiddenCard: function(player, name) {
                 if (name == "tao" && player.countCards("hes", { suit: "heart" }) > 0) return true;
@@ -448,6 +276,7 @@ export default {
             group: ["sgz_longxiao_modify", "sgz_longxiao_recover", "sgz_longxiao_after", "sgz_longxiao_directhit"],
             subSkill: {
                 modify: {
+                    persevereSkill: true,
                     trigger: { player: "useCard1" },
                     forced: true,
                     silent: true,
@@ -489,6 +318,7 @@ export default {
                     }
                 },
                 recover: {
+                    persevereSkill: true,
                     trigger: { global: "recoverBegin" },
                     forced: true,
                     silent: true,
@@ -513,6 +343,7 @@ export default {
                     }
                 },
                 after: {
+                    persevereSkill: true,
                     trigger: { player: ["useCardAfter", "respondAfter"] },
                     forced: true,
                     popup: false,
@@ -556,6 +387,7 @@ export default {
                     }
                 },
                 directhit: {
+                    persevereSkill: true,
                     trigger: { player: 'useCardToTargeted' },
                     forced: true,
                     popup: false,
@@ -567,7 +399,7 @@ export default {
                     }
                 }
             },
-            ai: { save: true, respondSha: true, respondShan: true, respondWuxie: true, order: 4, result: { player: 1 } }
+            ai: AI.sgz_longxiao,
         },
         // === 3. 劫烬  ===
         sgz_jiejin: {
@@ -579,10 +411,11 @@ export default {
                 name: "劫烬",
                 content: "mark",
             },
-            ai:{expose: 0.6,},
+            ai: AI.sgz_jiejin,
             group: ["sgz_jiejin_effect", "sgz_jiejin_gain", "sgz_jiejin_dying"],
             subSkill: {
                 effect: {
+                    persevereSkill: true,
                     trigger: {
                         player: ["useCard", "respond"],
                     },
@@ -619,6 +452,7 @@ export default {
                     }
                 },
                 gain: {
+                    persevereSkill: true,
                     trigger: { global: "phaseZhunbeiBegin" },
                     forced: true,
                     silent: true,
@@ -630,6 +464,7 @@ export default {
                     }
                 },
                 dying: {
+                    persevereSkill: true,
                     trigger: { player: "dying" },
                     forced: true,
                     silent: true,
@@ -648,11 +483,25 @@ export default {
     },
     skillTranslate: {
         sgz_guzhi: "孤峙",
-        sgz_guzhi_info: "锁定技，①你的手牌上限+X（X为你的体力上限）；②当你进入或脱离濒死状态时摸一张牌。③回合外你的手牌数始终不小于2。④你的体力值始终不大于1，体力上限始终不大于7。⑤你单次受到的伤害不大于你已损失体力值与游戏轮数。",
+        sgz_guzhi_info: 
+            "锁定技，①你的手牌上限+X（X为你的体力上限）；" +
+            "②当你进入或脱离濒死状态时摸一张牌。" +
+            "③回合外你的手牌数始终不小于2。" +
+            "④你的体力值始终不大于1，体力上限始终不大于7。" +
+            "⑤你单次受到的伤害不大于你已损失体力值与游戏轮数。",
         sgz_longxiao: "龙霄",
-        sgz_longxiao_info: "你可以将1至3张花色相同的牌当做对应牌使用或打出并根据其数量与花色执行对应效果：<br>♥️当【桃】；两张：目标增加一点体力上限且回复量+1；三张：目标增加两点体力上限并回满体力。<br>♦️当火【杀】（无距离次数限制且不可被响应）；两张：伤害+1；三张：伤害改为等同于目标的体力与护甲之和且至少为3。<br>♠️当【无懈可击】：两张：获得当前回合角色一张牌；三张：不可被响应且摸两张牌。<br>♣️当【闪】：两张：获得当前回合角色一张牌；三张：弃置一名角色所有牌。<br>若你依此法使用或打出了2或3张牌，你增加一点体力上限。",
+        sgz_longxiao_info: 
+            "你可以将1至3张花色相同的牌当做对应牌使用或打出并根据其数量与花色执行对应效果：" +
+            "<br>♥️当【桃】；两张：目标增加一点体力上限且回复量+1；三张：目标增加两点体力上限并回满体力。" +
+            "<br>♦️当火【杀】（无距离次数限制且不可被响应）；两张：伤害+1；三张：伤害改为等同于目标的体力与护甲之和且至少为3。" +
+            "<br>♠️当【无懈可击】：两张：获得当前回合角色一张牌；三张：不可被响应且摸两张牌。" +
+            "<br>♣️当【闪】：两张：获得当前回合角色一张牌；三张：弃置一名角色所有牌。" +
+            "<br>若你依此法使用或打出了2或3张牌，你增加一点体力上限。",
         sgz_jiejin: "劫烬",
-        sgz_jiejin_info: "<span style='color:#FF0000;'><strong>蓄力技</strong></span>(0/7)，①<span style='color:#00FF00;'>蓄力</span>：每名角色回合开始时或你进入濒死状态时。<br>②当你发动“龙霄”时，你可以消耗1点蓄力点并执行相应效果：若在你的回合内/外，你获得一名其他角色/当前回合角色的一张牌。",
+        sgz_jiejin_info: 
+            "<span style='color:#FF0000;'><strong>蓄力技</strong></span>(0/7)，" +
+            "①<span style='color:#00FF00;'>蓄力</span>：每名角色回合开始时或你进入濒死状态时。" +
+            "<br>②当你发动〖龙霄〗时，你可以消耗1点蓄力点并执行相应效果：若在你的回合内/外，你获得一名其他角色/当前回合角色的一张牌。",
     },
     characterTaici:{
         "sgz_guzhi":{order: 1,content:"九阳断魂，斩却三尸，脱凡蜕而化应龙!/潜龙在渊，声震九天，身可战于四野!"},

@@ -1,3 +1,5 @@
+import AI, { helpers } from "../ai/mfsd_anyuanmofa.js";
+
 export default {
     character: {
         mfsd_anyuanmofa: {
@@ -27,7 +29,7 @@ export default {
                     return "已发动 " + (storage || 0) + " 次<br>共约13次";
                 }
             },
-            ai:{threaten: 99,},
+            // ⚠ 这里原本还有一份 ai（被后面那份整份覆盖、从未生效）→ 已记入 ai/mfsd_anyuanmofa.js 的注释
             // 初始化标记为 0，防止开局显示 undefined
             init: function(player) {
                 if (player.storage.mfsd_guishi === undefined) {
@@ -39,14 +41,7 @@ export default {
                     if (card.name == 'sha') return num+player.countMark('mfsd_guishi');
                 },
                 //禁疗逻辑：不吃桃
-                aiOrder: function(player, card, num) {
-                    // 鬼噬标记 ≤10：绝对不吃桃/回血牌
-                    if (player.countMark('mfsd_guishi') <= 10) {
-                        if (get.tag(card, 'recover')) return -100;
-                        if (player.isDying() && (card.name == 'tao' || card.name == 'jiu')) return -1000; 
-                    }
-                    return num;
-                },
+                aiOrder: helpers.mfsd_guishi_aiOrder,
                 // 新增：AI 绝对不解锁自己的铁索连环
                 aiUnchain: function(player) {
                     if (player.countMark('mfsd_guishi') <= 10) {
@@ -87,29 +82,10 @@ export default {
                 }
             },
             // === 核心AI重写：只攻不防逻辑 ===
-            ai: {
-                // 留牌价值 (决定弃牌阶段留什么)
-                value: function(card, player) {
-                    // 如果是伤害类卡牌（杀、决斗、南蛮等），大幅提升保留价值
-                    if (get.tag(card, 'damage')) return get.value(card, player) + 20;
-                    // 如果是防御/回复类卡牌（闪、无懈、桃），价值归零（诱导弃置）
-                    if (get.tag(card, 'respondShan') || get.tag(card, 'recover') || card.name == 'wuxie') return 0;
-                    // 装备牌和其他功能牌保留价值极低
-                    return get.value(card, player) * 0.1;
-                },
-                // 使用价值 (决定出牌阶段用什么)
-                useful: function(card, player) {
-                    // 极度倾向于使用伤害牌
-                    if (get.tag(card, 'damage')) return get.useful(card, player) + 20;
-                    // 非伤害类牌的使用欲望减半
-                    return get.useful(card, player) * 0.5;
-                },
-                // 配合“只攻不防”：告诉AI即便没闪也没关系，反正有鬼噬
-                noShan: true,
-                threaten: 2.5
-            },
+            ai: AI.mfsd_guishi,
             subSkill: {
                 return: {
+                    persevereSkill: true,
                     trigger: { global: "phaseAfter" },
                     forced: true,
                     silent: true,
@@ -142,7 +118,7 @@ export default {
             persevereSkill: true,
             trigger: { player: "phaseZhunbeiBegin" },
             forced: true,
-            ai:{expose: 1,},
+            ai: AI.mfsd_zhouyv,
             content: function() {
                 "step 0"
                 player.chooseTarget('咒域：横置任意名角色并获得其一张牌', [1, Infinity], function(card, player, target) {
@@ -181,7 +157,7 @@ export default {
             filter: function(event, player) {
                 return event.num > 0 && event.player.isAlive() && event.player != player;
             },
-            ai:{expose: 0.5,},
+            ai: AI.mfsd_jiangming,
             content: function() {
                 "step 0"
                 player.chooseBool('是否发动【降冥】令伤害+1并变为火焰伤害？、').set('ai', function() {
@@ -268,9 +244,7 @@ export default {
             filter: function(event, player) {
                 return player.countCards('h') > 0 && event.player != player;
             },
-            check: function(event, player) {
-                return get.attitude(player, event.player) <= 0;
-            },
+            check: helpers.mfsd_xiongtun_check,
             content: function() {
                 "step 0"
                 player.trySkillAnimate('mfsd_xiongtun', 'key');
@@ -280,17 +254,7 @@ export default {
                 trigger.cancel();
                 trigger.player.die(player);
             },
-            ai: {
-                expose: 1,
-                order: 20, 
-                result: {
-                    target: function(player, target) {
-                        if (get.attitude(player, target) > 0) return 0;
-                        // 目标威胁越大，AI越想去拆他的牌
-                        return -get.threaten(target);
-                    }
-                }
-            },
+            ai: AI.mfsd_xiongtun,
         }
     },
     skillTranslate: {

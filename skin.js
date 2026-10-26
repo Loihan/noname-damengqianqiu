@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 //  大梦千秋 · 皮肤 / 特效注册（千幻聆音 · 十周年UI · 无名美化 对接）
 // ============================================================
 //  本文件做两件事（都只在本扩展内完成，不改任何其它扩展文件）：
@@ -57,6 +57,10 @@ const DMQC_JIANGWEI_STATIC_KEY = "敕剑伏波(静)";
 /// 梦姜维两张皮的皮肤名（以代码/素材为准：是「伏」不是「浮」）
 const DMQC_JIANGWEI_DYNAMIC = "炽剑补天";
 const DMQC_JIANGWEI_AWAKENED = "敕剑伏波";
+/// 梦黄月英的动皮（原黄月英的「惊鸿一瞥」，十周年UI 本体数据在 huangyueying 段）
+const DMQC_HUANGYUEYING_JINGHONG = "惊鸿一瞥";
+/// 该皮待机骨骼名（用来判断「当前正在播的是不是这张皮」）
+const DMQC_JINGHONG_SPINE = "黄月英/惊鸿一瞥/daiji";
 
 // ============================================================
 //  梦曹髦 · 「枭龙破渊」系列（两张动皮 + 腾渊变身）
@@ -108,6 +112,28 @@ const DMQC_WEIYAN_KUANGZHI2 = "狂志吞天2";
 /// 两条骨骼的路径（用于判断「当前立绘是哪张」→ 决定壮誓用哪种形态的特效）
 const DMQC_WEIYAN_KUANGZHI_SPINE = "势魏延/狂志吞天/XingXiang";
 const DMQC_WEIYAN_KUANGZHI2_SPINE = "势魏延/狂志吞天2/XingXiang";
+
+// ============================================================
+//  梦陆逊 · 三张动皮 + 局内条件自动切换
+// ============================================================
+//  需求（2026）：
+//    · ① 原陆逊皮肤「蛇年清明」  ② 原陆逊皮肤「烈火炽天」  ③ 原周瑜皮肤「烈焰炽魂」
+//    · 默认 + **每轮开始时** → ①
+//    · 发动【焚灭】后 → ②
+//    · 发动【韬晦】后 → ③
+//  素材位置（全部已存在，**不复制骨骼**）：
+//    · ①② 数据：`十周年UI/js/dynamicSkin.js:20339-20353`、`20403-20417`（`luxun` 段）
+//      素材：`十周年UI/assets/dynamic/陆逊/蛇年清明/`、`.../烈火炽天/`
+//    · ③ 数据：`十周年UI/js/dynamicSkin.js:44466-44486`（`zhouyu` 段，骨骼名就是 `周瑜/烈焰炽魂/...`）
+//      素材：`十周年UI/assets/dynamic/周瑜/烈焰炽魂/`
+//      ⚠ ③ 是**周瑜**的皮，骨骼/贴图都在 `周瑜/` 目录下；数据里 `name` 就指向那个路径，
+//        所以放在梦陆逊身上不需要搬素材（骨骼根目录写死 `assets/dynamic/`，跨武将引用没问题）。
+//    · 静皮：三张都复制到了本包 `skin/image/sgz_luxun/<皮肤名>.jpg`（来自千幻 `sanguoskin/`）
+const DMQC_LUXUN_MING = "蛇年清明"; // ①
+const DMQC_LUXUN_HUO = "烈火炽天"; // ②
+const DMQC_LUXUN_ZHOU = "烈焰炽魂"; // ③（周瑜的皮）
+/// 三个形态按需求顺序排列，索引 0/1/2 ↔ ①/②/③
+const DMQC_LUXUN_SKINS = [DMQC_LUXUN_MING, DMQC_LUXUN_HUO, DMQC_LUXUN_ZHOU];
 
 // ============================================================
 //  梦孙寒华 · 「威灵尽显」
@@ -164,7 +190,7 @@ const DMQC_ZHONGHUI_VIDEO_ONLY_MINE = false;
 
 // ── 第二段视频：**非首次**矫诏时的演出（不中断游戏）────────────────────
 /// 视频文件（已放在本扩展 video/ 下）
-const DMQC_ZHONGHUI_VIDEO_SUB = "extension/大梦千秋/video/sgz_zhonghui1.mp4";
+const DMQC_ZHONGHUI_VIDEO_SUB = "extension/大梦千秋/video/sgz_zhonghui.mp4";
 /// ★★★ 小视频大小 ★★★（height:"auto" 保持比例）
 const DMQC_ZHONGHUI_VIDEO_SUB_SIZE = { width: "50%", height: "auto" };
 /// ★★★ 位置模式 ★★★
@@ -191,6 +217,30 @@ const DMQC_ZHONGHUI_VIDEO_SUB_SOUND = true;
 ///     · 本扩展的**中央大视频** `DMQC_ZHONGHUI_VIDEO_ZINDEX = 80`（那个要盖住一切，不动）
 ///   调法：被武将牌/手牌挡住 → 往上加；还盖住不该盖的东西 → 继续往下压。
 const DMQC_ZHONGHUI_VIDEO_SUB_ZINDEX = 5;
+
+// ============================================================
+//  梦甘宁 · 「战破无间」 ／ 梦文鸯 · 「势若万钧」
+// ============================================================
+//  需求：把**本体武将**的两张皮借用给本包的两个新武将。
+//  素材位置（骨骼/背景全部复用十周年UI，**不复制**；只复制了一张 412KB / 306KB 的静皮）：
+//    · 梦甘宁 ← 本体「神甘宁」（`shen_ganning`）
+//        数据：十周年UI/js/dynamicSkin.js 的 `dynamicSkin.shen_ganning.战破无间`（≈24534 行）
+//        静皮：extension/千幻聆音/sanguoskin/shen_ganning/战破无间.jpg
+//    · 梦文鸯 ← 本体「文鸯」（⚠ **`db_wenyang`**，不是 `wenyang`）
+//        数据：十周年UI/js/dynamicSkin.js 的 `dynamicSkin.db_wenyang.势若万钧`（≈31898 行）
+//        静皮：extension/千幻聆音/sanguoskin/db_wenyang/势若万钧.jpg
+//      ⚠ 为什么是 `db_wenyang`：十周年UI 里 `db_wenyang`（手杀文鸯）和 `wenyang`（另一版文鸯）
+//        是**两个条目**，`势若万钧` 只挂在 `db_wenyang` 下面（`wenyang` 下面是「万军披靡」）。
+//        千幻的皮肤目录也是 `sanguoskin/db_wenyang/`，两边对得上。
+//      ⚠ 静皮**必须**真的放进本包 `skin/image/<武将>/<皮肤名>.jpg`：
+//        千幻取图的三条路里，只有第③条对本包 `sgz_*` 武将生效（详见上一节 孙寒华 的说明）。
+//  数据要点：这两张皮**都没有** gongji / teshu / chuchang / shizhounian，
+//    只有「待机立绘 + 背景」⇒ 不会多出出框动作或出场动画，与需求一致。
+const DMQC_GANNING_ZHANPO = "战破无间";
+const DMQC_WENYANG_SHIRO = "势若万钧";
+/// 两张皮的骨骼路径（将来要判断「当前是不是这张皮」时用得上）
+const DMQC_GANNING_ZHANPO_SPINE = "神甘宁/战破无间/XingXiang";
+const DMQC_WENYANG_SHIRO_SPINE = "文鸯/势若万钧/XingXiang";
 
 // ============================================================
 //  梦赵云 · 四张「龙霄花色皮」
@@ -337,6 +387,21 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 		//     即：没有出框动作、没有技能特效、没有出场动画，只有待机立绘 + 背景。
 		//     这也正好符合「只加立绘、不额外加动作」的需求，无需再进 DMQC_SKIN_STRIP_ACTIONS。
 		{ char: "sgz_sunhanhua", src: "sunhanhua", skins: [DMQC_SUNHANHUA_WEILING] },
+		// 梦甘宁：战破无间（本体「神甘宁」shen_ganning 的皮，数据原样引用）
+		//   ⚠ 数据里没有 gongji / teshu / chuchang / shizhounian ⇒ 只有待机立绘 + 背景。
+		{ char: "sgz_gannin", src: "shen_ganning", skins: [DMQC_GANNING_ZHANPO] },
+		// 梦文鸯：势若万钧（本体「文鸯」，⚠ 键是 `db_wenyang` 不是 `wenyang`，见上方第 2 节说明）
+		{ char: "sgz_wenyang", src: "db_wenyang", skins: [DMQC_WENYANG_SHIRO] },
+		// 梦陆逊：三张皮。
+		//   ⚠ ① 直接引用 `luxun` 段原数据（**一个字都不改**）；
+		//   ⚠ ②③ 的**出框攻击动作**用下面的 `DMQC_SKIN_PATCHES` 打补丁 ——
+		//     只覆盖 `gongji` 一个键，框内（待机）的 x/y/scale/angle/beijing 全部沿用本体，
+		//     不抄、不改、也不覆盖。
+		//   ⚠ ③「烈焰炽魂」是**周瑜**的皮，在 `luxun` 段里没有 → 用 `srcBySkin` 指定它的来源是 `zhouyu`。
+		{ char: "sgz_luxun", src: "luxun", srcBySkin: { [DMQC_LUXUN_ZHOU]: "zhouyu" }, skins: DMQC_LUXUN_SKINS },
+		// 梦黄月英：原黄月英的「惊鸿一瞥」（十周年UI 本体 huangyueying 段原样引用）
+		//   出框攻击动作的位置/大小在下面 DMQC_SKIN_PATCHES 里单独留了参数。
+		{ char: "sgz_huangyueying", src: "huangyueying", skins: [DMQC_HUANGYUEYING_JINGHONG] },
 	];
 	// 郭嘉「以身证道」用自己目录的真实骨骼（覆盖本体那份串了路径的数据）；
 	// 诸葛诞「寿春举义」按需求**去掉攻击/技能动作**（gongji / teshu），只留待机与背景；
@@ -454,27 +519,30 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 				y: [0, 0.35],
 				scale: 0.4,
 				angle: 0,
-				// ⚠⚠ 本体数据自带的 `alpha: true` / `unpackPremultipliedAlpha: true` —— 这里**只关 `alpha`**：
-				//   · `alpha` 在「皮肤切换」自己的 spine 运行时里**就是 premultipliedAlpha**
-				//     （皮肤切换/animations.js:196 `this.premultipliedAlpha = initParam.alpha`，
-				//      由 dynamicWorker.js:94 `sprite.alpha = player.alpha` 传进来）；
-				//   · 而这两张贴图**实测是直通 alpha（非预乘）**：逐像素统计全部 12 页，
-				//     `max(R,G,B) > A` 的像素占 20%~94%（预乘图不可能出现这种像素）。
-				//   ⇒ 「按预乘混合 + 直通贴图」= 退化成**加色叠加**，红色越叠越亮 —— 这就是「红色过浓」。
-				//     `狂志吞天2` 的数据里**没有**这个键，观感正常，正好互为对照。
-				//   · `unpackPremultipliedAlpha` 这套扩展里**没有任何代码读它**（全目录搜过）→ 空键，留着无害。
-				// ── 三次实验记录（务必保留，别再绕回去）────────────────────────
-				//   ① `alpha:false` + 我额外加的 `premultipliedAlpha:false`  → 出现「中间+左右三块红斑」
-				//      ⚠ `premultipliedAlpha` 是**十周年UI 侧的键**（十周年UI/js/animation.js:863），
-				//        **上游从来没设过它** —— 那块红斑多半就是它引入的，所以现在**不再写它**。
-				//   ② 回滚成 `alpha:true`（本体原值）                        → 红色更浓（加色叠加）
-				//   ③ 现在：**只把 `alpha` 设为 false**，其余一概保持本体原值 ← 直通贴图配直通混合
+				// ⚠⚠ `alpha` 在「皮肤切换」的 spine 运行时里**就是 premultipliedAlpha**
+				//   （皮肤切换/animations.js:196 `this.premultipliedAlpha = initParam.alpha`，
+				//    由 dynamicWorker.js:94 `sprite.alpha = player.alpha` 传进来）。
+				// ── 实验记录（务必保留，别再绕回去）────────────────────────────
+				//   ① `alpha:false` + 额外 `premultipliedAlpha:false` → 中间+左右三块红斑
+				//   ② `alpha:true`（上游原值）                        → 红色更浓（加色叠加）
+				//   ③ `alpha:false`（只关 alpha）                     → 身前/身后各一块亮红色光斑
+				//   ④ 再试 `alpha:true`                               → **光斑更严重**（用户实测），已回滚
+				//   ⑤ 摘掉 `beijing` 背景骨骼层                        → 光斑仍在 ⇒ 不在背景层
+				//   ⑥ 离线解析 skel：一形态有 17 个 **`screen`** 混合槽位，二形态是 0 个
+				//   ⑦ 试 `player.hideSlots` → **无效**（它只喂「部件列表」查询，渲染不读）
+				//   ⑧ 【已修复】改**图集**：把 screen 层实际存在的 7 个 region 指到 1×1 全透明
+				//      贴图 `dmqc_blank.png` → 光斑消失（用户实测"修好了"）。
+				//      涉及 region：r-htx9 r-htx10 r-htx11 r-htx12 r-htx13 r-guang1 r-tx1
+				//      原始图集备份：`XingXiang.atlas.dmqc.bak`（同目录，改坏了能还原）
+				//   ⇒ 结论：光斑**不是 alpha 造成的**，别再动它；病根是 screen 混合层，
+				//      已用图集消融彻底解决（自检见 `__dytest/check_weiyan_atlas.mjs`）。
 				alpha: false,
 				unpackPremultipliedAlpha: true,
 				gongji: {
 					alpha: false,
 					unpackPremultipliedAlpha: true,
 				},
+				// 背景骨骼（已恢复）。摘掉它光斑仍在 → 与这一层无关，务必保留。
 				beijing: {
 					name: "势魏延/狂志吞天/BeiJing",
 					scale: 0.3,
@@ -534,6 +602,42 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 				},
 			},
 		},
+		// 梦甘宁「战破无间」—— 逐字抄自 十周年UI/js/dynamicSkin.js:24533-24552（本体 神甘宁 `shen_ganning`），
+		// **只多加了下面那个 `gongji` 块**（需求：出框攻击特效从「屏幕中央」挪到「屏幕右下角」，大小不变）。
+		//  ⚠ 本体这张皮**没有 `gongji` 键** ⇒ 走 皮肤切换/chukuangWorker.js:664-672 的兜底默认分支：
+		//      `x/y = [0, 0.5] / [0, 0.5]`（= **屏幕正中央**，这就是"现在在中央"的原因）、
+		//      `scale = player.scale`（= 顶层那个 0.41）、`action = 'GongJi'`。
+		//  ★★★ 想细调出框位置/大小，**只改下面 `gongji` 里的三个数** ★★★
+		//    · `x: [像素, 比例]` —— 比例 = **屏幕宽度**的百分比：0 = 左边缘，0.5 = 正中，1 = 右边缘；
+		//      第一个数是像素微调（渲染时会乘 dpr），例：`[-80, 0.78]` = 再往左挪 80px。
+		//    · `y: [像素, 比例]` —— 比例 = **屏幕高度**的百分比，⚠ **从屏幕底边往上算**：
+		//      0 = 贴底边，0.5 = 正中，1 = 顶边 ⇒ 「右下角」= x 大、**y 小**。
+		//    · `scale` —— 出框大小。**与顶层 0.41 相同 = 和现在完全一样大**（顶层那个管待机立绘，别混）。
+		//  ⚠ 换算公式在 皮肤切换/animations.js:243-249 与 十周年UI/js/animation.js:190-196 完全一致：
+		//    `像素 = value[0] * dpr + value[1] * referSize`；出框节点**没有 referNode**，
+		//    所以 referSize 就是**整块画布**（= 屏幕）—— 这才有"[0,0.5] 落在正中央"的表现。
+		//  ⚠ 待机那几项（顶层 name/x/y/angle/scale/beijing）必须与本体逐字一致，别顺手改，会动到站姿。
+		sgz_gannin: {
+			[DMQC_GANNING_ZHANPO]: {
+				name: "神甘宁/战破无间/XingXiang",
+				x: [0, -0.54],
+				y: [0, 0.54],
+				angle: 1,
+				scale: 0.41, // ← 待机立绘大小（本体原值，勿动）
+				gongji: {
+					// 出框攻击特效：屏幕右下角（原来是 [0,0.5] / [0,0.5] = 正中央）
+					x: [0, 0.85], // ★ 横向：越大越靠右（1 = 右边缘）
+					y: [0, 0.20], // ★ 纵向：**从底边往上算**，越小越靠下（0 = 贴底边）
+					scale: 0.41, // ★ 出框大小：与原来一致（= 顶层 scale）
+				},
+				beijing: {
+					name: "神甘宁/战破无间/BeiJing",
+					scale: 0.3,
+					x: [0, 0.4],
+					y: [0, 0.5],
+				},
+			},
+		},
 	};
 	// 需要「去掉动作」的皮肤：注入时删掉**指定**的动作键（本体没写也照样删，防以后补上）
 	//   · 梦姜维「炽剑补天」：去掉**技能触发特效**（`teshu` = action "jineng"）
@@ -549,7 +653,140 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 	const DMQC_SKIN_STRIP_ACTIONS = {
 		sgz_zhugedan: { 寿春举义: ["gongji", "teshu", "shan", "shizhounian"] },
 		sgz_jiangwei: { 炽剑补天: ["teshu", "shizhounian"] },
+		// 梦陆逊 ③「烈焰炽魂」：**删掉 `chuchang`（回合开始的出场动画）**
+		//   · 谁在播它：皮肤切换的 `_checkDcdChuChang`（皮肤切换/extension.js:626-637）
+		//     `trigger: { global: "phaseBefore" }`，filter 里就一句
+		//     `player.dynamic.primary.player.chuchang` —— 有这个键就播。
+		//   · 所以只要把数据里的 `chuchang` 删掉，回合开始就不会再播那段动画。
+		//   · 只删这一张（①②本来就没有 `chuchang`，不受影响）。
+		sgz_luxun: { [DMQC_LUXUN_ZHOU]: ["chuchang"] },
 	};
+	// ---- 3e. 梦陆逊三张动皮的「全部参数」（要改就改这里）----
+	//  为什么参数全写在这里：
+	//    · 这三张皮是**本扩展注入**的（十周年UI 本体没有 `sgz_luxun`），而「皮肤切换」的
+	//      调参保存只对「已存在的条目」生效、且它写盘要求能按骨骼名反查到皮肤名 ——
+	//      对 ②烈火炽天 / ③烈焰炽魂（后者骨骼属于**周瑜**）实测**根本存不下来**
+	//      （`extension/皮肤切换/saveSkinParams.js` 里从来就没有 `sgz_luxun` 这一项）。
+	//    · 所以干脆**参数就写死在扩展里**：局内调参面板改的值不会保留（别再依赖它），
+	//      要改就改下面这三段数字，保存后重启游戏即生效。
+	//  ⚠ 合并方式：`DMQC_SKIN_PATCHES` 是**深合并**（只覆盖写到的键），
+	//    没写的键继续用十周年UI 本体那份（名字/出场/背景等都不必抄）。
+	//  ⚠ 数值含义（三个皮肤通用）：
+	//    · x: [0, v]  → 水平位置，v = 屏幕宽度的比例（可为负，往左）
+	//    · y: [0, v]  → 垂直位置，**从底边往上算**（0.22 = 离底边 22%）
+	//    · scale      → 缩放（待机立绘的大小）
+	//    · angle      → 旋转角度（度）
+	//    · beijing    → **背景层**自己的一套 x / y / scale（和立绘是分开的）
+	//    · gongji     → **出框攻击动作**：位置 / 大小 / 速度（speed：1 = 原速）
+	const DMQC_SKIN_PATCHES = {
+		sgz_luxun: {
+			// ============ ① 蛇年清明（默认 / 每轮开始）============
+			[DMQC_LUXUN_MING]: {
+				// ↓↓↓ 框内（待机）位置与大小 —— 要调就改这四行 ↓↓↓
+				x: [0, 1.5],
+				y: [0, 0.3],
+				scale: 0.4,
+				angle: -13,
+				beijing: {
+					scale: 0.3,
+					x: [0, 0.69],
+					y: [0, 0.5],
+				},
+				// 本皮骨骼里**没有 GongJi**（只有 ChuChang / DaiJi / TeShu），所以不出框、不写 gongji。
+			},
+			// ============ ② 烈火炽天（发动【焚灭】后）============
+			[DMQC_LUXUN_HUO]: {
+				// ↓↓↓ 框内（待机）位置与大小 ↓↓↓
+				x: [0, -0.05],
+				y: [0, 0.45],
+				scale: 0.3,
+				angle: 0,
+				beijing: {
+					scale: 0.3,
+					x: [0, 0.76],
+					y: [0, 0.5],
+				},
+				// ↓↓↓ 出框攻击动作 ↓↓↓
+				gongji: {
+					name: "陆逊/烈火炽天/XingXiang",
+					x: [0, 0.62],
+					y: [0, 0.3],
+					scale: 0.8,
+					action: "GongJi",
+					speed: 2,
+				},
+			},
+			// ============ ③ 烈焰炽魂（发动【韬晦】后，周瑜的皮）============
+			[DMQC_LUXUN_ZHOU]: {
+				// ↓↓↓ 框内（待机）位置与大小 ↓↓↓
+				x: [0, 0.47],
+				y: [0, 0.47],
+				scale: 0.3,
+				// 背景是本皮的 PNG（`周瑜/烈焰炽魂/beijing.png`），不是骨骼，参数在 background 里，这里不动。
+				// ↓↓↓ 出框攻击动作 ↓↓↓
+				gongji: {
+					x: [0, 0.8],
+					y: [0, 0.48],
+					scale: 0.57,
+					speed: 1.35,
+				},
+			},
+		},
+		// ================= 梦黄月英 · 惊鸿一瞥 ==================
+		//  出框攻击动作（GongJi）的**位置与大小**：要调就改这一段，改完重启游戏生效。
+		//   · x: [0, v] → 水平位置（v = 屏幕宽度比例，负数往左）
+		//   · y: [0, v] → 垂直位置（**从底边往上**算）
+		//   · scale    → 缩放（越大越占屏）
+		//   · action   → 骨骼里的动画名（这张皮是 GongJi）
+		//   · speed    → 播放速度（1 = 原速；可不写）
+		//  ⚠ 只覆盖 gongji 一个键，待机立绘/指示线/背景全部沿用本体数据。
+		sgz_huangyueying: {
+			// ⚠ 这里**必须写字面量**皮肤名（不能用 [DMQC_HUANGYUEYING_JINGHONG] 计算键）：
+			//   自检脚本会把这段参数表整块 eval 出来核对数值，计算键在那边没有作用域。
+			"惊鸿一瞥": {
+				gongji: {
+					name: "黄月英/惊鸿一瞥/xingxiang",
+					x: [0, 0.8],
+					y: [0, 0.48],
+					scale: 0.57,
+					action: "GongJi",
+				},
+			},
+		},
+	};
+	/// 深拷贝皮肤数据（纯 JSON 结构：对象/数组/原始值）
+	function dmqcCloneSkinData(v) {
+		if (Array.isArray(v)) return v.map(dmqcCloneSkinData);
+		if (v && typeof v === "object") {
+			const out = {};
+			for (const k in v) out[k] = dmqcCloneSkinData(v[k]);
+			return out;
+		}
+		return v;
+	}
+	/// 深合并：把 patch 递归并到 base 上（数组整体替换），**不修改** base 本体
+	/// ⚠ 未被打补丁的嵌套对象也要**复制一份**，否则后面「应用玩家保存的参数」时
+	///   会顺着同一个引用改到十周年UI 本体那份数据（同场有本体陆逊/周瑜时会被连带改）。
+	function dmqcMergeSkinData(base, patch) {
+		if (patch === undefined) return dmqcCloneSkinData(base);
+		if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
+			return Array.isArray(patch) ? patch.slice() : patch;
+		}
+		const out = base && typeof base === "object" && !Array.isArray(base) ? Object.assign({}, base) : {};
+		for (const key in out) {
+			if (out[key] && typeof out[key] === "object") out[key] = dmqcCloneSkinData(out[key]);
+		}
+		for (const key in patch) {
+			const pv = patch[key];
+			const bv = out[key];
+			if (pv && typeof pv === "object" && !Array.isArray(pv) && bv && typeof bv === "object" && !Array.isArray(bv)) {
+				out[key] = dmqcMergeSkinData(bv, pv);
+			} else {
+				out[key] = Array.isArray(pv) ? pv.slice() : pv;
+			}
+		}
+		return out;
+	}
 	function dmqcInjectMoreDynamicSkins() {
 		if (!window.decadeUI || !window.decadeUI.dynamicSkin) return false;
 		const ds = window.decadeUI.dynamicSkin;
@@ -568,12 +805,27 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 				} else {
 					const override =
 						DMQC_SKIN_OVERRIDES[item.char] && DMQC_SKIN_OVERRIDES[item.char][skinName];
-					if (override) {
+					const patch =
+						DMQC_SKIN_PATCHES[item.char] && DMQC_SKIN_PATCHES[item.char][skinName];
+					// 这张皮的「原数据」在哪个本体段里（默认 item.src；③ 烈焰炽魂是周瑜的皮 → srcBySkin）
+					const baseKey = (item.srcBySkin && item.srcBySkin[skinName]) || item.src;
+					const baseTable = ds[baseKey] || src;
+					const baseData = baseTable && baseTable[skinName];
+					if (patch) {
+						// 只改 patch 里写到的键，框内参数全部沿用本体
+						if (!baseData) {
+							console.warn("[大梦千秋] 打补丁失败（本体没这份动皮数据）：" + baseKey + " / " + skinName);
+						} else {
+							ds[item.char][skinName] = dmqcMergeSkinData(baseData, patch);
+							placed = true;
+						}
+					} else if (override) {
 						ds[item.char][skinName] = override;
 						placed = true;
-					} else if (src[skinName]) {
-						// 引用本体那一份（浅引用即可：播放时千幻会 deepClone）
-						ds[item.char][skinName] = src[skinName];
+					} else if (baseData) {
+						// 复制本体那一份（**不能直接共享引用**：后面应用玩家保存的参数会写进这个对象，
+						// 共享的话会把十周年UI 本体里同名武将的皮肤数据一起改掉）
+						ds[item.char][skinName] = dmqcCloneSkinData(baseData);
 						placed = true;
 					} else {
 						console.warn("[大梦千秋] 十周年UI 里找不到动皮数据：" + item.src + " / " + skinName);
@@ -592,6 +844,7 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 				}
 			}
 		}
+		// 参数全部来自本文件（DMQC_SKIN_PATCHES），不需要再做任何运行期回填。
 		return true;
 	}
 	if (!dmqcInjectMoreDynamicSkins()) {
@@ -609,7 +862,7 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 	//   · 梦小乔（秋水伊人）  → 放宽：使用任意牌都播（原来只播伤害牌）。
 	//   · 梦郭嘉（以身证道）  → 收紧到零：伤害牌**不再**播，改由【极慧】触发（见第 10 节）。
 	//   · 梦钟会（潜蛟觊天 / 潜蛟觊天2，**两个形态都算**） → 收紧到零：伤害牌**不再**播，
-	//     改由【兴伐】触发（见第 10 节）。⚠ 潜蛟觊天现在是默认皮，它的骨骼里同样有 `GongJi`，
+	//     改由【逐月】触发（见第 10 节）。⚠ 潜蛟觊天现在是默认皮，它的骨骼里同样有 `GongJi`，
 	//     所以只挡潜蛟觊天2 是不够的 —— 否则常态下「使用伤害牌」会自动出框。
 	//   · 梦诸葛诞（寿春举义）→ 收紧到零：伤害牌**不再**播，且**没有替代触发**（就是纯粹屏蔽）。
 	// 做法：只在这些角色的条件命中时短路，其它角色完全走原逻辑，互不影响。
@@ -641,6 +894,25 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 	function dmqcIsShouchunJuyi(player) {
 		return dmqcSkinIs(player, DMQC_SHOUCHUN_SPINE);
 	}
+	// 当前立绘是不是梦黄月英的「惊鸿一瞥」（原黄月英的动皮）
+	function dmqcIsJinghongYipie(player) {
+		return dmqcSkinIs(player, DMQC_JINGHONG_SPINE);
+	}
+	// 当前立绘是不是梦孙寒华的「威灵尽显」
+	//   ⚠ 路径常量用文件顶部那个 DMQC_SUNHANHUA_WEILING_SPINE（"孙寒华/威灵尽显/XingXiang"）
+	function dmqcIsWeilingXianxian(player) {
+		return dmqcSkinIs(player, DMQC_SUNHANHUA_WEILING_SPINE);
+	}
+	// 当前立绘是不是梦文鸯的「势若万钧」
+	//   ⚠ 路径常量用文件顶部那个 DMQC_WENYANG_SHIRO_SPINE（"文鸯/势若万钧/XingXiang"）
+	function dmqcIsShiRuoWanjun(player) {
+		return dmqcSkinIs(player, DMQC_WENYANG_SHIRO_SPINE);
+	}
+	// 当前立绘是不是梦甘宁的「战破无间」
+	//   ⚠ 路径常量用文件顶部那个 DMQC_GANNING_ZHANPO_SPINE（"神甘宁/战破无间/XingXiang"）
+	function dmqcIsZhanPoWujian(player) {
+		return dmqcSkinIs(player, DMQC_GANNING_ZHANPO_SPINE);
+	}
 	window.dmqcIsYishenZhengdao = dmqcIsYishenZhengdao;
 
 	function dmqcEnableAnyCardAction() {
@@ -657,10 +929,25 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 		};
 		const wrapped = function (event, player) {
 			try {
-				// 这三张皮：伤害牌不播出框
+				// 这几张皮：伤害牌不播出框
 				//   · 以身证道 / 潜蛟觊天2 → 改由技能触发（见第 10 节）
 				//   · 寿春举义            → 按要求**彻底屏蔽**，没有替代触发
-				if (dmqcIsYishenZhengdao(player) || dmqcIsQianjiaoJitian(player) || dmqcIsShouchunJuyi(player)) return false;
+				//   · 威灵尽显（梦孙寒华）→ 改由「发动妙剑④」触发（见第 10 节）
+				//   · 势若万钧（梦文鸯）  → 改由「使用【惊跃】」触发（见第 10 节）
+				//   · 战破无间（梦甘宁）  → 改由「**即将造成伤害时**」触发（见第 10 节）
+				if (dmqcIsYishenZhengdao(player) || dmqcIsQianjiaoJitian(player) || dmqcIsShouchunJuyi(player) || dmqcIsWeilingXianxian(player) || dmqcIsShiRuoWanjun(player) || dmqcIsZhanPoWujian(player)) return false;
+				// 梦黄月英（惊鸿一瞥）：出框条件改为「使用锦囊牌」
+				//   · 原来是「基本/锦囊 且带 damage 标签」，即只有火攻/南蛮/万箭这类伤害锦囊才出框；
+				//   · 现在只要是**锦囊牌**（get.type2 == 'trick'，含延时锦囊）就出框。
+				if (
+					player &&
+					_status.currentPhase === player &&
+					player.dynamic &&
+					(player.name1 === "sgz_huangyueying" || player.name === "sgz_huangyueying") &&
+					dmqcIsJinghongYipie(player)
+				) {
+					return get.type2(event.card) === "trick";
+				}
 				// 仅当：是梦小乔 + 装备秋水伊人 + 本回合的持有者 + 有动皮
 				if (
 					player &&
@@ -678,7 +965,7 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 		};
 		wrapped.__dmqcWrapped = true;
 		lib.skill._gj.filter = wrapped;
-		console.log("[大梦千秋] 出框动作已改：梦小乔（秋水伊人）→ 使用任意牌；梦郭嘉/梦钟会的伤害牌出框已关闭（改由技能触发）；梦诸葛诞（寿春举义）的出框已屏蔽");
+		console.log("[大梦千秋] 出框动作已改：梦黄月英（惊鸿一瞥）→ 使用锦囊牌；梦小乔（秋水伊人）→ 使用任意牌；梦郭嘉【极慧】/梦钟会【逐月】/梦孙寒华【妙剑④】/梦文鸯【惊跃】的伤害牌出框已关闭（改由技能触发）；梦甘宁（战破无间）→ 改为**即将造成伤害时**触发；梦诸葛诞（寿春举义）的出框已屏蔽");
 		return true;
 	}
 	if (!dmqcEnableAnyCardAction()) {
@@ -695,7 +982,7 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 	// —— 那会表现为皮肤格子是空的。这里把这些武将的缓存清掉，强制下次重扫。
 	try {
 		if (_status && _status.qhly_skinListCache) {
-			for (const id of ["sgz_xiaoqiao", "sgz_jiangwei", "sgz_zhonghui", "sgz_guojia", "sgz_zhugedan", "sgz_machao", "sgz_guanyu", "sgz_caomao", "sgz_weiyan", "sgz_sunhanhua"]) {
+			for (const id of ["sgz_xiaoqiao", "sgz_zhaoyun", "sgz_jiangwei", "sgz_zhonghui", "sgz_guojia", "sgz_zhugedan", "sgz_machao", "sgz_guanyu", "sgz_caomao", "sgz_weiyan", "sgz_sunhanhua", "sgz_gannin", "sgz_wenyang", "sgz_huangyueying"]) {
 				delete _status.qhly_skinListCache[id];
 			}
 		}
@@ -724,6 +1011,10 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 		sgz_weiyan: DMQC_WEIYAN_KUANGZHI + ".jpg",
 		// 梦孙寒华 → 威灵尽显（本包目前唯一一张皮；静皮在 skin/image/sgz_sunhanhua/ 下）
 		sgz_sunhanhua: DMQC_SUNHANHUA_WEILING + ".jpg",
+		// 梦陆逊 → 蛇年清明（默认形态；【焚灭】→烈火炽天、【韬晦】→烈焰炽魂，每轮开始回到这张，见第 8h 节）
+		sgz_luxun: DMQC_LUXUN_MING + ".jpg",
+		// 梦黄月英 → 惊鸿一瞥（原黄月英的动皮；静态预览图在 skin/image/sgz_huangyueying/ 下）
+		sgz_huangyueying: DMQC_HUANGYUEYING_JINGHONG + ".jpg",
 	};
 	try {
 		if (!lib.config.qhly_skinset) {
@@ -782,6 +1073,14 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 		sgz_weiyan: [DMQC_WEIYAN_KUANGZHI + ".jpg", DMQC_WEIYAN_KUANGZHI2 + ".jpg"],
 		// 梦孙寒华：威灵尽显（静皮已放在 skin/image/sgz_sunhanhua/威灵尽显.jpg，这里只是兜底补入列表）
 		sgz_sunhanhua: [DMQC_SUNHANHUA_WEILING + ".jpg"],
+		// 梦甘宁：战破无间（静皮 = skin/image/sgz_gannin/战破无间.jpg，复制自千幻 sanguoskin/shen_ganning）
+		sgz_gannin: [DMQC_GANNING_ZHANPO + ".jpg"],
+		// 梦文鸯：势若万钧（静皮 = skin/image/sgz_wenyang/势若万钧.jpg，复制自千幻 sanguoskin/db_wenyang）
+		sgz_wenyang: [DMQC_WENYANG_SHIRO + ".jpg"],
+		// 梦陆逊：三张动皮各自的静皮（skin/image/sgz_luxun/，复制自千幻 sanguoskin/luxun 与 zhouyu）
+		sgz_luxun: DMQC_LUXUN_SKINS.map(name => name + ".jpg"),
+		// 梦黄月英：惊鸿一瞥（静皮 = skin/image/sgz_huangyueying/惊鸿一瞥.jpg）
+		sgz_huangyueying: [DMQC_HUANGYUEYING_JINGHONG + ".jpg"],
 	};
 	function dmqcEnsureSkinListed() {
 		if (typeof game.qhly_getSkinList !== "function" || game.qhly_getSkinList.__dmqcWrapped) return false;
@@ -928,14 +1227,13 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 	function dmqcInitSwapRules() {
 		DMQC_SWAP_RULES = [
 			{
-				// 梦姜维：伐达 9 时按**当前用的是哪套皮**分流：
+				// 梦姜维：**发动限定技【幽明】时**切换（2026 需求，原来判的是“伐达 9”）。
 				//   · 当前是「炽剑补天」（本包默认皮肤）→ 切成动皮「敕剑伏波」
 				//   · 当前是「原皮/其它静态」→ 只切成静态 2 形态「敕剑伏波(静)」
-				//     （即不再把立绘写死成 sgz_jiangwei_9.png，而是登记成一张皮肤，
-				//       这样与动皮体系不冲突，也不会覆盖玩家当前播着的动皮）
-				// ⚠ 按需求：伐减少**不会**切回来
-				mark: "sgz_jiufa",
-				threshold: 9,
+				// 由角色文件里【幽明】的 `content` 主动调用 `dmqcApplySwapRules(player, "sgz_youming")`。
+				//   ⇒ 这条规则是「技能驱动」（有 skill 无 mark），
+				//     不再依赖蓄力点数量；幽明只发一次，所以也不会反复切。
+				skill: "sgz_youming",
 				to: DMQC_JIANGWEI_AWAKENED, // 动皮目标
 				toStatic: DMQC_JIANGWEI_STATIC_KEY, // 静态目标
 				dynamicFrom: DMQC_JIANGWEI_DYNAMIC, // 当前是这张（或已有动皮在播）→ 走动皮
@@ -960,16 +1258,36 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 		dmqcSwapState = {};
 	}
 	window.dmqcResetSwapState = dmqcResetSwapState;
+	/// 这个角色算不算「拥有」某个技能。
+	/// ⚠ 为什么不能只用 `player.hasSkill()`：觉醒技发动后 `awakenSkill` 会
+	///   `disableSkill(skill + "_awake", skill)`（player.js:10240/10264），
+	///   而 `game.filterSkills` 会把 `disabledSkills` 的键从 `getSkills()` 里剔掉
+	///   （game/index.js:10276-10277）⇒ **发动过幽明之后 `hasSkill('sgz_youming')` 就是 false**。
+	///   技能驱动的换皮规则（如姜维，判定时机正是「发动幽明」）因此永远不命中。
+	///   补充两条兜底：`awakenedSkills`（觉醒记录）与 `storage[skill] === true`（awakenSkill 会写）。
+	function dmqcPlayerOwnsSkill(player, name) {
+		if (!player || !name) return false;
+		try {
+			if (player.hasSkill && player.hasSkill(name)) return true;
+			if (player.awakenedSkills && typeof player.awakenedSkills.has === "function" && player.awakenedSkills.has(name)) {
+				return true;
+			}
+			if (player.storage && player.storage[name] === true) return true;
+		} catch (e) {}
+		return false;
+	}
 	function dmqcApplySwapRules(player, skillName) {
 		try {
 			if (!player || !skillName || !window.decadeUI || !window.decadeUI.dynamicSkin) return;
 			for (const rule of DMQC_SWAP_RULES) {
-				// 用「标记载体技能」做入口判定：
-				//   addMark/removeMark 的 markName 就是 storage 键，也就是承载该标记的技能名。
-				//   ⚠ 不要用 rule.skill（父技能）判定：像梦钟会的「患」是挂在 sgz_quanhuan 的
-				//     group 里的独立技能 sgz_quanhuan_huan，用父技能判定容易踩坑。
-				if (rule.mark !== skillName) continue;
-				if (!player.hasSkill || !player.hasSkill(rule.mark)) continue;
+				// 入口判定支持两种规则：
+				//   · 标记驱动：`mark` + `threshold`（addMark/removeMark 的 markName 就是承载标记的技能名）
+				//   · 技能驱动：`skill`（只判「有没有这个技能」，如姜维发动【幽明】后换皮）
+				//   ⚠ 不要用父技能判定：像梦钟会的「患」是挂在 sgz_quanhuan 的 group 里的独立技能。
+				if (rule.mark !== skillName && rule.skill !== skillName) continue;
+				const carrierSkill = rule.mark || rule.skill;
+				// ⚠ 已觉醒的技能也要算「拥有」（见上面 dmqcPlayerOwnsSkill 的说明）
+				if (!dmqcPlayerOwnsSkill(player, carrierSkill)) continue;
 				const charId = player.name1 || player.name;
 				if (!charId) continue;
 				// 该武将必须真的有这张动皮，否则不动（避免把皮肤设成不存在的名字）
@@ -981,7 +1299,10 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 				// 当前是否真的有一套动皮在播（用于「静态/动态分流」的兜底判断）
 				const hasDynamic =
 					!!player.dynamic && !!(player.dynamic.primary || player.dynamic.deputy);
-				const count = player.countMark ? player.countMark(rule.mark) : 0;
+				// 技能驱动规则：技能在即满足；标记驱动规则：标记数达到阈值才满足
+				const matched = rule.skill
+					? dmqcPlayerOwnsSkill(player, rule.skill)
+					: (player.countMark ? player.countMark(rule.mark) : 0) >= rule.threshold;
 				// 有 toStatic 的规则：先算出「本次该切到哪张」
 				let target = rule.to;
 				if (rule.toStatic) {
@@ -989,9 +1310,9 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 						(rule.dynamicFrom && curName === rule.dynamicFrom) || (hasDynamic && !curName);
 					target = useDynamic ? rule.to : rule.toStatic;
 				}
-				const stateKey = charId + "|" + rule.mark;
+				const stateKey = charId + "|" + carrierSkill;
 
-				if (count >= rule.threshold) {
+				if (matched) {
 					if (dmqcSwapState[stateKey] === target) continue; // 已经切过了
 					// 声明了 from 时：只在「当前正是 from」或「当前已经是目标」时才动手，
 					// 避免覆盖玩家手动选的其它皮肤。
@@ -1022,6 +1343,35 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 		}
 	}
 	window.dmqcApplySwapRules = dmqcApplySwapRules;
+
+	// 诊断：`dmqcSwapRulesDebug()` —— 打出每条换皮规则当前为什么命中/不命中
+	//  ⚠ 排查「自动换皮没反应」时非常有用：能一眼看出是「没有这个技能 / 没有这张皮 /
+	//    皮肤名已经是目标 / 本局已经切过」中的哪一种。
+	window.dmqcSwapRulesDebug = function (player) {
+		const list = player ? [player] : (game.players || []);
+		list.forEach(function (p) {
+			if (!p) return;
+			const charId = p.name1 || p.name;
+			const ds = window.decadeUI && window.decadeUI.dynamicSkin && window.decadeUI.dynamicSkin[charId];
+			const out = [];
+			for (const rule of DMQC_SWAP_RULES) {
+				const carrier = rule.mark || rule.skill;
+				const own = dmqcPlayerOwnsSkill(p, carrier);
+				const count = rule.mark && p.countMark ? p.countMark(rule.mark) : null;
+				const matched = rule.skill ? own : count !== null && count >= rule.threshold;
+				out.push({
+					角色: charId,
+					规则载体: carrier,
+					拥有技能: own,
+					标记数: count,
+					命中: matched,
+					有目标动皮: !!(ds && rule.to && ds[rule.to]),
+					本局已切到: dmqcSwapState[charId + "|" + carrier] || null,
+				});
+			}
+			console.log("[大梦千秋] 换皮规则诊断 ↓↓↓", out);
+		});
+	};
 
 	// ---- 8b. 梦曹髦【腾渊】变身：枭龙破渊 ⇄ 枭龙破渊2 ----
 	//  为什么不用上面的 DMQC_SWAP_RULES（标记驱动）：
@@ -1101,6 +1451,361 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 		}
 	};
 
+	// ---- 8h. 梦陆逊：三形态动皮 + 局内条件自动切换 ----
+	//  需求：默认/每轮开始 → ① 蛇年清明；发动【焚灭】→ ② 烈火炽天；发动【韬晦】→ ③ 烈焰炽魂。
+	//  用法（角色文件里调）：
+	//    · 【焚灭】content 开头：`window.dmqcApplyLuxunSkin(player, 2)`
+	//    · 【韬晦】content 开头：`window.dmqcApplyLuxunSkin(player, 3)`
+	//    · 每轮开始：见下面全局技能 `sgz_dmqc_skin_swap` 的 `roundStart` 分支（自动切回 ①）
+	//  ⚠ 这个函数**只改本局播放**，不写千幻存档（和魏延/曹髦那些一样：玩家菜单里的选择不会被覆盖）。
+	//  ⚠ 传入 1/2/3（更直观，和需求里的 ①②③ 对齐），内部换算成 DMQC_LUXUN_SKINS 的 0-based 下标。
+	window.dmqcApplyLuxunSkin = function (player, which) {
+		try {
+			if (!player) return false;
+			const isLuxun = player.name1 === "sgz_luxun" || player.name === "sgz_luxun" || player.name2 === "sgz_luxun";
+			if (!isLuxun) return false;
+			const idx = Math.max(0, Math.min(DMQC_LUXUN_SKINS.length - 1, (Number(which) || 1) - 1));
+			const skinName = DMQC_LUXUN_SKINS[idx];
+			const ds = window.decadeUI && window.decadeUI.dynamicSkin;
+			const hasDynamic = !!(ds && ds.sgz_luxun && ds.sgz_luxun[skinName]);
+			if (hasDynamic) {
+				const isDeputy = player.name2 === "sgz_luxun" && player.name1 !== "sgz_luxun";
+				// ★ 优先用「皮肤切换」自己的换肤函数 —— 也就是**手动点皮肤菜单**走的那条路径
+				//   （皮肤切换/extension.js:3691 `selectSkinV3`），这样自动切换和手动切换行为一致。
+				//   ⚠ 以前只调千幻的 `qhly_changeDynamicSkin`：它会按**本体武将**的数据重播一次，
+				//     所以自动切过去时参数是「原皮肤拥有者」的默认值（②是陆逊的、③是周瑜的）——
+				//     这正是「手动切参数对、自动切是默认」的原因。
+				const ss = window.skinSwitch && window.skinSwitch.dynamic;
+				let switched = false;
+				if (ss && typeof ss.selectSkinV3 === "function") {
+					try {
+						ss.selectSkinV3(skinName, player, !isDeputy);
+						switched = true;
+					} catch (e) {
+						console.warn("[大梦千秋] selectSkinV3 失败，回退到千幻换肤：", e);
+					}
+				}
+				if (!switched && typeof game.qhly_changeDynamicSkin === "function") {
+					game.qhly_changeDynamicSkin(player, skinName, undefined, isDeputy);
+				}
+				console.log(
+					"[大梦千秋] 梦陆逊换肤（仅本局）：" + skinName + "（第 " + (idx + 1) + " 形态）" + (isDeputy ? "（副将位）" : "")
+				);
+				// 等新节点建好后，把文件里的框内参数推给渲染器（改文件就能生效的那条通道）
+				[60, 300, 900].forEach(function (delay) {
+					setTimeout(function () {
+						try {
+							window.dmqcLuxunPushParams(player);
+						} catch (e) {}
+					}, delay);
+				});
+				// ③「烈焰炽魂」：把**正在播的那份副本**上的 chuchang 也删掉，
+				// 否则回合开始仍会播出场动画（数据层删了，副本里可能还留着）。
+				if (skinName === DMQC_LUXUN_ZHOU) {
+					[60, 300, 900, 1500].forEach(function (delay) {
+						setTimeout(function () {
+							try {
+								const n = player.dynamic && player.dynamic.primary;
+								if (n && n.player) delete n.player.chuchang;
+							} catch (e) {}
+						}, delay);
+					});
+				}
+				return true;
+			}
+			// 没装十周年UI / 没有动皮数据 → 退回静态图（skin/image/sgz_luxun/ 下那三张）
+			const path = "extension/大梦千秋/skin/image/sgz_luxun/" + skinName + ".jpg";
+			if (player.node && player.node.avatar && player.node.avatar.setBackgroundImage) {
+				player.node.avatar.setBackgroundImage(path);
+			}
+			if (player.node && player.node.avatar2 && player.node.avatar2.setBackgroundImage) {
+				player.node.avatar2.setBackgroundImage(path);
+			}
+			return true;
+		} catch (e) {
+			console.error("[大梦千秋] 梦陆逊换肤失败（不影响技能结算）：", e);
+			return false;
+		}
+	};
+
+	// ---- 8h1. 用「皮肤切换」自己的 ADJUST 通道把参数推给渲染器（唯一真正生效的办法）----
+	//  背景（实测日志）：屏幕上那张皮用的是一份**副本**，不是 `decadeUI.dynamicSkin` 里我们改的对象
+	//  （诊断里 `是不是表里那几个对象: 否`），所以改文件对画面没有任何影响。
+	//  而调参面板能实时改，是因为它发的是 `ADJUST` 消息：
+	//      skinSwitch.postMsgApi.adjust(player, 'daiji', posData)
+	//    → dynamicWorker.js:1260 `adjust(data)` → 直接改 `apnode.x/y/scale/angle` 和 `apnode.player.*`
+	//  ⇒ 这里就复用这条通道：把 DMQC_SKIN_PATCHES 里的框内参数按「面板同样的格式」推过去。
+	//  ⚠⚠ 注意 `adjust` 里的判断是 **if/else 链**（dynamicWorker.js:1268-1288）：
+	//      x/y 一起、scale 单独、angle 单独 —— 一条消息只能改一组，所以下面发 3 条。
+	function dmqcLuxunFindSkinEntry(player) {
+		const node = player && player.dynamic && player.dynamic.primary;
+		if (!node) return null;
+		const spineName = (node.player && node.player.name) || node.name;
+		const table = window.decadeUI && window.decadeUI.dynamicSkin && window.decadeUI.dynamicSkin.sgz_luxun;
+		if (!spineName || !table) return null;
+		for (const skinName of DMQC_LUXUN_SKINS) {
+			const d = table[skinName];
+			if (d && (d.name === spineName || (node.name && d.name === node.name))) return { skinName, data: d, node };
+		}
+		return null;
+	}
+	/// 把当前皮肤（文件里的那份）的框内参数推给渲染器
+	//  ⚠ 不依赖 `skinSwitch.postMsgApi`（它可能还没挂上 / 名字变了），
+	//    直接向 `player.dynamic.renderer` 发 **ADJUST 原始消息** —— 这就是调参面板实时改参数时
+	//    底层真正发出的东西（dynamicWorker.js:1260 `adjust(data)` 会改 apnode.x/y/scale/angle）。
+	//  ⚠ ADJUST 的处理是 if/else 链：x/y 一起、scale 单独、angle 单独 → 必须发 3 条。
+	window.dmqcLuxunPushParams = function (player) {
+		const players = player
+			? [player]
+			: (game.players || []).filter(function (p) {
+					return p && (p.name1 === "sgz_luxun" || p.name === "sgz_luxun");
+			  });
+		let done = 0;
+		players.forEach(function (p) {
+			try {
+				const hit = dmqcLuxunFindSkinEntry(p);
+				if (!hit) {
+					console.log("[大梦千秋][推参数] 跳过：找不到当前皮肤在 sgz_luxun 表里的条目（可能当前播的不是这三张）");
+					return;
+				}
+				const node = hit.node;
+				const d = hit.data;
+				const renderer = p.dynamic && p.dynamic.renderer;
+				// 1) 主线程这份代理对象也改成文件值（调试用；部分路径直接读它）
+				if (node) {
+					if (d.x) node.x = d.x.slice();
+					if (d.y) node.y = d.y.slice();
+					if (d.scale != null) node.scale = d.scale;
+					if (d.angle != null) node.angle = d.angle;
+				}
+
+				if (node && node.player) {
+					if (d.x) node.player.x = d.x.slice();
+					if (d.y) node.player.y = d.y.slice();
+					if (d.scale != null) node.player.scale = d.scale;
+					if (d.angle != null) node.player.angle = d.angle;
+				}
+				if (!renderer || typeof renderer.postMessage !== "function") {
+					console.log("[大梦千秋][推参数] 跳过：player.dynamic.renderer 没有 postMessage（该玩家没在播动皮？）");
+					return;
+				}
+				const id = p.dynamic.id;
+				const skinID = node && node.id;
+				const base = { message: "ADJUST", id: id, skinID: skinID, mode: "daiji" };
+				// 2) 原始 ADJUST：位置 / 大小 / 角度，分三条
+				if (Array.isArray(d.x) && Array.isArray(d.y)) {
+					renderer.postMessage(Object.assign({}, base, { x: d.x.slice(), y: d.y.slice() }));
+				}
+				if (d.scale != null) {
+					renderer.postMessage(Object.assign({}, base, { scale: d.scale }));
+				}
+				if (d.angle != null) {
+					renderer.postMessage(Object.assign({}, base, { angle: d.angle }));
+				}
+				done++;
+				console.log(
+					"[大梦千秋][推参数] 已发送「" + hit.skinName + "」：id=" + id + " skinID=" + skinID +
+						" x=" + JSON.stringify(d.x) + " y=" + JSON.stringify(d.y) + " scale=" + d.scale + " angle=" + d.angle
+				);
+			} catch (e) {
+				console.error("[大梦千秋][推参数] 失败：", e);
+			}
+		});
+		if (!done) console.log("[大梦千秋][推参数] 一条都没发出去（看上面的跳过原因）");
+		return done;
+	};
+	// ---- 8h3. 直接**重新读取 skin.js 文件**里的参数表并立即生效（不用重启游戏）----
+	//  为什么需要：`dmqcLuxunPushParams()` 推的是**内存里**那张表的数值；
+	//  你改了文件但没重启游戏，内存里还是旧值（推送日志会显示旧的 x）。
+	//  这条命令会：读文件 → 解析 `DMQC_SKIN_PATCHES` → 重建三张皮的数据 → 立刻推给渲染器。
+	//  用法（F12）：`dmqcLuxunReloadFile()`
+	window.dmqcLuxunReloadFile = function () {
+		const rel = "extension/大梦千秋/skin.js";
+		const done = function (text) {
+			try {
+				// 1) 从源码里抠出 `const DMQC_SKIN_PATCHES = { … }`
+				const at = text.indexOf("const DMQC_SKIN_PATCHES = {");
+				if (at < 0) return console.error("[大梦千秋][重读] 文件里找不到 DMQC_SKIN_PATCHES");
+				let i = text.indexOf("{", at);
+				let depth = 0;
+				const start = i;
+				for (; i < text.length; i++) {
+					if (text[i] === "{") depth++;
+					else if (text[i] === "}") {
+						depth--;
+						if (depth === 0) break;
+					}
+				}
+				let block = text.slice(start, i + 1);
+				// 计算键换成字面量，才能单独 eval
+				block = block
+					.replace(/\[DMQC_LUXUN_MING\]/g, '["蛇年清明"]')
+					.replace(/\[DMQC_LUXUN_HUO\]/g, '["烈火炽天"]')
+					.replace(/\[DMQC_LUXUN_ZHOU\]/g, '["烈焰炽魂"]');
+				const parsed = new Function("return (" + block + ");")();
+				const patches = (parsed && parsed.sgz_luxun) || {};
+				// 2) 用「本体数据 + 新补丁」重建三张皮
+				const ds = window.decadeUI && window.decadeUI.dynamicSkin;
+				if (!ds || !ds.sgz_luxun) return console.error("[大梦千秋][重读] decadeUI.dynamicSkin.sgz_luxun 不存在");
+				let n = 0;
+				DMQC_LUXUN_SKINS.forEach(function (skinName) {
+					const baseKey = skinName === DMQC_LUXUN_ZHOU ? "zhouyu" : "luxun";
+					const base = ds[baseKey] && ds[baseKey][skinName];
+					if (!base) return;
+					const patch = patches[skinName];
+					ds.sgz_luxun[skinName] = dmqcMergeSkinData(base, patch || {});
+					n++;
+				});
+				console.log("[大梦千秋][重读] 已从文件重建 " + n + " 张皮的数据：" + JSON.stringify(patches));
+				// 3) 立刻推给渲染器
+				window.dmqcLuxunPushParams();
+				return n;
+			} catch (e) {
+				console.error("[大梦千秋][重读] 失败：", e);
+			}
+		};
+		try {
+			if (typeof game.readFileAsText === "function") {
+				game.readFileAsText(rel, done, function () {
+					game.readFileAsText((lib.assetURL || "") + rel, done, function () {
+						console.error("[大梦千秋][重读] 读不到文件：" + rel);
+					});
+				});
+			} else {
+				console.error("[大梦千秋][重读] 没有 game.readFileAsText");
+			}
+		} catch (e) {
+			console.error("[大梦千秋][重读] 异常：", e);
+		}
+	};
+	// ---- 8h2. 梦陆逊：把参数**强制**写回 decadeUI.dynamicSkin 并重播（诊断 + 立即生效）----
+	//  为什么需要：你改文件里的 x 后画面没变，说明播放时用的**不是**我们注入的那份数据
+	//  （可能是被别处覆盖、或渲染取的是另一份副本）。这两个命令能当场分辨：
+	//    · dmqcLuxunSkinDebug()  → 打印「注入值 / 当前生效数据 / 正在播的节点」三方对照
+	//    · dmqcLuxunForce()      → 把文件里的参数重新写进 decadeUI.dynamicSkin 并重播一次
+	//  ⚠ 正常游戏中不需要手动跑；这两条只是排障口。
+	function dmqcLuxunSkinData(skinName) {
+		const ds = window.decadeUI && window.decadeUI.dynamicSkin;
+		const table = ds && ds.sgz_luxun;
+		const data = table && table[skinName];
+		const patch = DMQC_SKIN_PATCHES.sgz_luxun && DMQC_SKIN_PATCHES.sgz_luxun[skinName];
+		if (!data) return null;
+		if (patch) {
+			const merged = dmqcMergeSkinData(data, patch);
+			table[skinName] = merged;
+			return merged;
+		}
+		return data;
+	}
+	window.dmqcLuxunForce = function () {
+		let n = 0;
+		DMQC_LUXUN_SKINS.forEach(function (skinName) {
+			if (dmqcLuxunSkinData(skinName)) n++;
+		});
+		(game.players || []).forEach(function (p) {
+			if (!p || (p.name1 !== "sgz_luxun" && p.name !== "sgz_luxun")) return;
+			const node = p.dynamic && p.dynamic.primary;
+			const skinName = node && node.player && node.player.name;
+			// 用骨骼名反查皮肤名，重播当前这张
+			const hit = DMQC_LUXUN_SKINS.find(function (s) {
+				const d = window.decadeUI.dynamicSkin.sgz_luxun[s];
+				return d && node && (d.name === node.name || (node.player && d.name === node.player.name));
+			});
+			window.dmqcApplyLuxunSkin(p, (hit ? DMQC_LUXUN_SKINS.indexOf(hit) : 0) + 1);
+		});
+		console.log("[大梦千秋] 已把参数重新写回 decadeUI.dynamicSkin 并重播（" + n + " 张）");
+		return n;
+	};
+	/// 通用诊断：把某个武将注入表里各皮肤的参数打出来（用于和其它正常武将对照）
+	window.dmqcSkinDataDump = function (charId) {
+		const out = {};
+		try {
+			const ds = window.decadeUI && window.decadeUI.dynamicSkin;
+			const table = (ds && ds[charId]) || null;
+			if (!table) {
+				out["表"] = "(没有 " + charId + " 这张表)";
+			} else {
+				Object.keys(table).forEach(function (k) {
+					const d = table[k] || {};
+					out[k] = { name: d.name, x: d.x, y: d.y, scale: d.scale, angle: d.angle, hasGongji: !!d.gongji };
+				});
+			}
+			const live = [];
+			(game.players || []).forEach(function (p) {
+				if (!p || (p.name1 !== charId && p.name !== charId)) return;
+				const node = p.dynamic && p.dynamic.primary;
+				live.push({
+					正在播: node ? node.name : "(无)",
+					node参数: node && node.player ? { x: node.player.x, y: node.player.y, scale: node.player.scale } : "(无)",
+				});
+			});
+			out["当前局内"] = live;
+		} catch (e) {
+			out["出错"] = e.message;
+		}
+		console.log("[大梦千秋] 动皮数据诊断：" + charId + " ↓↓↓", out);
+		return out;
+	};
+	window.dmqcLuxunSkinDebug = function () {
+		const out = {};
+		try {
+			const ds = window.decadeUI && window.decadeUI.dynamicSkin;
+			const table = (ds && ds.sgz_luxun) || null;
+			out["①dynamicSkin.sgz_luxun 有哪些皮"] = table ? Object.keys(table) : "(没有这张表 → 注入没成功)";
+			if (table) {
+				DMQC_LUXUN_SKINS.forEach(function (s) {
+					const d = table[s];
+					out["②" + s] = d ? { name: d.name, x: d.x, y: d.y, scale: d.scale, angle: d.angle } : "(缺)";
+				});
+			}
+			out["③存档里选的皮肤名"] = typeof game.qhly_getSkin === "function" ? game.qhly_getSkin("sgz_luxun") : "(无)";
+			const live = [];
+			(game.players || []).forEach(function (p) {
+				if (!p || (p.name1 !== "sgz_luxun" && p.name !== "sgz_luxun")) return;
+				const node = p.dynamic && p.dynamic.primary;
+					// 关键：node.player 是不是**就是**我们表里那个对象？
+					//   是 → 改表里的参数就该生效（若不生效 = 渲染缓存了旧值）
+					//   否 → 渲染用的是**另一份数据**（这才是“改文件没反应”的根因）
+					let sameObj = "否 → 渲染用的是另一份数据";
+					if (node && node.player && table) {
+						for (const s of DMQC_LUXUN_SKINS) {
+							if (table[s] === node.player) sameObj = "是（" + s + "）";
+						}
+					}
+					live.push({
+						玩家: p.name,
+						正在播: node ? node.name : "(没有动皮)",
+						node名称: node && node.player ? node.player.name : "(无 node.player)",
+						node参数: node && node.player ? { x: node.player.x, y: node.player.y, scale: node.player.scale, angle: node.player.angle } : "(无)",
+						是不是表里那几个对象: sameObj,
+					});
+			});
+			out["④正在播的节点"] = live;
+			// ⑥⑦：千幻的「静/动」开关 + 当前选中的皮肤名 —— 这两个能解释“改 x 没反应”：
+			//   若 djtoggle 为 true，千幻会当成“这张皮用静态图”，动皮**根本不播**。`qhly_changeDynamicSkin`
+			//   里就是这么判的（千幻聆音/extension/content.js:2467：value = null → skin 找不到 → 不播动皮）。
+			//   而陆逊这三张恰好**同时有静态皮**（skin/image/sgz_luxun/*.jpg，还是我们设的默认皮），
+			//   别的武将我并没有给它们设“同名静态皮 + 默认选中”，所以只有陆逊会踩到。
+			try {
+				const set = lib.config.qhly_skinset || {};
+				out["⑥千幻静动开关 djtoggle.sgz_luxun"] = (set.djtoggle && set.djtoggle.sgz_luxun) || "(无记录)";
+				out["⑦千幻选中的皮 skin.sgz_luxun"] = (set.skin && set.skin.sgz_luxun) || "(无记录)";
+			} catch (e) {
+				out["⑥⑦读取失败"] = e.message;
+			}
+			out["⑤本文件里写的参数（DMQC_SKIN_PATCHES）"] = DMQC_SKIN_PATCHES.sgz_luxun;
+		} catch (e) {
+			out["出错"] = e.message;
+		}
+		// 一行 JSON：避免控制台把对象折叠成 {…}，方便直接复制给我
+		try {
+			console.log("[大梦千秋] 梦陆逊动皮诊断(JSON)=" + JSON.stringify(out));
+		} catch (e) {
+			console.log("[大梦千秋] 诊断 JSON 序列化失败（可能有循环引用）：" + e.message);
+		}
+		console.log("[大梦千秋] 梦陆逊动皮诊断 ↓↓↓", out);
+		return out;
+	};
 	// ---- 8d. 梦魏延动皮诊断（控制台用）----
 	//  用途：查「狂志吞天 第一形态渲染异常」那类问题。
 	//  用法：让梦魏延穿上该皮，按 F12 打开控制台，粘贴执行  dmqcWeiyanSkinDebug()
@@ -1153,6 +1858,216 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 		}
 	};
 
+	// ---- 8g. 动皮「图集消融」工具箱（已用它修好狂志吞天，留着给以后排障用）----
+	//  已完成：把「狂志吞天」的 7 个 screen 层 region（r-htx9/10/11/12/13、r-guang1、r-tx1）
+	//    挪到 1×1 透明页 → 用户实测"修好了"。图集已固化改好，平时**不需要再跑这里的命令**。
+	//  ⚠ 结论先记住：`player.hideSlots` 只喂给「部件列表」查询（dynamicWorker.js:1505-1531），
+	//    **不影响渲染** → 想靠它隐藏部件是死路（实测"没什么变化"正是这个原因）。
+	//  真正能立刻见效的杠杆是**图集**：把某个 region 指向一张 1x1 全透明贴图（`dmqc_blank.png`），
+	//  重载皮肤后那一块就看不见了。图集是纯文本，改完不用重启游戏。
+	//  用法（F12 控制台）：
+	//    dmqcParts()                → 列出全部 region（编号 + 名字 + 所在页）
+	//    dmqcParts("guang")         → 只列匹配的
+	//    dmqcMute(3)                → 屏蔽编号 3
+	//    dmqcMute([3, 7, 9])        → 屏蔽多个编号
+	//    dmqcMute("^(r-htx9|r-tx1)$")→ 按正则屏蔽（可反复叠加，直到光斑消失）
+	//    dmqcMuteRestore()          → 还原成原始图集
+	const DMQC_WEIYAN_KZ_ATLAS = "extension/十周年UI/assets/dynamic/势魏延/狂志吞天/XingXiang.atlas";
+	const DMQC_WEIYAN_KZ_ATLAS_BAK = DMQC_WEIYAN_KZ_ATLAS + ".dmqc.bak";
+	const DMQC_WEIYAN_KZ_BLANK = "dmqc_blank.png";
+
+	function dmqcReadTextFile(rel, ok, fail) {
+		if (typeof game === "undefined" || !game.readFileAsText) return fail && fail();
+		game.readFileAsText(rel, ok, function () {
+			game.readFileAsText((lib.assetURL || "") + rel, ok, function () {
+				fail && fail();
+			});
+		});
+	}
+	function dmqcWriteTextFile(rel, text, ok, fail) {
+		if (typeof game === "undefined" || !game.writeFile) return fail && fail();
+		const i = rel.lastIndexOf("/");
+		game.writeFile(text, rel.slice(0, i), rel.slice(i + 1), ok, fail);
+	}
+	function dmqcAtlasParse(text) {
+		const lines = String(text).split(/\r?\n/);
+		const pages = [];
+		let cur = null;
+		let i = 0;
+		while (i < lines.length) {
+			const line = lines[i];
+			if (/\.png\s*$/.test(line)) {
+				cur = { page: line.trim(), header: [], regions: [] };
+				i++;
+				while (i < lines.length && /^\s*\S+\s*:/.test(lines[i])) cur.header.push(lines[i++]);
+				pages.push(cur);
+				continue;
+			}
+			if (line.trim() && /^\S/.test(line)) {
+				const reg = { name: line.trim(), lines: [] };
+				i++;
+				while (i < lines.length && /^\s+\S/.test(lines[i])) reg.lines.push(lines[i++]);
+				if (cur) cur.regions.push(reg);
+				continue;
+			}
+			i++;
+		}
+		return pages;
+	}
+	function dmqcAtlasSerialize(pages) {
+		const out = [];
+		pages.forEach(function (p) {
+			out.push(p.page);
+			p.header.forEach(function (h) {
+				out.push(h);
+			});
+			p.regions.forEach(function (r) {
+				out.push(r.name);
+				r.lines.forEach(function (l) {
+					out.push(l);
+				});
+			});
+			out.push("");
+		});
+		return out.join("\n");
+	}
+	function dmqcAtlasRegionNames(pages) {
+		const names = [];
+		pages.forEach(function (p) {
+			p.regions.forEach(function (r) {
+				names.push(r.name);
+			});
+		});
+		return names;
+	}
+	/// 把指定名字的 region 换成 1x1 透明（叠在 `dmqc_blank.png` 这一页上）
+	function dmqcAtlasMute(pages, names) {
+		const set = new Set(names);
+		const muted = [];
+		pages.forEach(function (p) {
+			if (p.page === DMQC_WEIYAN_KZ_BLANK) return;
+			p.regions = p.regions.filter(function (r) {
+				if (set.has(r.name)) {
+					muted.push(r.name);
+					return false;
+				}
+				return true;
+			});
+		});
+		let blank = pages.find(function (p) {
+			return p.page === DMQC_WEIYAN_KZ_BLANK;
+		});
+		if (!blank && muted.length) {
+			blank = {
+				page: DMQC_WEIYAN_KZ_BLANK,
+				header: ["size: 1,1", "format: RGBA8888", "filter: Linear,Linear", "repeat: none"],
+				regions: [],
+			};
+			pages.unshift(blank);
+		}
+		if (blank) {
+			muted.forEach(function (name) {
+				if (
+					!blank.regions.some(function (r) {
+						return r.name === name;
+					})
+				) {
+					blank.regions.push({
+						name: name,
+						lines: ["  rotate: false", "  xy: 0, 0", "  size: 1, 1", "  orig: 1, 1", "  offset: 0, 0", "  index: -1"],
+					});
+				}
+			});
+		}
+		return muted;
+	}
+	/// 重载所有正在播「狂志吞天」的魏延（让图集改动立刻生效）
+	window.dmqcReloadKuangzhi = function () {
+		let n = 0;
+		try {
+			(game.players || []).concat(game.dead || []).forEach(function (p) {
+				if (!p || (p.name !== "sgz_weiyan" && p.name1 !== "sgz_weiyan")) return;
+				const node = p.dynamic && p.dynamic.primary;
+				if (!node || String(node.name || "").indexOf("势魏延/狂志吞天/") !== 0) return;
+				const isDeputy = p.name2 === "sgz_weiyan" && p.name1 !== "sgz_weiyan";
+				game.qhly_changeDynamicSkin(p, DMQC_WEIYAN_KUANGZHI, undefined, isDeputy);
+				n++;
+			});
+		} catch (e) {
+			console.error("[大梦千秋] 重载失败：", e);
+		}
+		if (!n) console.log("[大梦千秋] 当前没有正在播「狂志吞天」的魏延（换一次皮肤或等下一局）");
+		return n;
+	};
+	window.dmqcParts = function (filter) {
+		dmqcReadTextFile(
+			DMQC_WEIYAN_KZ_ATLAS,
+			function (text) {
+				const names = dmqcAtlasRegionNames(dmqcAtlasParse(text));
+				const re = filter instanceof RegExp ? filter : filter ? new RegExp(String(filter)) : null;
+				const rows = [];
+				names.forEach(function (name, idx) {
+					if (!re || re.test(name)) rows.push(idx + 1 + "\t" + name);
+				});
+				console.log("[大梦千秋] 图集共 " + names.length + " 个 region，列出 " + rows.length + " 个：");
+				console.log(rows.join("\n"));
+				window.__dmqcParts = names;
+			},
+			function () {
+				console.error("[大梦千秋] 读不到图集：" + DMQC_WEIYAN_KZ_ATLAS);
+			}
+		);
+	};
+	window.dmqcMute = function (which) {
+		dmqcReadTextFile(
+			DMQC_WEIYAN_KZ_ATLAS,
+			function (text) {
+				const pages = dmqcAtlasParse(text);
+				const names = dmqcAtlasRegionNames(pages);
+				let targets;
+				if (typeof which === "number") targets = [names[which - 1]];
+				else if (Array.isArray(which))
+					targets = which.map(function (w) {
+						return typeof w === "number" ? names[w - 1] : String(w);
+					});
+				else if (which instanceof RegExp) targets = names.filter(function (n) {
+					return which.test(n);
+				});
+				else
+					targets = names.filter(function (n) {
+						return new RegExp(String(which)).test(n);
+					});
+				targets = targets.filter(Boolean);
+				if (!targets.length) {
+					console.log("[大梦千秋] 没有匹配的 region，未改动");
+					return;
+				}
+				const muted = dmqcAtlasMute(pages, targets);
+				dmqcWriteTextFile(DMQC_WEIYAN_KZ_ATLAS, dmqcAtlasSerialize(pages), function () {
+					console.log("[大梦千秋] 已屏蔽 " + muted.length + " 个 region：" + muted.join(", "));
+					window.dmqcReloadKuangzhi();
+				}, function () {
+					console.error("[大梦千秋] 写图集失败（可能被只读或被占用）：" + DMQC_WEIYAN_KZ_ATLAS);
+				});
+			},
+			function () {
+				console.error("[大梦千秋] 读不到图集：" + DMQC_WEIYAN_KZ_ATLAS);
+			}
+		);
+	};
+	window.dmqcMuteRestore = function () {
+		dmqcReadTextFile(DMQC_WEIYAN_KZ_ATLAS_BAK, function (text) {
+			dmqcWriteTextFile(DMQC_WEIYAN_KZ_ATLAS, text, function () {
+				console.log("[大梦千秋] 图集已还原");
+				window.dmqcReloadKuangzhi();
+			}, function () {
+				console.error("[大梦千秋] 还原失败");
+			});
+		}, function () {
+			console.error("[大梦千秋] 找不到备份：" + DMQC_WEIYAN_KZ_ATLAS_BAK);
+		});
+	};
+
 	// 用「标记变化」事件驱动：addMark / removeMark 都会触发，覆盖所有增减路径
 	function dmqcRegisterSwapTrigger() {
 		if (!lib.skill) return false;
@@ -1163,10 +2078,52 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 			silent: true,
 			popup: false,
 			// 每局开始时清空本局换肤状态（避免上一局的记录影响这一局）
-			trigger: { global: ["addMark", "removeMark", "gameStart"] },
+			// ⚠ `roundStart` 是给梦陆逊用的：**每轮开始把三形态重置回 ① 蛇年清明**（见 8h 节）
+			trigger: { global: ["addMark", "removeMark", "gameStart", "roundStart"] },
 			async content(event, trigger, player) {
 				if (trigger.name === "gameStart") {
 					window.dmqcResetSwapState();
+					// ①③ 若当前正在播的是 ③「烈焰炽魂」，开局也把副本里的 chuchang 删掉
+					//    （需求：③ 不要回合开始的出场动画）
+					[200, 800, 2000, 4000].forEach(function (delay) {
+						setTimeout(function () {
+							try {
+								(game.players || []).forEach(function (p) {
+									if (!p || (p.name1 !== "sgz_luxun" && p.name !== "sgz_luxun")) return;
+									const n = p.dynamic && p.dynamic.primary;
+									if (!n || !n.player) return;
+									const spineName = n.player.name || n.name || "";
+									if (spineName.indexOf("周瑜/烈焰炽魂/") === 0 && n.player.chuchang) {
+										delete n.player.chuchang;
+										console.log("[大梦千秋] ③烈焰炽魂：已去掉回合开始的出场动画");
+									}
+								});
+							} catch (e) {}
+						}, delay);
+					});
+					// 开局把文件里的框内参数推给渲染器（皮肤是千幻自动应用的，可能在我们之前）
+					[200, 800, 2000, 4000].forEach(function (delay) {
+						setTimeout(function () {
+							try {
+								window.dmqcLuxunPushParams();
+							} catch (e) {}
+						}, delay);
+					});
+					// 皮肤的位置/大小/出框参数**全部写死在** `DMQC_SKIN_PATCHES`（第 3e 节），
+					// 每局开始不需要做任何回填 —— 局内调参面板改的值不会保留，这是有意为之
+					// （它的保存流程对我们注入的这三张皮根本不生效，见 3e 节注释）。
+					return;
+				}
+				// 每轮开始：梦陆逊回到 ①（不管上一轮是焚灭的②还是韬晦的③）
+				//   顺手把「框内参数」再盖一遍：新开一局后 saveSkinParams.js 往往还没就绪，
+				//   到第一轮开始肯定已经就绪了，这时补应用最保险（也不会打断玩家调参）。
+				if (trigger.name === "roundStart") {
+					// 每轮开始：梦陆逊回到 ①（皮肤的位置/大小全部写死在 DMQC_SKIN_PATCHES 里）
+					(game.players || []).concat(game.dead || []).forEach(function (p) {
+						if (!p || !p.isAlive || !p.isAlive()) return;
+						if (p.name1 !== "sgz_luxun" && p.name !== "sgz_luxun") return;
+						window.dmqcApplyLuxunSkin(p, 1); // 内部会再推一次参数
+					});
 					return;
 				}
 				// ⚠ addMark / removeMark 的字段名是 `markName`（不是 skill）：
@@ -1268,8 +2225,8 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 	// ============================================================
 	//  两条需求、同一套机制：
 	//    · 梦郭嘉「以身证道」  ：伤害牌特效 → 改由【极慧】触发
-	//    · 梦钟会「潜蛟觊天 / 潜蛟觊天2」：伤害牌特效 → 改由【兴伐】触发
-	//      （2026 改动：触发源**只剩【兴伐】**；【矫诏】改用视频演出，不再叠出框。
+	//    · 梦钟会「潜蛟觊天 / 潜蛟觊天2」：伤害牌特效 → 改由【逐月】触发
+	//      （2026 改动：触发源**只剩【逐月】**；【矫诏】改用视频演出，不再叠出框。
 	//        皮肤判据两个形态都认 —— 潜蛟觊天是默认皮，其骨骼里同样有 `GongJi`。）
 	//
 	//  ⚠ 为什么不能像姜维那样「删个键」（务必保留结论，别再白试一遍）：
@@ -1305,8 +2262,11 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 	//    ② 技能结算时由角色文件调下面导出的函数，手动派发同一个 GongJi 出框
 	//       → 视觉与原来完全一致，只是触发者换成了技能：
 	//         · `character/sgz_guojia.js`  的 `sgz_jihui.content`      → dmqcPlayJihuiEffect
-	//         · `character/sgz_zhonghui.js` 的 `sgz_xingfa.content`      → dmqcPlayZhonghuiEffect
+	//         · `character/sgz_zhonghui.js` 的 `sgz_zhuyue.content`      → dmqcPlayZhonghuiEffect
 	//         · `character/sgz_zhonghui.js` 的 `sgz_jiaozhao.precontent` → dmqcPlayZhonghuiEffect
+	//         · `character/sgz_sunhanhua.js` 的 `sgz_miaojian_use.backup.precontent` → dmqcPlaySunhanhuaEffect
+	//         · `character/sgz_wenyang.js`   的 `sgz_jingyue_respond.content`（useCard1 那一下） → dmqcPlayWenyangEffect
+	//         · `character/sgz_gannin.js`    的 `sgz_gannin_chukuang.content`（隐藏技能，`damageBegin1` 的 source 侧 = 即将造成伤害） → dmqcPlayGanningEffect
 	//  ✅ 挂钩位置都选在「技能真正结算」的地方，而不是 `useSkillBefore`，两个理由：
 	//     1. 极慧是**双模式**技能（`enable:"phaseUse"` + `trigger:{player:"damageEnd"}`），
 	//        **受伤自动触发不派发 useSkill 事件**，只有 content 两条路都覆盖；
@@ -1343,16 +2303,59 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 		dmqcSkillChukuang(player, DMQC_YISHEN_SPINE, "梦郭嘉【极慧】");
 	};
 
-	// 梦钟会【兴伐】结算时播一次出框
+	// 梦钟会【逐月】结算时播一次出框
 	//  ⚠ 2026 改动：**触发源改为「使用兴伐」**（原来还兼由【矫诏】触发）。
 	//    · 【矫诏】那边现在改用视频演出（见第 11 节），不再叠一个出框；
 	//    · 皮肤判据**两个形态都认**（潜蛟觊天是默认皮、潜蛟觊天2 是首次矫诏后的形态），
-	//      否则常态下【兴伐】永远出不了框。
+	//      否则常态下【逐月】永远出不了框。
 	//    · 与此同时，第 3b 节的 `_gj` 短路也已扩到两个形态 —— 常态下「使用伤害牌」
 	//      不会再自动出框（潜蛟觊天的骨骼里同样有 `GongJi`，不挡就会串）。
-	//  （由 character/sgz_zhonghui.js 的 sgz_xingfa.content 调用）
+	//  （由 character/sgz_zhonghui.js 的 sgz_zhuyue.content 调用）
 	window.dmqcPlayZhonghuiEffect = function (player) {
-		dmqcSkillChukuang(player, [DMQC_QIANJIAO1_SPINE, DMQC_QIANJIAO_SPINE], "梦钟会【兴伐】");
+		dmqcSkillChukuang(player, [DMQC_QIANJIAO1_SPINE, DMQC_QIANJIAO_SPINE], "梦钟会【逐月】");
+	};
+
+	// 梦孙寒华【妙剑④】结算时播一次出框
+	//  ⚠ 2026 改动：**触发源改为「发动妙剑④」**（原来绑在「使用伤害牌」上）。
+	//    · 第 3b 节的 `_gj` 短路已经加了 `dmqcIsWeilingXianxian` —— 使用伤害牌
+	//      不会再自动出框（威灵尽显的骨骼里同样带 `GongJi`，不挡就会串）；
+	//    · ④ 是 `chooseButton` 的视为技，每次使用都会经过 `backup().precontent`
+	//      （和【矫诏】同理，那里是唯一全覆盖的"发动"点），所以挂钩放在那儿。
+	//  （由 character/sgz_sunhanhua.js 的 sgz_miaojian_use.backup.precontent 调用）
+	window.dmqcPlaySunhanhuaEffect = function (player) {
+		dmqcSkillChukuang(player, DMQC_SUNHANHUA_WEILING_SPINE, "梦孙寒华【妙剑④】");
+	};
+
+	// 梦文鸯【惊跃】使用时播一次出框
+	//  ⚠ 2026 改动（需求）：**「势若万钧」的攻击出框，触发条件改为「使用【惊跃】」**
+	//    （原来跟其它皮一样，绑在「使用伤害牌」上）。
+	//    · 第 3b 节的 `_gj` 短路已加 `dmqcIsShiRuoWanjun` —— 使用伤害牌不会再自动出框；
+	//      ⚠ 势若万钧的皮肤数据里**没有** `gongji` 键，但骨骼
+	//        `assets/dynamic/文鸯/势若万钧/XingXiang.skel` 里**确实有 `GongJi`** 动作，
+	//        所以关掉触发源之后必须手动派发，否则就彻底不播了；
+	//      ⚠ 也正因为没有 `gongji` 键，`chukuangWorker.js:664-673` 会落回兜底默认
+	//        `{action:'GongJi'}` —— 那正是我们要的动作，不用另配皮肤数据。
+	//    · 挂钩点选在【惊跃】的 `useCard1`（`sgz_jingyue_respond.content` 里的那个点）：
+	//      与原来「伤害牌」的时机同为「牌刚声明、结算之前」，视觉不会突然变晚；
+	//      火/雷两种【杀】都算（惊跃每使用一次就播一次）。
+	//  （由 character/sgz_wenyang.js 的 sgz_jingyue_respond.content 调用）
+	window.dmqcPlayWenyangEffect = function (player) {
+		dmqcSkillChukuang(player, DMQC_WENYANG_SHIRO_SPINE, "梦文鸯【惊跃】");
+	};
+
+	// 梦甘宁（战破无间）：**即将造成伤害时**播一次出框
+	//  ⚠ 2026 改动（需求）：这个出框原来是跟着「使用伤害牌」走的
+	//    （皮肤切换的全局技能 `lib.skill._gj`：自己回合 + 基本/锦囊 + `get.tag(card,'damage')`），
+	//    现在改成「**你即将造成伤害时**」。
+	//    · 第 3b 节的 `_gj` 短路已加 `dmqcIsZhanPoWujian` —— 使用伤害牌不再自动出框；
+	//    · 触发源落在**角色文件**里的隐藏技能（`character/sgz_gannin.js` 的
+	//      `sgz_gannin_chukuang`：`trigger: { source: "damageBegin1" }`），
+	//      和夜魇②-2「你的牌造成的伤害+1」是同一个伤害时机 = 「即将造成伤害」；
+	//    · 这张皮的骨骼（`assets/dynamic/神甘宁/战破无间/`）里同样带 `GongJi`，
+	//      第 10 节给它单独配的 `gongji` 还顺带把它挪到了**屏幕右下角**（见第 3c 节）。
+	//  （由 character/sgz_gannin.js 的 sgz_gannin_chukuang.content 调用）
+	window.dmqcPlayGanningEffect = function (player) {
+		dmqcSkillChukuang(player, DMQC_GANNING_ZHANPO_SPINE, "梦甘宁（战破无间）");
 	};
 
 	// ============================================================
@@ -1591,7 +2594,7 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 
 	// 梦钟会【矫诏】的两段演出（由 character/sgz_zhonghui.js 的 sgz_jiaozhao.precontent 调用）
 	//   · **首次**（每局）：屏幕中央大视频（`sgz_zhonghui.mp4`，暂停游戏）+ 换成「潜蛟觊天2」
-	//   · **非首次**：`sgz_zhonghui1.mp4` **斜着播在武将牌上方**（width 20%），**不中断游戏**
+	//   · **非首次**：`sgz_zhonghui.mp4` **斜着播在武将牌上方**（width 20%），**不中断游戏**
 	//  ⚠ 「每局一次」用 `player.storage` 记 —— 它随玩家对象一局一份，
 	//    不需要额外挂钩 `gameStart` 去清（那个隐藏技能其实并没有被 addGlobalSkill，见第 8 节备注）。
 	//  ⚠ 换皮走 `dmqcSwapSkin`：**不写存档**（下一局仍按玩家自己选的皮肤开局）。
@@ -1640,4 +2643,110 @@ window.qhly_import(function (lib, game, ui, get, ai, _status) {
 			console.error("[大梦千秋] 矫诏视频/换皮失败（不影响技能结算）：", e);
 		}
 	};
+
+	// ============================================================
+	//  ---- 15. 千幻数据来源自愈 + 诊断 ----
+	//  背景：千幻的「技能 / 台词」页面，数据来自 game.qhly_foundPackage(武将) 返回的包：
+	//    · 包的 characterTaici(name)  → 台词文本
+	//    · get.character(武将, 3)     → 技能列表（顺序）
+	//    · lib.skill[技能].audio      → 每个技能的语音数量（:N）
+	//  只要找到的**不是本扩展注册的那个包**，或者 lib.qhly_dirskininfo 里有旧的覆盖数据，
+	//  表现就是：改 skillTranslate / characterTaici 全都没反应、台词格数量也不对。
+	//  这里在加载后自检一遍，并把本包放到 lib.qhlypkg 的最前面（本包武将的真相只在文件里）。
+	// ============================================================
+	const DMQC_QHLY_CHARS = [
+		"sgz_huangyueying",
+		"sgz_jiangwei",
+		"sgz_zhonghui",
+		"sgz_zhugedan",
+		"sgz_guojia",
+		"sgz_machao",
+		"sgz_guanyu",
+		"sgz_caomao",
+		"sgz_weiyan",
+		"sgz_luxun",
+		"sgz_xiaoqiao",
+		"sgz_sunhanhua",
+		"sgz_gannin",
+		"sgz_wenyang",
+		"sgz_zhaoyun",
+		"sgz_duyu",
+	];
+	/// 本扩展注册的千幻包（extension.js 里 push 的那个）
+	function dmqcFindOwnQhlyPkg() {
+		const list = (lib && lib.qhlypkg) || [];
+		for (const pkg of list) {
+			try {
+				if (pkg && typeof pkg.characterTaici === "function" && pkg.filterCharacter && pkg.filterCharacter("sgz_huangyueying")) return pkg;
+			} catch (e) {}
+		}
+		return null;
+	}
+	function dmqcFixQhlyDataSources() {
+		if (!window.qhly_import || !lib || !lib.qhlypkg || typeof game.qhly_foundPackage !== "function") return false;
+		const own = dmqcFindOwnQhlyPkg();
+		if (!own) return false;
+		// ① 把本包移到最前面：qhly_foundPackage 是按顺序取第一个匹配的包
+		const idx = lib.qhlypkg.indexOf(own);
+		if (idx > 0) {
+			lib.qhlypkg.splice(idx, 1);
+			lib.qhlypkg.unshift(own);
+			console.log("[大梦千秋] 已把本扩展的千幻包提到最前（原序号 " + idx + "），保证技能/台词按本包文件读取");
+		}
+		// ② 清掉旧皮肤数据覆盖：skininfo.js 会整包盖住 characterTaici
+		let cleared = 0;
+		if (lib.qhly_dirskininfo) {
+			for (const id of DMQC_QHLY_CHARS) {
+				if (lib.qhly_dirskininfo[id]) {
+					delete lib.qhly_dirskininfo[id];
+					cleared++;
+				}
+			}
+		}
+		if (cleared) console.log("[大梦千秋] 已清掉 " + cleared + " 个旧的千幻 skininfo 覆盖（它们会盖住 characterTaici）");
+		return true;
+	}
+	if (!dmqcFixQhlyDataSources()) {
+		let triesFix = 0;
+		const timerFix = setInterval(function () {
+			triesFix++;
+			if (dmqcFixQhlyDataSources() || triesFix > 40) clearInterval(timerFix);
+		}, 500);
+	}
+
+	/// 诊断：在控制台执行 dmqcQhlyDebug() 即可看到千幻的数据来源
+	window.dmqcQhlyDebug = function (charId) {
+		charId = charId || "sgz_huangyueying";
+		const out = {};
+		try {
+			const pkg = game.qhly_foundPackage ? game.qhly_foundPackage(charId) : null;
+			out.武将 = charId;
+			out.命中的千幻包 = pkg
+				? {
+						"lib.qhlypkg 里的序号": (lib.qhlypkg || []).indexOf(pkg),
+						isExt: !!pkg.isExt,
+						skin目录: pkg.skin && pkg.skin.standard,
+						"有 characterTaici 函数": typeof pkg.characterTaici,
+					}
+				: "(没找到包)";
+			out["是否本扩展的包"] = pkg && typeof pkg.characterTaici === "function" && pkg.filterCharacter && pkg.filterCharacter(charId);
+			out["有皮肤数据覆盖 lib.qhly_dirskininfo"] = !!(lib.qhly_dirskininfo && lib.qhly_dirskininfo[charId]);
+			const skills = get.character(charId, 3) || [];
+			out.技能列表 = skills.slice();
+			out.语音数量 = {};
+			for (const s of skills) {
+				const info = lib.skill[s] || {};
+				out.语音数量[s] = info.audio;
+			}
+			const taici = pkg && pkg.characterTaici ? pkg.characterTaici(charId) : null;
+			out.台词来源 = taici;
+			out.台词键 = taici ? Object.keys(taici) : null;
+			out["绮梦台词"] = taici && taici.sgz_qimeng ? taici.sgz_qimeng.content : "(拿不到)";
+		} catch (e) {
+			out.出错 = String(e);
+		}
+		console.log("[大梦千秋] 千幻诊断：", out);
+		return out;
+	};
+
 });
